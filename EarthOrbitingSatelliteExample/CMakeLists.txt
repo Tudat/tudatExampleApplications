@@ -182,4 +182,9 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
 
+# Add Earth-orbiting satellite example application
+add_executable(application_EarthOrbitingSatelliteExample "${SRCROOT}/earthOrbitingSatelliteExample.cpp")
+setup_tudat_executable_target(application_EarthOrbitingSatelliteExample "${SRCROOT}")
+target_link_libraries(application_EarthOrbitingSatelliteExample tudat_astrodynamics tudat_input tudat_output tudat_mathematics tudat_basics tudat_core ${Boost_LIBRARIES})
+
 # End of file.
