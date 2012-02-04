@@ -52,125 +52,122 @@
 // Include statements.
 #include <cmath>
 #include <iostream>
-//#include "Tudat/Astrodynamics/Bodies/planet.h"
-//#include "Tudat/Astrodynamics/Bodies/vehicle.h"
-//#include "Tudat/Astrodynamics/ForceModels/gravitationalForceModel.h"
-//#include "Tudat/Astrodynamics/Propagators/cartesianStateNumericalPropagator.h"
-//#include "Tudat/Astrodynamics/Propagators/seriesPropagator.h"
-//#include "Tudat/Astrodynamics/States/cartesianElements.h"
-//#include "Tudat/Mathematics/unitConversions.h"
-//#include "Tudat/Mathematics/NumericalIntegrators/rungeKutta4thOrderFixedStepsize.h"
-//#include "Tudat/Output/writingOutputToFile.h"
-#include "TudatCore/Astrodynamics/astrodynamicsFunctions.h"
+#include <TudatCore/Astrodynamics/BasicAstrodynamics/astrodynamicsFunctions.h>
+#include <TudatCore/Astrodynamics/BasicAstrodynamics/unitConversions.h>
+#include <Tudat/Astrodynamics/Bodies/planet.h>
+#include <Tudat/Astrodynamics/Bodies/vehicle.h>
+#include <Tudat/Astrodynamics/ForceModels/gravitationalForceModel.h>
+#include <Tudat/Astrodynamics/States/cartesianElements.h>
+#include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4thOrderFixedStepsize.h>
+#include <Tudat/Output/writingOutputToFile.h>
+#include "cartesianStateNumericalPropagator.h"
+#include "seriesPropagator.h"
 
 //! Execute example of an Earth-orbiting satellite.
 int main( )
 {
-//    // Using declarations.
-//    using std::cout;
-//    using std::endl;
-//    using namespace tudat;
+    // Using declarations.
+    using std::cout;
+    using std::endl;
 
-//    // Create the state of Asterix given in Cartesian elements.
-//    CartesianElements stateOfAsterix;
+    // Create the state of Asterix given in Cartesian elements.
+    tudat::CartesianElements stateOfAsterix;
 
-//    // Fill initial state vector with position and
-//    // velocity given for Asterix.
-//    // Position is given in kilometers and
-//    // velocity is given in kilometers per second.
-//    stateOfAsterix.setCartesianElementX( 7000.0 );
-//    stateOfAsterix.setCartesianElementY( 0.0 );
-//    stateOfAsterix.setCartesianElementZ( 0.0 );
-//    stateOfAsterix.setCartesianElementXDot( 0.0 );
-//    stateOfAsterix.setCartesianElementYDot( 5.0 );
-//    stateOfAsterix.setCartesianElementZDot( 7.0 );
+    // Fill initial state vector with position and velocity given for Asterix.
+    // Position is given in kilometers and velocity is given in kilometers per second.
+    stateOfAsterix.setCartesianElementX( 7000.0 );
+    stateOfAsterix.setCartesianElementY( 0.0 );
+    stateOfAsterix.setCartesianElementZ( 0.0 );
+    stateOfAsterix.setCartesianElementXDot( 0.0 );
+    stateOfAsterix.setCartesianElementYDot( 5.0 );
+    stateOfAsterix.setCartesianElementZDot( 7.0 );
 
-//    // Convert initial state vector to meters from
-//    // kilometers.
-//    stateOfAsterix.state = unit_conversions::convertKilometersToMeters( stateOfAsterix.state );
+    // Convert initial state vector to meters from kilometers.
+    stateOfAsterix.state = tudat::unit_conversions::convertKilometersToMeters(
+                stateOfAsterix.state );
 
-//    // Create map of propagation history of Asterix.
-//    std::map < double, State > asterixPropagationHistory;
+    // Create map of propagation history of Asterix.
+    std::map < double, tudat::State > asterixPropagationHistory;
 
-//    // Create a new vehicle object for Asterix.
-//    Vehicle asterix;
+    // Create a new vehicle object for Asterix.
+    tudat::Vehicle asterix;
 
-//    // Set mass of Asterix.
-//    asterix.setMass( 1000.0 );
+    // Set mass of Asterix.
+    asterix.setMass( 1000.0 );
 
-//    // Create pre-defined Earth object.
-//    Planet predefinedEarth;
-//    predefinedEarth.setPredefinedPlanetSettings( Planet::earth );
+    // Create pre-defined Earth object.
+    tudat::Planet predefinedEarth;
+    predefinedEarth.setPredefinedPlanetSettings( tudat::Planet::earth );
 
-//    // Create a new gravitational force model for Earth.
-//    GravitationalForceModel earthGravitiationalForceModel;
+    // Create a new gravitational force model for Earth.
+    tudat::GravitationalForceModel earthGravitiationalForceModel;
 
-//    // Set Asterix as body subject to Earth gravitational force.
-//    earthGravitiationalForceModel.setBodySubjectToForce( &asterix );
+    // Set Asterix as body subject to Earth gravitational force.
+    earthGravitiationalForceModel.setBodySubjectToForce( &asterix );
 
-//    // Set Earth as central body for gravity.
-//    earthGravitiationalForceModel.setGravitationalBody( &predefinedEarth );
+    // Set Earth as central body for gravity.
+    earthGravitiationalForceModel.setGravitationalBody( &predefinedEarth );
 
-//    // Create a new RK4 integrator object.
-//    RungeKutta4thOrderFixedStepsize rungeKutta4;
+    // Create a new RK4 integrator object.
+    tudat::RungeKutta4thOrderFixedStepsize rungeKutta4;
 
-//    // Set an initial stepsize for our integrator.
-//    rungeKutta4.setInitialStepsize( 30.0 );
+    // Set an initial stepsize for our integrator.
+    rungeKutta4.setInitialStepsize( 30.0 );
 
-//    // Create Cartesian state numerical propagator object.
-//    CartesianStateNumericalPropagator cartesianStateNumericalPropagator;
+    // Create Cartesian state numerical propagator object.
+    tudat::CartesianStateNumericalPropagator cartesianStateNumericalPropagator;
 
-//    // Set object containing state derivative function for integrator. In this
-//    // case the Cartesian state numerical propagator contains the state
-//    // derivative function.
-//    rungeKutta4.setObjectContainingStateDerivative( &cartesianStateNumericalPropagator );
+    // Set object containing state derivative function for integrator. In this
+    // case the Cartesian state numerical propagator contains the state
+    // derivative function.
+    rungeKutta4.setObjectContainingStateDerivative( &cartesianStateNumericalPropagator );
 
-//    // Set the integrator to use RK4.
-//    cartesianStateNumericalPropagator.setIntegrator( &rungeKutta4 );
+    // Set the integrator to use RK4.
+    cartesianStateNumericalPropagator.setIntegrator( &rungeKutta4 );
 
-//    // Add Asterix as the body that has to be propagated.
-//    cartesianStateNumericalPropagator.addBody( &asterix );
+    // Add Asterix as the body that has to be propagated.
+    cartesianStateNumericalPropagator.addBody( &asterix );
 
-//    // Add Earth gravity as force acting on Asterix.
-//    cartesianStateNumericalPropagator.addForceModel( &asterix, &earthGravitiationalForceModel );
+    // Add Earth gravity as force acting on Asterix.
+    cartesianStateNumericalPropagator.addForceModel( &asterix, &earthGravitiationalForceModel );
 
-//    // Create series propagator object to propagate timeseries.
-//    SeriesPropagator seriesPropagator;
+    // Create series propagator object to propagate timeseries.
+    tudat::SeriesPropagator seriesPropagator;
 
-//    // Set Cartesian state numerical propagator for timeseries propagation.
-//    seriesPropagator.setPropagator( &cartesianStateNumericalPropagator );
+    // Set Cartesian state numerical propagator for timeseries propagation.
+    seriesPropagator.setPropagator( &cartesianStateNumericalPropagator );
 
-//    // Set start of the timeseries for propagation.
-//    seriesPropagator.setSeriesPropagationStart( 0.0 );
+    // Set start of the timeseries for propagation.
+    seriesPropagator.setSeriesPropagationStart( 0.0 );
 
-//    // Set end of the timeseries for propagation.
-//    seriesPropagator.setSeriesPropagationEnd( 86400.0 );
+    // Set end of the timeseries for propagation.
+    seriesPropagator.setSeriesPropagationEnd( 86400.0 );
 
-//    // Set fixed output interval for timeseries propagation
-//    seriesPropagator.setFixedOutputInterval( 60.0 );
+    // Set fixed output interval for timeseries propagation
+    seriesPropagator.setFixedOutputInterval( 60.0 );
 
-//    // Set initial state of Asterix for timeseries propagation.
-//    seriesPropagator.setInitialState( &asterix, &stateOfAsterix );
+    // Set initial state of Asterix for timeseries propagation.
+    seriesPropagator.setInitialState( &asterix, &stateOfAsterix );
 
-//    // Run timeseries propagation.
-//    seriesPropagator.execute( );
+    // Run timeseries propagation.
+    seriesPropagator.execute( );
 
-//    // Get propagation history of Asterix.
-//    asterixPropagationHistory
-//            = seriesPropagator.getPropagationHistoryAtFixedOutputIntervals( &asterix );
+    // Get propagation history of Asterix.
+    asterixPropagationHistory
+            = seriesPropagator.getPropagationHistoryAtFixedOutputIntervals( &asterix );
 
-//    // Output final state vector of Asterix to screen.
-//    cout << "Asterix final state in km(/s):" << endl;
-//    cout << unit_conversions::convertMetersToKilometers(
-//            asterixPropagationHistory[ seriesPropagator.getSeriesPropagationEnd( ) ].state )
-//         << endl;
+    // Output final state vector of Asterix to screen.
+    cout << "Asterix final state in km(/s):" << endl;
+    cout << tudat::unit_conversions::convertMetersToKilometers(
+            asterixPropagationHistory[ seriesPropagator.getSeriesPropagationEnd( ) ].state )
+         << endl;
 
-//    // Write propagation history of Asterix to file.
-//    WritingOutputToFile fileWriter;
-//    fileWriter.writePropagationHistoryToFile( asterixPropagationHistory,
-//                                              "asterixExampleEarthOrbitingSatellite.dat" );
+    // Write propagation history of Asterix to file.
+    tudat::WritingOutputToFile fileWriter;
+    fileWriter.writePropagationHistoryToFile( asterixPropagationHistory,
+                                              "asterixExampleEarthOrbitingSatellite.dat" );
 
-//    return 0;
+    return 0;
 }
 
 // End of file.

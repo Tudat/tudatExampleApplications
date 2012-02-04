@@ -182,9 +182,30 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
 
+# Add source files.
+set(EARTHORBITINGEXAMPLE_SOURCES
+  "${SRCROOT}/cartesianStateNumericalPropagator.cpp"
+  "${SRCROOT}/numericalPropagator.cpp"
+  "${SRCROOT}/seriesPropagator.cpp"
+)
+
+# Add header files.
+set(EARTHORBITINGEXAMPLE_HEADERS 
+  "${SRCROOT}/cartesianStateNumericalPropagator.h"
+  "${SRCROOT}/numericalPropagator.h"
+  "${SRCROOT}/propagator.h"
+  "${SRCROOT}/propagatorDataContainer.h"
+  "${SRCROOT}/seriesPropagator.h"
+)
+
+# Add static libraries.
+add_library(tudat_earth_orbiting_example STATIC ${EARTHORBITINGEXAMPLE_SOURCES} ${EARTHORBITINGEXAMPLE_HEADERS})
+setup_tudat_library_target(tudat_earth_orbiting_example "${SRCROOT}")
+setup_headers("${EARTHORBITINGEXAMPLE_HEADERS}" "")
+
 # Add Earth-orbiting satellite example application
 add_executable(application_EarthOrbitingSatelliteExample "${SRCROOT}/earthOrbitingSatelliteExample.cpp")
 setup_tudat_executable_target(application_EarthOrbitingSatelliteExample "${SRCROOT}")
-target_link_libraries(application_EarthOrbitingSatelliteExample tudat_astrodynamics tudat_input tudat_output tudat_mathematics tudat_basics tudat_core ${Boost_LIBRARIES})
+target_link_libraries(application_EarthOrbitingSatelliteExample tudat_earth_orbiting_example tudat_astrodynamics tudat_input tudat_output tudat_mathematics tudat_basics tudat_core ${Boost_LIBRARIES})
 
 # End of file.
