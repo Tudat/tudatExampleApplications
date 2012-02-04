@@ -168,7 +168,7 @@ else()
 endif()
 
 # Find Tudat library on local system.
-find_package(Tudat 0.1 REQUIRED)
+find_package(Tudat 0.5 REQUIRED)
 # If Tudat is not found, use the following to manually set the path to the Tudat include and
 # library directories.
 #SET(TUDAT_INCLUDE_DIR "C:\My\Custom\Path\To\Tudat\Include\Directory")
