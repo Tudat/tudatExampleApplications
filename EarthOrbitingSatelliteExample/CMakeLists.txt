@@ -1,26 +1,4 @@
-# \file CMakeLists.txt
- #    This is the main CMake file for the Earth-orbiting satellite example Tudat application.
- #
- #    Path              : /EarthOrbitingSatelliteExample/
- #    Version           : 2
- #    Check status      : Checked
- #
- #    Author/Checker    : S.M. Persson
- #    Affiliation       : McGill University, Department of Mechanical Engineering
- #    E-mail address    : mikael.s.persson@gmail.com
- #
- #    Author            : K. Kumar
- #    Affiliation       : Delft University of Technology
- #    E-mail address    : K.Kumar@tudelft.nl
- #
- #    Date created      : 20 August, 2011
- #    Last modified     : 2 February, 2012
- #
- #    References
- #
- #    Notes
- #
- #    Copyright (c) 2010-2011 Delft University of Technology.
+ #    Copyright (c) 2010-2012 Delft University of Technology.
  #
  #    This software is protected by national and international copyright.
  #    Any unauthorized use, reproduction or modification is unlawful and
@@ -34,7 +12,10 @@
  #    Changelog
  #      YYMMDD    Author            Comment
  #      110820    S.M. Persson      File created.
- #	120202    K. Kumar 	    Adapted to work with Tudat and Tudat Core.
+ #	120202    K. Kumar 	    Adapted to work with Earth orbiting satellite example.
+ #
+ #    References
+ #
  #/
 
 # Specify minimum CMake version required to compile Tudat.
@@ -72,22 +53,21 @@ if (WIN32)
         string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
       endif(${flag_var} MATCHES "/MD")
     endforeach(flag_var)
-    set(LIBROOT "${SRCROOT}/lib")
+    set(LIBROOT "${SRCROOT}/../lib")
     set(INCLUDEROOT "${SRCROOT}/include")
-    set(BINROOT "${SRCROOT}/bin")
+    set(BINROOT "${SRCROOT}/../bin")
   else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
-    set(LIBROOT "${SRCROOT}/lib")
+    set(LIBROOT "${SRCROOT}/../lib")
     set(INCLUDEROOT "${SRCROOT}/include")
-    set(BINROOT "${SRCROOT}/bin")
+    set(BINROOT "${SRCROOT}/../bin")
   endif()
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
-  set(LIBROOT "${SRCROOT}/lib")
-  set(INCLUDEROOT "${SRCROOT}/include")
-  set(BINROOT "${SRCROOT}/bin")
+    set(LIBROOT "${SRCROOT}/../lib")
+    set(INCLUDEROOT "${SRCROOT}/include")
+    set(BINROOT "${SRCROOT}/../bin")
 endif()
-
 
 # Set the global macros for setting up targets.
 macro(setup_tudat_executable_target target_name CUSTOM_OUTPUT_PATH)
@@ -119,10 +99,10 @@ include_directories(AFTER
 )
 
 # Find Eigen3 library on local system.
-find_package(Eigen3 REQUIRED)
 # If Eigen3 is not found, use the following to manually set the path to the Eigen3 directory.
 # A default location is given as an example.
 #set(EIGEN3_INCLUDE_DIR "${SRCROOT}/External/eigen3")
+find_package(Eigen3 REQUIRED)
 
 # Include Eigen3 directories.
 # Set CMake flag to suppress Eigen warnings (platform-dependent solution).
@@ -138,11 +118,12 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 
 # Find Boost libraries on local system.
-find_package(Boost 1.45.0 COMPONENTS thread date_time system unit_test_framework filesystem regex iostreams REQUIRED)
 # If Boost is not found, use the following to manually set the path to the Boost include and
 # library directories.
+#SET(Boost_ROOT "C:\My\Custom\Path\To\Boost\Root\Directory")
 #SET(Boost_INCLUDE_DIRS "C:\My\Custom\Path\To\Boost\Include\Directory")
 #SET(Boost_LIBRARY_DIRS "C:\My\Custom\Path\To\Boost\Library\Directory")
+find_package(Boost 1.45.0 COMPONENTS thread date_time system unit_test_framework filesystem regex iostreams REQUIRED)
 
 # Include Boost directories.
 # Set CMake flag to suppress Boost warnings (platform-dependent solution).
@@ -153,11 +134,11 @@ else()
 endif()
 
 # Find Tudat Core library on local system.
-find_package(TudatCore 0.1 REQUIRED)
 # If TudatCore is not found, use the following to manually set the path to the TudatCore include and
 # library directories.
 #SET(TUDAT_CORE_INCLUDE_DIR "C:\My\Custom\Path\To\TudatCore\Include\Directory")
 #SET(TUDAT_CORE_LIBRARIES_DIR "C:\My\Custom\Path\To\TudatCore\Library\Directory")
+find_package(TudatCore 1.0 REQUIRED)
 
 # Include TudatCore directories.
 # Set CMake flag to suppress TudatCore warnings (platform-dependent solution).
@@ -168,11 +149,11 @@ else()
 endif()
 
 # Find Tudat library on local system.
-find_package(Tudat 0.5 REQUIRED)
 # If Tudat is not found, use the following to manually set the path to the Tudat include and
 # library directories.
 #SET(TUDAT_INCLUDE_DIR "C:\My\Custom\Path\To\Tudat\Include\Directory")
 #SET(TUDAT_LIBRARIES_DIR "C:\My\Custom\Path\To\Tudat\Library\Directory")
+find_package(Tudat 1.0 REQUIRED)
 
 # Include Tudat directories.
 # Set CMake flag to suppress Tudat warnings (platform-dependent solution).
@@ -184,28 +165,30 @@ endif()
 
 # Add source files.
 set(EARTHORBITINGEXAMPLE_SOURCES
-  "${SRCROOT}/cartesianStateNumericalPropagator.cpp"
-  "${SRCROOT}/numericalPropagator.cpp"
-  "${SRCROOT}/seriesPropagator.cpp"
+  "${SRCROOT}/stateAssembly.cpp"
+  "${SRCROOT}/stateDerivativeModel.cpp"
 )
 
 # Add header files.
 set(EARTHORBITINGEXAMPLE_HEADERS 
-  "${SRCROOT}/cartesianStateNumericalPropagator.h"
-  "${SRCROOT}/numericalPropagator.h"
-  "${SRCROOT}/propagator.h"
-  "${SRCROOT}/propagatorDataContainer.h"
-  "${SRCROOT}/seriesPropagator.h"
+  "${SRCROOT}/stateAssembly.h"
+  "${SRCROOT}/stateDerivativeModel.h"
 )
 
 # Add static libraries.
 add_library(tudat_earth_orbiting_example STATIC ${EARTHORBITINGEXAMPLE_SOURCES} ${EARTHORBITINGEXAMPLE_HEADERS})
 setup_tudat_library_target(tudat_earth_orbiting_example "${SRCROOT}")
-setup_headers("${EARTHORBITINGEXAMPLE_HEADERS}" "")
+setup_headers("${EARTHORBITINGEXAMPLE_HEADERS}" "${SRCROOT}")
 
-# Add Earth-orbiting satellite example application
+# Add Earth-orbiting satellite example application.
 add_executable(application_EarthOrbitingSatelliteExample "${SRCROOT}/earthOrbitingSatelliteExample.cpp")
 setup_tudat_executable_target(application_EarthOrbitingSatelliteExample "${SRCROOT}")
-target_link_libraries(application_EarthOrbitingSatelliteExample tudat_earth_orbiting_example tudat_astrodynamics tudat_input tudat_output tudat_mathematics tudat_basics tudat_core ${Boost_LIBRARIES})
+target_link_libraries(application_EarthOrbitingSatelliteExample tudat_earth_orbiting_example tudat_gravitation tudat_core ${Boost_LIBRARIES} )
+
+
+# Add Galileo constellation application.
+add_executable(application_GalileoConstellation "${SRCROOT}/galileoConstellationSimulation.cpp")
+setup_tudat_executable_target(application_GalileoConstellation "${SRCROOT}")
+target_link_libraries(application_GalileoConstellation tudat_earth_orbiting_example tudat_gravitation tudat_core ${Boost_LIBRARIES} )
 
 # End of file.

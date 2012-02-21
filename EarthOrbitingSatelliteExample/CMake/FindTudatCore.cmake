@@ -18,7 +18,8 @@
 # Redistribution and use is allowed according to the terms of the 2-clause BSD license.
 
 macro(_tudat_core_check_version)
-  file(READ "${TUDAT_CORE_INCLUDE_DIR}/TudatCore/tudatCoreVersion.h" _tudat_core_header)
+	MESSAGE( STATUS "Checking for TudatCore in:         " ${TUDAT_CORE_BASE_PATH} )
+  file(READ "${TUDAT_CORE_BASE_PATH}/tudatCoreVersion.h" _tudat_core_header)
 
   string(REGEX MATCH "define[ \t]+TUDAT_CORE_VERSION_MAJOR[ \t]+([0-9]+)" _tudat_core_major_version_match "${_tudat_core_header}")
   set(TUDAT_CORE_MAJOR_VERSION "${CMAKE_MATCH_1}")
@@ -34,41 +35,42 @@ macro(_tudat_core_check_version)
 
   if(NOT TUDAT_CORE_VERSION_OK)
 
-    message(STATUS "Tudat core version ${TUDAT_CORE_VERSION} found in ${TUDAT_CORE_INCLUDE_DIR}, "
-                   "but at least version ${TudatCore_FIND_VERSION} is required")
+    message(WARNING "Tudat core version ${TUDAT_CORE_VERSION} found in ${TUDAT_CORE_INCLUDE_DIR}, "
+                    "but at least version ${TudatCore_FIND_VERSION} is required")
   endif(NOT TUDAT_CORE_VERSION_OK)
 
   set(TUDAT_CORE_LIBRARIES "tudat_core")
+  set(TUDAT_CORE_INCLUDE_DIR ${TUDAT_CORE_BASE_PATH}/..)
+  set(TUDAT_CORE_LIBRARIES_DIR ${TUDAT_CORE_BASE_PATH}/../lib)
   link_directories(${TUDAT_CORE_LIBRARIES_DIR})
 endmacro(_tudat_core_check_version)
 
-if (TUDAT_CORE_INCLUDE_DIR)
+if (TUDAT_CORE_BASE_PATH)
 
   # in cache already
-  _tudat_core_check_version()
+  _tudat_core_check_version( )
   set(TUDAT_CORE_FOUND ${TUDAT_CORE_VERSION_OK})
 
-else (TUDAT_CORE_INCLUDE_DIR)
+else (TUDAT_CORE_BASE_PATH)
 
   find_path(TUDAT_CORE_BASE_PATH NAMES tudatCoreVersion.h
       PATHS
       ${PROJECT_SOURCE_DIR}/External
-      ${PROJECT_SOURCE_DIR}/../../../../tudatCore/trunk
       ${PROJECT_SOURCE_DIR}/../../core/trunk
+      ${PROJECT_SOURCE_DIR}/../../../tudatCore/trunk
       ${CMAKE_INSTALL_PREFIX}/include
       PATH_SUFFIXES TudatCore
     )
-  set(TUDAT_CORE_INCLUDE_DIR ${TUDAT_CORE_BASE_PATH}/..)
-  set(TUDAT_CORE_LIBRARIES_DIR ${TUDAT_CORE_BASE_PATH}/lib)
 
-  if(TUDAT_CORE_INCLUDE_DIR)
-    _tudat_core_check_version()
-  endif(TUDAT_CORE_INCLUDE_DIR)
+
+  if(TUDAT_CORE_BASE_PATH)
+    _tudat_core_check_version( )
+  endif(TUDAT_CORE_BASE_PATH)
 
   include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(TudatCore DEFAULT_MSG TUDAT_CORE_INCLUDE_DIR TUDAT_CORE_VERSION_OK)
+  find_package_handle_standard_args(TudatCore DEFAULT_MSG TUDAT_CORE_BASE_PATH TUDAT_CORE_VERSION_OK)
 
-  mark_as_advanced(TUDAT_CORE_INCLUDE_DIR)
+  mark_as_advanced(TUDAT_CORE_BASE_PATH)
 
-endif(TUDAT_CORE_INCLUDE_DIR)
+endif(TUDAT_CORE_BASE_PATH)
 

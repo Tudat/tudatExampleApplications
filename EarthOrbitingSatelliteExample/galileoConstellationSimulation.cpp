@@ -11,55 +11,37 @@
  *
  *    Changelog
  *      YYMMDD    Author            Comment
- *      101111    K. Kumar          File created.
- *      110113    K. Kumar          Scenario updated to use latest version of code; added file
- *                                  header and footer.
- *      110202    K. Kumar          Scenario updated to use latest version of code.
- *      110216    K. Kumar          Migrated to applications namespace.
- *      110217    K. Kumar          Function name changed.
- *      110815    K. Kumar          Updated with mass of Asterix.
- *      111024    K. Kumar          Modified to be executable program with main-function as
- *                                  suggested by M. Persson.
- *      120221    K. Kumar          Rewrote application from scratch; now propagates two
- *                                  satellites.
+ *      120221    K. Kumar          File created.
  *
  *    References
  *
  */
 
 #include <fstream>
-#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <utility>
 
 #include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <Eigen/Core>
 
 #include <TudatCore/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
-#include <TudatCore/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
 #include <TudatCore/Astrodynamics/BasicAstrodynamics/unitConversions.h>
 #include <TudatCore/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
 
 #include <Tudat/Astrodynamics/Bodies/vehicle.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/forceModel.h>
-#include <Tudat/Astrodynamics/Gravitation/gravitationalForceModel.h>
 #include <Tudat/Astrodynamics/Gravitation/centralGravityField.h>
+#include <Tudat/Astrodynamics/Gravitation/gravitationalForceModel.h>
 
 #include "stateAssembly.h"
 #include "stateDerivativeModel.h"
 
-//! Execute example of an Earth-orbiting satellite.
+//! Execute simulation of Galileo constellation around the Earth.
 int main( )
 {
-    using tudat::orbital_element_conversions::semiMajorAxisIndex;
-    using tudat::orbital_element_conversions::eccentricityIndex;
-    using tudat::orbital_element_conversions::inclinationIndex;
-    using tudat::orbital_element_conversions::argumentOfPeriapsisIndex;
-    using tudat::orbital_element_conversions::longitudeOfAscendingNodeIndex;
-    using tudat::orbital_element_conversions::trueAnomalyIndex;
+    using tudat::unit_conversions::convertDegreesToRadians;
 
     using tudat::orbital_element_conversions::xPositionIndex;
     using tudat::orbital_element_conversions::yPositionIndex;
@@ -67,8 +49,6 @@ int main( )
     using tudat::orbital_element_conversions::xVelocityIndex;
     using tudat::orbital_element_conversions::yVelocityIndex;
     using tudat::orbital_element_conversions::zVelocityIndex;
-
-    using tudat::unit_conversions::convertDegreesToRadians;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -81,38 +61,72 @@ int main( )
     double simulationStartEpoch = 0.0;
 
     // Set simulation end epoch.
-    double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
+    double simulationEndEpoch = 0.1 * tudat::physical_constants::JULIAN_DAY;
 
     // Set numerical integration fixed step size.
-    double fixedStepSize = 60.0;
+    double fixedStepSize = 30.0;
 
-    // Set initial conditions for satellites that will be propagated in this simulation.
+    // Set number of satellites in constellation.
+    const unsigned int NUMBER_OF_SATELLITES = 30;
+
+    // Set orbital parameters of Galileo constellation.
+    double semiMajorAxis = 21000.0e3;                                           // [km]
+    double eccentricity = 0.0;                                                  // [-]
+    double inclination = convertDegreesToRadians( 60.0 );                       // [rad]
+    double argumentOfPeriapsis = 0.0;                                           // [rad]
+    double longitudeOfAscendingNodeSpacing = convertDegreesToRadians( 120.0 );  // [rad]
+    double trueAnomalySpacing = convertDegreesToRadians( 36.0 );                // [rad]
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Set initial conditions for Galileo satellites that will be propagated in this simulation.
     // The initial conditions are given in Keplerian elements and later on converted to
-    // Cartesian elements.
+    // Cartesian elements. They are stored in a matrix.
 
-    // Set Keplerian elements for Asterix.
-    Eigen::VectorXd asterixInitialStateInKeplerianElements( 6 );
-    asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0e3;
-    asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
-    asterixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 85.3 );
-    asterixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = convertDegreesToRadians( 235.7 );
-    asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = convertDegreesToRadians( 23.4 );
-    asterixInitialStateInKeplerianElements( trueAnomalyIndex )
-            = convertDegreesToRadians( 139.87 );
+    // Declare size of state.
+    const unsigned int SIZE_OF_STATE = 6;
 
-    // Set Keplerian elements for Obelix.
-    Eigen::VectorXd obelixInitialStateInKeplerianElements( 6 );
-    obelixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 12040.6e3;
-    obelixInitialStateInKeplerianElements( eccentricityIndex ) = 0.4;
-    obelixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( -23.5 );
-    obelixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = convertDegreesToRadians( 10.6 );
-    obelixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = convertDegreesToRadians( 367.9 );
-    obelixInitialStateInKeplerianElements( trueAnomalyIndex )
-            = convertDegreesToRadians( 93.4 );
+    // Set Keplerian elements for Galileo satellites.
+    Eigen::MatrixXd initialConditionsInKeplerianElements( NUMBER_OF_SATELLITES, SIZE_OF_STATE );
+
+    // Set semiMajorAxis.
+    initialConditionsInKeplerianElements.col( 0 )
+            = Eigen::MatrixXd::Constant( NUMBER_OF_SATELLITES, 1, semiMajorAxis );
+
+    // Set eccentricity.
+    initialConditionsInKeplerianElements.col( 1 )
+            = Eigen::MatrixXd::Constant( NUMBER_OF_SATELLITES, 1, eccentricity );
+
+    // Set inclination.
+    initialConditionsInKeplerianElements.col( 2 )
+            = Eigen::MatrixXd::Constant( NUMBER_OF_SATELLITES, 1, inclination );
+
+    // Set argument of periapsis.
+    initialConditionsInKeplerianElements.col( 3 )
+            = Eigen::MatrixXd::Constant( NUMBER_OF_SATELLITES, 1, argumentOfPeriapsis );
+
+    // Set longitude of ascending node.
+    initialConditionsInKeplerianElements.block( 0, 4, 10, 1 )
+            = Eigen::MatrixXd::Constant( 10, 1, 0.0 );
+    initialConditionsInKeplerianElements.block( 10, 4, 10, 1 )
+            = Eigen::MatrixXd::Constant( 10, 1, 1.0 * longitudeOfAscendingNodeSpacing );
+    initialConditionsInKeplerianElements.block( 20, 4, 10, 1 )
+            = Eigen::MatrixXd::Constant( 10, 1, 2.0 * longitudeOfAscendingNodeSpacing );
+
+    // Set true anomaly.
+    Eigen::VectorXd trueAnomalySpacingIntegers( 10 );
+    trueAnomalySpacingIntegers << 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
+    initialConditionsInKeplerianElements.block( 0, 5, 10, 1 )
+            = Eigen::MatrixXd::Constant( 10, 1, trueAnomalySpacing ).array( )
+            * trueAnomalySpacingIntegers.array( );
+    initialConditionsInKeplerianElements.block( 10, 5, 10, 1 )
+            = Eigen::MatrixXd::Constant( 10, 1, trueAnomalySpacing ).array( )
+            * trueAnomalySpacingIntegers.array( );
+    initialConditionsInKeplerianElements.block( 20, 5, 10, 1 )
+            = Eigen::MatrixXd::Constant( 10, 1, trueAnomalySpacing ).array( )
+            * trueAnomalySpacingIntegers.array( );
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -133,15 +147,16 @@ int main( )
 
     using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
 
-    // Convert Asterix state from Keplerian elements to Cartesian elements.
-    Eigen::VectorXd asterixInitialState = convertKeplerianToCartesianElements(
-                asterixInitialStateInKeplerianElements,
-                earthCentralGravityField.getGravitationalParameter( ) );
+    // Set Cartesian elements for Galileo satellites.
+    Eigen::MatrixXd initialConditions( NUMBER_OF_SATELLITES, SIZE_OF_STATE );
 
-    // Convert Obelix state from Keplerian elements to Cartesian elements.
-    Eigen::VectorXd obelixInitialState = convertKeplerianToCartesianElements(
-                obelixInitialStateInKeplerianElements,
-                earthCentralGravityField.getGravitationalParameter( ) );
+    for ( unsigned int i = 0; i < initialConditionsInKeplerianElements.rows( ); i++ )
+    {
+        // Convert state from Keplerian elements to Cartesian elements.
+        initialConditions.row( i ) = convertKeplerianToCartesianElements(
+                    initialConditionsInKeplerianElements.row( i ),
+                    earthCentralGravityField.getGravitationalParameter( ) );
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -149,25 +164,28 @@ int main( )
 
     // Create satellite vehicles and set their respective masses [kg].
 
-    // Declare a new vehicle object for Asterix and set its mass.
-    tudat::Vehicle asterix;
-    asterix.setMass( 1.0 );
+    std::vector< tudat::Vehicle > vehicles( NUMBER_OF_SATELLITES );
 
-    // Declare a new vehicle object for Obelix and set its mass.
-    tudat::Vehicle obelix;
-    obelix.setMass( 1.0 );
-
-    ///////////////////////////////////////////////////////////////////////////
+    for ( unsigned int i = 0; i < NUMBER_OF_SATELLITES; i++ )
+    {
+        vehicles.at( i ).setMass( 1.0 );
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // Create Earth gravitational force models for both satellites.
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Create Earth gravitational force models for satellites.
 
     // Declare Earth gravitational force models.
-    tudat::GravitationalForceModel earthGravitationalForceModelForAsterix(
-                &asterix, &earthCentralGravityField );
-    tudat::GravitationalForceModel earthGravitationalForceModelForObelix(
-                &obelix, &earthCentralGravityField );
+    std::vector< tudat::GravitationalForceModel > earthGravitationalForceModels;
+
+    for ( unsigned int i = 0; i < NUMBER_OF_SATELLITES; i++ )
+    {
+        tudat::GravitationalForceModel earthGravitationalForceModel(
+                    &vehicles.at( i ), &earthCentralGravityField );
+        earthGravitationalForceModels.push_back( earthGravitationalForceModel );
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -179,15 +197,12 @@ int main( )
     using earth_orbiting_satellite_example::StateDerivativeModel;
     StateDerivativeModel::ListOfForces listOfForces;
 
-    std::vector< tudat::ForceModel* > listOfForcesActingOnAsterix;
-    listOfForcesActingOnAsterix.push_back( &earthGravitationalForceModelForAsterix );
-
-    listOfForces[ &asterix ] = listOfForcesActingOnAsterix;
-
-    std::vector< tudat::ForceModel* > listOfForcesActingOnObelix;
-    listOfForcesActingOnObelix.push_back( &earthGravitationalForceModelForObelix );
-
-    listOfForces[ &obelix ] = listOfForcesActingOnObelix;
+    for ( unsigned int i = 0; i < NUMBER_OF_SATELLITES; i++ )
+    {
+        std::vector< tudat::ForceModel* > forceModels;
+        forceModels.push_back( &earthGravitationalForceModels.at( i ) );
+        listOfForces[ &vehicles.at( i ) ] = forceModels;
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -197,8 +212,11 @@ int main( )
 
     // Add initial states.
     earth_orbiting_satellite_example::ListOfStates listOfInitialStates;
-    listOfInitialStates[ &asterix ] = asterixInitialState;
-    listOfInitialStates[ &obelix ] = obelixInitialState;
+
+    for ( unsigned int i = 0; i < NUMBER_OF_SATELLITES; i++ )
+    {
+        listOfInitialStates[ &vehicles.at( i ) ] = initialConditions.row( i );
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -207,7 +225,7 @@ int main( )
     // Setup state derivative model and numerical integrator.
 
     // Declare state derivative model.
-    StateDerivativeModel stateDerivativeModelForEarthSatellites( listOfForces );
+    StateDerivativeModel stateDerivativeModelForSatellites( listOfForces );
 
     // Declare Runge-Kutta 4 integrator.
     // Since the state derivative function is a member-function, it must be passed by using
@@ -217,10 +235,9 @@ int main( )
     assembledStateAndBodyIndices = earth_orbiting_satellite_example::assembleState(
                 listOfInitialStates );
 
-    tudat::mathematics::numerical_integrators::RungeKutta4Integrator<
-            double, Eigen::VectorXd, Eigen::VectorXd > rungeKutta4(
+    tudat::mathematics::numerical_integrators::RungeKutta4IntegratorXd rungeKutta4(
                 boost::bind( &StateDerivativeModel::computeStateDerivative,
-                             &stateDerivativeModelForEarthSatellites, _1, _2 ),
+                             &stateDerivativeModelForSatellites, _1, _2 ),
                 0.0, assembledStateAndBodyIndices.first );
 
     ///////////////////////////////////////////////////////////////////////////
@@ -263,40 +280,39 @@ int main( )
     // Write results to file.
 
     // Declare results file for propagation history for satellites.
-    std::ofstream asterixPropagationHistoryFile( ( outputDirectory
-                                                   + "asterixPropagationHistory.dat" ).c_str( ) );
+    std::vector< boost::shared_ptr< std::ofstream > > propagationHistoryDataFiles;
 
-    std::ofstream obelixPropagationHistoryFile( ( outputDirectory
-                                                   + "obelixPropagationHistory.dat" ).c_str( ) );
+    for ( unsigned int i = 0; i < NUMBER_OF_SATELLITES; i++ )
+    {
+        std::stringstream propagationHistoryDataFilename;
+        propagationHistoryDataFilename << outputDirectory << "galileoSatellite" << i + 1 << ".dat";
+        propagationHistoryDataFiles.push_back(
+                    boost::shared_ptr< std::ofstream >(
+                        new std::ofstream( propagationHistoryDataFilename.str( ).c_str( ) ) ) );
+    }
 
     // Store state history in propagation history files.
     for ( PropagationHistory::iterator iteratorPropagationHistory = propagationHistory.begin( );
           iteratorPropagationHistory != propagationHistory.end( ); iteratorPropagationHistory++ )
     {
-        asterixPropagationHistoryFile
-                << iteratorPropagationHistory->first << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( xPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( yPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( zPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( xVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( yVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( zVelocityIndex ) << std::endl;
-
-        obelixPropagationHistoryFile
-                << iteratorPropagationHistory->first << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( xPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( yPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( zPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( xVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( yVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( zVelocityIndex ) << std::endl;
+        for ( unsigned int i = 0; i < NUMBER_OF_SATELLITES; i++ )
+        {
+            *propagationHistoryDataFiles.at( i )
+                    << iteratorPropagationHistory->first << ", "
+                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( xPositionIndex ) << ", "
+                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( yPositionIndex ) << ", "
+                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( zPositionIndex ) << ", "
+                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( xVelocityIndex ) << ", "
+                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( yVelocityIndex ) << ", "
+                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( zVelocityIndex ) << std::endl;
+        }
     }
 
     // Close simulation output files.
-    asterixPropagationHistoryFile.close( );
-    obelixPropagationHistoryFile.close( );
+//    propagationHistoryDataFile.close( );
 
     ///////////////////////////////////////////////////////////////////////////
 
     return 0;
+
 }

@@ -54,13 +54,15 @@ else (TUDAT_INCLUDE_DIR)
       PATHS
       ${PROJECT_SOURCE_DIR}/External
       ${PROJECT_SOURCE_DIR}/../../../../tudat/branches/packages/
+      ${PROJECT_SOURCE_DIR}/../../../tudat/branches/packages/
       ${PROJECT_SOURCE_DIR}/../../../../tudat/trunk
       ${PROJECT_SOURCE_DIR}/../../trunk
+      ${PROJECT_SOURCE_DIR}/../../../tudat/main
       ${CMAKE_INSTALL_PREFIX}/include
       PATH_SUFFIXES Tudat
     )
   set(TUDAT_INCLUDE_DIR ${TUDAT_BASE_PATH}/..)
-  set(TUDAT_LIBRARIES_DIR ${TUDAT_BASE_PATH}/lib)
+  set(TUDAT_LIBRARIES_DIR ${TUDAT_BASE_PATH}/../lib)
 
   if(TUDAT_INCLUDE_DIR)
     _tudat_check_version()
