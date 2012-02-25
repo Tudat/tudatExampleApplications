@@ -23,7 +23,7 @@ clear all; close all; clc;
 % Input deck.
 
 % Set simulation data files directory.
-simulationDataFilesDirectory = 
+simulationDataFilesDirectory =
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -69,7 +69,7 @@ axis equal
 
 for i = 1:30
     simulationDataFiles{i} = csvread(strcat(simulationDataFilesDirectory,...
-                                            'galileoSatellite', num2str(i),...
+                                            '/galileoSatellite', num2str(i),...
                                             '.dat'));
 end
 

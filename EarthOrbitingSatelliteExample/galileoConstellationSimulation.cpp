@@ -70,9 +70,9 @@ int main( )
     const unsigned int NUMBER_OF_SATELLITES = 30;
 
     // Set orbital parameters of Galileo constellation.
-    double semiMajorAxis = 21000.0e3;                                           // [km]
+    double semiMajorAxis = 23222.0e3 + 6378.1e3;                                // [km]
     double eccentricity = 0.0;                                                  // [-]
-    double inclination = convertDegreesToRadians( 60.0 );                       // [rad]
+    double inclination = convertDegreesToRadians( 56.0 );                       // [rad]
     double argumentOfPeriapsis = 0.0;                                           // [rad]
     double longitudeOfAscendingNodeSpacing = convertDegreesToRadians( 120.0 );  // [rad]
     double trueAnomalySpacing = convertDegreesToRadians( 36.0 );                // [rad]
@@ -309,7 +309,10 @@ int main( )
     }
 
     // Close simulation output files.
-//    propagationHistoryDataFile.close( );
+    for ( unsigned int i = 0; i < NUMBER_OF_SATELLITES; i++ )
+    {
+        propagationHistoryDataFiles.at( i )->close( );
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
