@@ -185,10 +185,7 @@ add_executable(application_EarthOrbitingSatelliteExample "${SRCROOT}/earthOrbiti
 setup_tudat_executable_target(application_EarthOrbitingSatelliteExample "${SRCROOT}")
 target_link_libraries(application_EarthOrbitingSatelliteExample tudat_earth_orbiting_example tudat_gravitation tudat_core ${Boost_LIBRARIES} )
 
-
 # Add Galileo constellation application.
 add_executable(application_GalileoConstellation "${SRCROOT}/galileoConstellationSimulation.cpp")
 setup_tudat_executable_target(application_GalileoConstellation "${SRCROOT}")
 target_link_libraries(application_GalileoConstellation tudat_earth_orbiting_example tudat_gravitation tudat_core ${Boost_LIBRARIES} )
-
-# End of file.

@@ -50,8 +50,10 @@ Eigen::VectorXd StateDerivativeModel::computeStateDerivative(
             iteratorForForces->second.at( i )->computeForce(
                         &temporaryState, independentVariable );
 
+            // Compute force.
             assembledStateDerivative.segment( loopCounter + 3, 3 )
-                    += iteratorForForces->second.at( i )->getForce( );
+                    += iteratorForForces->second.at( i )->getForce( )
+                    / iteratorForForces->first->getMass( );
         }
 
         loopCounter += SIZE_OF_CARTESIAN_STATE;
