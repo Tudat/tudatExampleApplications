@@ -13,6 +13,8 @@
  *      YYMMDD    Author            Comment
  *      120220    K. Kumar          File created.
  *      120221    K. Kumar          Rewritten for new application architecture.
+ *      120501    K. Kumar          Updated namespace-access for typedefs; updated code to use
+ *                                  shared pointers.
  *
  *    References
  *
@@ -21,9 +23,13 @@
 #ifndef STATE_DERIVATIVE_MODEL_H
 #define STATE_DERIVATIVE_MODEL_H
 
-#include <Eigen/Core>
 #include <map>
 #include <vector>
+
+#include <boost/shared_ptr.hpp>
+
+#include <Eigen/Core>
+
 #include <Tudat/Astrodynamics/BasicAstrodynamics/forceModel.h>
 #include <Tudat/Astrodynamics/Bodies/body.h>
 
@@ -41,7 +47,9 @@ class StateDerivativeModel
 public:
 
     //! Typedef for list of forces per body.
-    typedef std::map< tudat::Body*, std::vector< tudat::ForceModel* > > ListOfForces;
+    typedef std::map< boost::shared_ptr< tudat::bodies::Body >,
+    std::vector< boost::shared_ptr<
+    tudat::astrodynamics::force_models::ForceModel > > > ListOfForces;
 
     //! Default constructor.
     /*!

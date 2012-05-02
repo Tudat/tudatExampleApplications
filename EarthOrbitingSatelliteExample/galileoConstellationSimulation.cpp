@@ -12,6 +12,7 @@
  *    Changelog
  *      YYMMDD    Author            Comment
  *      120221    K. Kumar          File created.
+ *      120502    K. Kumar          Updated code to use shared pointers.
  *
  *    References
  *
@@ -23,6 +24,7 @@
 #include <vector>
 
 #include <boost/bind.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include <Eigen/Core>
@@ -134,17 +136,16 @@ int main( )
 
     // Declare Earth environment.
 
-    // Declare pre-defined Earth central gravity field.
-    tudat::CentralGravityField earthCentralGravityField;
-    earthCentralGravityField.setPredefinedCentralGravityFieldSettings(
-                tudat::CentralGravityField::earth );
+    // Declare shared pointer to a new pre-defined Earth central gravity field.
+    using tudat::astrodynamics::gravitation::CentralGravityField;
+    boost::shared_ptr< CentralGravityField >earthCentralGravityField
+            = boost::make_shared< CentralGravityField > ( CentralGravityField::earth );
 
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
 
     // Convert initial states from Keplerian to Cartesian elements.
-
     using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
 
     // Set Cartesian elements for Galileo satellites.
@@ -155,7 +156,7 @@ int main( )
         // Convert state from Keplerian elements to Cartesian elements.
         initialConditions.row( i ) = convertKeplerianToCartesianElements(
                     initialConditionsInKeplerianElements.row( i ),
-                    earthCentralGravityField.getGravitationalParameter( ) );
+                    earthCentralGravityField->getGravitationalParameter( ) );
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -163,12 +164,13 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////
 
     // Create satellite vehicles and set their respective masses [kg].
-
-    std::vector< tudat::Vehicle > vehicles( NUMBER_OF_SATELLITES );
+    using tudat::bodies::Vehicle;
+    std::vector< boost::shared_ptr< Vehicle > > vehicles;
 
     for ( unsigned int i = 0; i < NUMBER_OF_SATELLITES; i++ )
     {
-        vehicles.at( i ).setMass( 1.0 );
+        vehicles.push_back( boost::make_shared< Vehicle >( ) );
+        vehicles.back( )->setMass( 1.0 );
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -178,13 +180,14 @@ int main( )
     // Create Earth gravitational force models for satellites.
 
     // Declare Earth gravitational force models.
-    std::vector< tudat::GravitationalForceModel > earthGravitationalForceModels;
+    using tudat::astrodynamics::force_models::GravitationalForceModel;
+    std::vector< boost::shared_ptr< GravitationalForceModel > > earthGravitationalForceModels;
 
     for ( unsigned int i = 0; i < NUMBER_OF_SATELLITES; i++ )
     {
-        tudat::GravitationalForceModel earthGravitationalForceModel(
-                    &vehicles.at( i ), &earthCentralGravityField );
-        earthGravitationalForceModels.push_back( earthGravitationalForceModel );
+        earthGravitationalForceModels.push_back(
+                    boost::make_shared< GravitationalForceModel >(
+                        vehicles.at( i ), earthCentralGravityField ) );
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -195,13 +198,14 @@ int main( )
 
     // Add Earth gravitational forces for Asterix and Obelix.
     using earth_orbiting_satellite_example::StateDerivativeModel;
+    using tudat::astrodynamics::force_models::ForceModel;
     StateDerivativeModel::ListOfForces listOfForces;
 
     for ( unsigned int i = 0; i < NUMBER_OF_SATELLITES; i++ )
     {
-        std::vector< tudat::ForceModel* > forceModels;
-        forceModels.push_back( &earthGravitationalForceModels.at( i ) );
-        listOfForces[ &vehicles.at( i ) ] = forceModels;
+        std::vector< boost::shared_ptr< ForceModel > > forceModels;
+        forceModels.push_back( earthGravitationalForceModels.at( i ) );
+        listOfForces[ vehicles.at( i ) ] = forceModels;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -215,7 +219,7 @@ int main( )
 
     for ( unsigned int i = 0; i < NUMBER_OF_SATELLITES; i++ )
     {
-        listOfInitialStates[ &vehicles.at( i ) ] = initialConditions.row( i );
+        listOfInitialStates[ vehicles.at( i ) ] = initialConditions.row( i );
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -299,12 +303,12 @@ int main( )
         {
             *propagationHistoryDataFiles.at( i )
                     << iteratorPropagationHistory->first << ", "
-                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( xPositionIndex ) << ", "
-                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( yPositionIndex ) << ", "
-                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( zPositionIndex ) << ", "
-                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( xVelocityIndex ) << ", "
-                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( yVelocityIndex ) << ", "
-                    << iteratorPropagationHistory->second[ &vehicles.at( i ) ]( zVelocityIndex ) << std::endl;
+                    << iteratorPropagationHistory->second[ vehicles.at( i ) ]( xPositionIndex ) << ", "
+                    << iteratorPropagationHistory->second[ vehicles.at( i ) ]( yPositionIndex ) << ", "
+                    << iteratorPropagationHistory->second[ vehicles.at( i ) ]( zPositionIndex ) << ", "
+                    << iteratorPropagationHistory->second[ vehicles.at( i ) ]( xVelocityIndex ) << ", "
+                    << iteratorPropagationHistory->second[ vehicles.at( i ) ]( yVelocityIndex ) << ", "
+                    << iteratorPropagationHistory->second[ vehicles.at( i ) ]( zVelocityIndex ) << std::endl;
         }
     }
 
@@ -317,5 +321,4 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////
 
     return 0;
-
 }

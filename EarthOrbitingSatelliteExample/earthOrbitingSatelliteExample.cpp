@@ -22,6 +22,7 @@
  *                                  suggested by M. Persson.
  *      120221    K. Kumar          Rewrote application from scratch; now propagates two
  *                                  satellites.
+ *      120502    K. Kumar          Updated code to use shared pointers.
  *
  *    References
  *
@@ -35,6 +36,8 @@
 #include <utility>
 
 #include <boost/bind.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <Eigen/Core>
 
@@ -99,8 +102,7 @@ int main( )
             = convertDegreesToRadians( 235.7 );
     asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
             = convertDegreesToRadians( 23.4 );
-    asterixInitialStateInKeplerianElements( trueAnomalyIndex )
-            = convertDegreesToRadians( 139.87 );
+    asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 139.87 );
 
     // Set Keplerian elements for Obelix.
     Eigen::VectorXd obelixInitialStateInKeplerianElements( 6 );
@@ -111,8 +113,7 @@ int main( )
             = convertDegreesToRadians( 10.6 );
     obelixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
             = convertDegreesToRadians( 367.9 );
-    obelixInitialStateInKeplerianElements( trueAnomalyIndex )
-            = convertDegreesToRadians( 93.4 );
+    obelixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 93.4 );
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -120,42 +121,42 @@ int main( )
 
     // Declare Earth environment.
 
-    // Declare pre-defined Earth central gravity field.
-    tudat::CentralGravityField earthCentralGravityField;
-    earthCentralGravityField.setPredefinedCentralGravityFieldSettings(
-                tudat::CentralGravityField::earth );
+    // Declare shared pointer to a new pre-defined Earth central gravity field.
+    using tudat::astrodynamics::gravitation::CentralGravityField;
+    boost::shared_ptr< CentralGravityField > earthCentralGravityField
+            = boost::make_shared< CentralGravityField >( CentralGravityField::earth );
 
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
 
     // Convert initial states from Keplerian to Cartesian elements.
-
     using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
 
     // Convert Asterix state from Keplerian elements to Cartesian elements.
     Eigen::VectorXd asterixInitialState = convertKeplerianToCartesianElements(
                 asterixInitialStateInKeplerianElements,
-                earthCentralGravityField.getGravitationalParameter( ) );
+                earthCentralGravityField->getGravitationalParameter( ) );
 
     // Convert Obelix state from Keplerian elements to Cartesian elements.
     Eigen::VectorXd obelixInitialState = convertKeplerianToCartesianElements(
                 obelixInitialStateInKeplerianElements,
-                earthCentralGravityField.getGravitationalParameter( ) );
+                earthCentralGravityField->getGravitationalParameter( ) );
 
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
 
     // Create satellite vehicles and set their respective masses [kg].
+    using tudat::bodies::Vehicle;
 
-    // Declare a new vehicle object for Asterix and set its mass.
-    tudat::Vehicle asterix;
-    asterix.setMass( 1.0 );
+    // Declare a shared pointer to a new vehicle object for Asterix and set its mass.
+    boost::shared_ptr< Vehicle > asterix = boost::make_shared< Vehicle >( );
+    asterix->setMass( 1.0 );
 
-    // Declare a new vehicle object for Obelix and set its mass.
-    tudat::Vehicle obelix;
-    obelix.setMass( 1.0 );
+    // Declare a shared pointer to a new vehicle object for Obelix and set its mass.
+    boost::shared_ptr< Vehicle > obelix = boost::make_shared< Vehicle >( );
+    obelix->setMass( 1.0 );
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -163,11 +164,12 @@ int main( )
 
     // Create Earth gravitational force models for both satellites.
 
-    // Declare Earth gravitational force models.
-    tudat::GravitationalForceModel earthGravitationalForceModelForAsterix(
-                &asterix, &earthCentralGravityField );
-    tudat::GravitationalForceModel earthGravitationalForceModelForObelix(
-                &obelix, &earthCentralGravityField );
+    // Declare shared pointers to new Earth gravitational force models.
+    using tudat::astrodynamics::force_models::GravitationalForceModel;
+    boost::shared_ptr< GravitationalForceModel > earthGravitationalForceModelForAsterix
+            = boost::make_shared< GravitationalForceModel >( asterix, earthCentralGravityField );
+    boost::shared_ptr< GravitationalForceModel > earthGravitationalForceModelForObelix
+            = boost::make_shared< GravitationalForceModel >( obelix, earthCentralGravityField );
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -177,17 +179,18 @@ int main( )
 
     // Add Earth gravitational forces for Asterix and Obelix.
     using earth_orbiting_satellite_example::StateDerivativeModel;
+    using tudat::astrodynamics::force_models::ForceModel;
     StateDerivativeModel::ListOfForces listOfForces;
 
-    std::vector< tudat::ForceModel* > listOfForcesActingOnAsterix;
-    listOfForcesActingOnAsterix.push_back( &earthGravitationalForceModelForAsterix );
+    std::vector< boost::shared_ptr< ForceModel > > listOfForcesActingOnAsterix;
+    listOfForcesActingOnAsterix.push_back( earthGravitationalForceModelForAsterix );
 
-    listOfForces[ &asterix ] = listOfForcesActingOnAsterix;
+    listOfForces[ asterix ] = listOfForcesActingOnAsterix;
 
-    std::vector< tudat::ForceModel* > listOfForcesActingOnObelix;
-    listOfForcesActingOnObelix.push_back( &earthGravitationalForceModelForObelix );
+    std::vector< boost::shared_ptr< ForceModel > > listOfForcesActingOnObelix;
+    listOfForcesActingOnObelix.push_back( earthGravitationalForceModelForObelix );
 
-    listOfForces[ &obelix ] = listOfForcesActingOnObelix;
+    listOfForces[ obelix ] = listOfForcesActingOnObelix;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -197,8 +200,8 @@ int main( )
 
     // Add initial states.
     earth_orbiting_satellite_example::ListOfStates listOfInitialStates;
-    listOfInitialStates[ &asterix ] = asterixInitialState;
-    listOfInitialStates[ &obelix ] = obelixInitialState;
+    listOfInitialStates[ asterix ] = asterixInitialState;
+    listOfInitialStates[ obelix ] = obelixInitialState;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -275,21 +278,21 @@ int main( )
     {
         asterixPropagationHistoryFile
                 << iteratorPropagationHistory->first << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( xPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( yPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( zPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( xVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( yVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ &asterix ]( zVelocityIndex ) << std::endl;
+                << iteratorPropagationHistory->second[ asterix ]( xPositionIndex ) << ", "
+                << iteratorPropagationHistory->second[ asterix ]( yPositionIndex ) << ", "
+                << iteratorPropagationHistory->second[ asterix ]( zPositionIndex ) << ", "
+                << iteratorPropagationHistory->second[ asterix ]( xVelocityIndex ) << ", "
+                << iteratorPropagationHistory->second[ asterix ]( yVelocityIndex ) << ", "
+                << iteratorPropagationHistory->second[ asterix ]( zVelocityIndex ) << std::endl;
 
         obelixPropagationHistoryFile
                 << iteratorPropagationHistory->first << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( xPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( yPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( zPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( xVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( yVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ &obelix ]( zVelocityIndex ) << std::endl;
+                << iteratorPropagationHistory->second[ obelix ]( xPositionIndex ) << ", "
+                << iteratorPropagationHistory->second[ obelix ]( yPositionIndex ) << ", "
+                << iteratorPropagationHistory->second[ obelix ]( zPositionIndex ) << ", "
+                << iteratorPropagationHistory->second[ obelix ]( xVelocityIndex ) << ", "
+                << iteratorPropagationHistory->second[ obelix ]( yVelocityIndex ) << ", "
+                << iteratorPropagationHistory->second[ obelix ]( zVelocityIndex ) << std::endl;
     }
 
     // Close simulation output files.

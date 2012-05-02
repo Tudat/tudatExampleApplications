@@ -12,6 +12,8 @@
  *    Changelog
  *      YYMMDD    Author            Comment
  *      120221    K. Kumar          File created.
+ *      120501    K. Kumar          Updated namespace-access for typedefs; updated code to use
+ *                                  shared pointers.
  *
  *    References
  *
@@ -20,9 +22,13 @@
 #ifndef STATE_ASSEMBLY_H
 #define STATE_ASSEMBLY_H
 
-#include <Eigen/Core>
 #include <map>
 #include <utility>
+
+#include <boost/shared_ptr.hpp>
+
+#include <Eigen/Core>
+
 #include "stateDerivativeModel.h"
 
 namespace earth_orbiting_satellite_example
@@ -32,10 +38,10 @@ namespace earth_orbiting_satellite_example
 const static unsigned int SIZE_OF_CARTESIAN_STATE = 6;
 
 //! Typedef for list of states, per body.
-typedef std::map< tudat::Body*, Eigen::VectorXd > ListOfStates;
+typedef std::map< boost::shared_ptr< tudat::bodies::Body >, Eigen::VectorXd > ListOfStates;
 
 //! Typedef for list of body indices in assembled state.
-typedef std::map< int, tudat::Body* > BodyIndices;
+typedef std::map< int, boost::shared_ptr< tudat::bodies::Body > > BodyIndices;
 
 //! Typedef for assembled state and body indices.
 typedef std::pair< Eigen::VectorXd, BodyIndices > AssembledStateWithBodyIndices;

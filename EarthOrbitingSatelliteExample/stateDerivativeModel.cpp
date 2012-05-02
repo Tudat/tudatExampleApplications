@@ -13,10 +13,14 @@
  *      YYMMDD    Author            Comment
  *      120220    K. Kumar          File created.
  *      120221    K. Kumar          Rewritten for new application architecture.
+ *      120501    K. Kumar          Updated creation of State object; updated code to use
+ *                                  shared pointers.
  *
  *    References
  *
  */
+
+#include <boost/make_shared.hpp>
 
 #include "stateAssembly.h"
 #include "stateDerivativeModel.h"
@@ -28,6 +32,8 @@ namespace earth_orbiting_satellite_example
 Eigen::VectorXd StateDerivativeModel::computeStateDerivative(
         const double independentVariable, const Eigen::VectorXd& stateVector )
 {
+    using tudat::astrodynamics::states::State;
+
     // Declare assembled state derivative of the same size as state vector.
     Eigen::VectorXd assembledStateDerivative = Eigen::VectorXd::Zero( stateVector.rows( ) );
 
@@ -43,12 +49,11 @@ Eigen::VectorXd StateDerivativeModel::computeStateDerivative(
 
         for ( unsigned int i = 0; i < iteratorForForces->second.size( ); i++ )
         {
-            tudat::State temporaryState;
-            temporaryState.state = stateVector.segment( loopCounter, 6 );
+            boost::shared_ptr< State > temporaryState = boost::make_shared< State >( );
+            temporaryState->state = stateVector.segment( loopCounter, 6 );
 
             // Compute force.
-            iteratorForForces->second.at( i )->computeForce(
-                        &temporaryState, independentVariable );
+            iteratorForForces->second.at( i )->computeForce( temporaryState, independentVariable );
 
             // Compute force.
             assembledStateDerivative.segment( loopCounter + 3, 3 )
