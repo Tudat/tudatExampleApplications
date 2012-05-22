@@ -12,35 +12,34 @@
  #    Changelog
  #      YYMMDD    Author            Comment
  #      110820    S.M. Persson      File created.
- #		120202    K. Kumar 	    	Adapted to work with Earth orbiting satellite example.
- #		120427	  A. Ronse		    Added option for 1) user arguments and 2) UserSettings.txt to define root directories of TudatCore and Tudat
+ #	120202    K. Kumar 	    Adapted to work with Earth orbiting satellite example.
+ #	120427	  A. Ronse	    Added option for using UserSettings.txt.
+ #	120522	  A. Ronse	    Adapted for automatically finding TudatCoreEnvironment.cmake
+ #			            at standard location relative to project source.
  #
  #    References
  #
  #/
 
-# Specify minimum CMake version required to compile Tudat.
+# Specify minimum CMake version required to compile application.
 cmake_minimum_required( VERSION 2.6 )
 
-# Specific Tudat project name.
-project( TestProgram )
+# Specify application project name.
+project( TemplateApplication )
 
-# Set module path to local CMake scripts.
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
-
-# Set root-directory for code to current source directory.
-set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+# Set path to local CMake modules.
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 # Define the basic input (trunk) and output (lib & include) directories.
-set(SRCROOT "${CODEROOT}")
+set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Set CMake build-type.
-set(CMAKE_BUILD_TYPE Debug)
-#set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Release)
 
 # Set testing options based on platform.
 enable_testing()
 
+# Set platform-specific compiler flags.
 if (WIN32)
   if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /Ox /W3 /FC -D_SCL_SECURE_NO_WARNINGS")
@@ -54,83 +53,81 @@ if (WIN32)
         string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
       endif(${flag_var} MATCHES "/MD")
     endforeach(flag_var)
-    set(LIBROOT "${SRCROOT}/../lib")
-    set(INCLUDEROOT "${SRCROOT}/include")
-    set(BINROOT "${SRCROOT}/../bin")
   else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
-    set(LIBROOT "${SRCROOT}/../lib")
-    set(INCLUDEROOT "${SRCROOT}/include")
-    set(BINROOT "${SRCROOT}/../bin")
   endif()
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
-    set(LIBROOT "${SRCROOT}/../lib")
-    set(INCLUDEROOT "${SRCROOT}/include")
-    set(BINROOT "${SRCROOT}/../bin")
 endif()
 
-# Load user specific settings. These can overwrite all previous settings.
-if (NOT TUDAT_USER_SETTINGS AND NOT DEFINED ENV{TUDAT_USER_SETTINGS})
-  # Load from default paths, least important first.
-  INCLUDE( "../UserSettings.txt" OPTIONAL)
-  INCLUDE( "UserSettings.txt" OPTIONAL)
-else()
-	MESSAGE(STATUS "Loading preset")
-  # Load the user specified file
-  if ( TUDAT_USER_SETTINGS )
-    #INCLUDE( $TUDAT_USER_SETTINGS OPTIONAL)
-  else()  
-    #INCLUDE( $ENV{TUDAT_USER_SETTINGS} OPTIONAL)
-  endif()
-endif()
+# Set directories for compiled libraries and binaries.
+set(LIBROOT "${SRCROOT}/lib")
+set(BINROOT "${SRCROOT}/bin")
 
-# Set the global macros for setting up targets.
-macro(setup_tudat_executable_target target_name CUSTOM_OUTPUT_PATH)
+# Set the global macros for setting up targets. Do not modify!
+# Different sub-directories are created for applications and unit tests.
+macro(setup_application_executable_target target_name CUSTOM_OUTPUT_PATH)
   set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/applications")
   install(TARGETS ${target_name} RUNTIME DESTINATION "${BINROOT}/applications")
-endmacro(setup_tudat_executable_target)
+endmacro(setup_application_executable_target)
 
-macro(setup_tudat_library_target target_name CUSTOM_OUTPUT_PATH)
+macro(setup_library_target target_name CUSTOM_OUTPUT_PATH)
   set_property(TARGET ${target_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY "${LIBROOT}")
   set_property(TARGET ${target_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${LIBROOT}")
   install(TARGETS ${target_name} LIBRARY DESTINATION "${BINROOT}" ARCHIVE DESTINATION "${LIBROOT}")
-endmacro(setup_tudat_library_target)
+endmacro(setup_library_target)
 
-macro(setup_custom_test_program target_name CUSTOM_OUTPUT_PATH)
+macro(setup_unit_test_executable_target target_name CUSTOM_OUTPUT_PATH)
   set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/unit_tests")
   get_property(CUSTOM_TEST_PROGRAM_NAME TARGET ${target_name} PROPERTY OUTPUT_NAME)
   add_test("${target_name}" "${BINROOT}/unit_tests/${target_name}")
-endmacro(setup_custom_test_program)
-
-macro(setup_headers HEADER_FILES HEADER_PATH)
-    foreach(CURRENT_HEADER_FILE ${HEADER_FILES})
-      install(FILES "${CURRENT_HEADER_FILE}" DESTINATION "${INCLUDEROOT}${HEADER_PATH}")
-    endforeach(CURRENT_HEADER_FILE)
-endmacro(setup_headers)
+endmacro(setup_unit_test_executable_target)
 
 # Include the top-level directories.
 include_directories(AFTER
   "${SRCROOT}"
 )
 
-# Load the environment file from the tudatcore distribution if specified.
+# Look for TudatCoreEnvironment.cmake in standard location.
+if (NOT TUDAT_CORE_ENVIRONMENT_PATH)
+  find_path(TUDAT_CORE_ENVIRONMENT_PATH TudatCoreEnvironment.cmake
+      ${PROJECT_SOURCE_DIR}/../../../tudatcore/trunk
+    )
+endif()
+
+# Load the environment file from the core distribution if specified or found. This sets the paths for TudatCore, Boost and Eigen.
 if(TUDAT_CORE_ENVIRONMENT_PATH)
     message(STATUS "Loading Tudat Core distribution from ${TUDAT_CORE_ENVIRONMENT_PATH}/TudatCoreEnvironment.cmake")
     include("${TUDAT_CORE_ENVIRONMENT_PATH}/TudatCoreEnvironment.cmake")
 endif(TUDAT_CORE_ENVIRONMENT_PATH)
 
-# Define the location of tudat if specified in argument.
-if(TUDAT_ENVIRONMENT_PATH)
-message(STATUS "Setting Tudat library paths")
-set(TUDAT_INCLUDE_DIR "${TUDAT_ENVIRONMENT_PATH}/..")
-set(TUDAT_LIBRARIES_DIR "${TUDAT_ENVIRONMENT_PATH}/../lib")
-endif(TUDAT_ENVIRONMENT_PATH)
+# Load user specific settings. These can overwrite all previous settings. 
+if(NOT TUDAT_USER_SETTINGS AND NOT DEFINED ENV{TUDAT_USER_SETTINGS})
+  # Load from default paths, least important first.
+  INCLUDE( "../UserSettings.txt" OPTIONAL)
+  INCLUDE( "UserSettings.txt" OPTIONAL)
+else()
+	MESSAGE(STATUS "Loading custom preset user settings")
+  # Load the user specified file.
+  if( TUDAT_USER_SETTINGS )
+    #INCLUDE( $TUDAT_USER_SETTINGS OPTIONAL)
+  else()  
+    #INCLUDE( $ENV{TUDAT_USER_SETTINGS} OPTIONAL)
+  endif()
+endif()
+
+# Find Tudat Core library on local system.
+find_package(TudatCore 1.1 REQUIRED)
+
+# Include TudatCore directories.
+# Set CMake flag to suppress TudatCore warnings (platform-dependent solution).
+if(NOT APPLE)
+  include_directories(SYSTEM AFTER "${TUDAT_CORE_INCLUDE_DIR}")
+else( )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_CORE_INCLUDE_DIR}\"")
+endif( )
 
 # Find Eigen3 library on local system.
-# If Eigen3 is not found, use the following to manually set the path to the Eigen3 directory.
-# A default location is given as an example.
-#set(EIGEN3_INCLUDE_DIR "${SRCROOT}/External/eigen3")
 find_package(Eigen3 REQUIRED)
 
 # Include Eigen3 directories.
@@ -142,17 +139,18 @@ else()
 endif()
 
 # Configure Boost libraries.
+if(NOT Boost_USE_STATIC_LIBS)
 set(Boost_USE_STATIC_LIBS ON)
+endif()
+if(NOT Boost_USE_MULTITHREADED)
 set(Boost_USE_MULTITHREADED ON)
+endif()
+if(NOT Boost_USE_STATIC_RUNTIME)
 set(Boost_USE_STATIC_RUNTIME ON)
+endif()
 
 # Find Boost libraries on local system.
-# If Boost is not found, use the following to manually set the path to the Boost include and
-# library directories.
-#SET(Boost_ROOT "C:\My\Custom\Path\To\Boost\Root\Directory")
-#SET(Boost_INCLUDE_DIRS "C:\My\Custom\Path\To\Boost\Include\Directory")
-#SET(Boost_LIBRARY_DIRS "C:\My\Custom\Path\To\Boost\Library\Directory")
-find_package(Boost 1.45.0 COMPONENTS thread date_time system unit_test_framework filesystem regex iostreams REQUIRED)
+find_package(Boost 1.45.0 COMPONENTS thread date_time system unit_test_framework filesystem regex REQUIRED)
 
 # Include Boost directories.
 # Set CMake flag to suppress Boost warnings (platform-dependent solution).
@@ -162,26 +160,7 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${Boost_INCLUDE_DIRS}\"")
 endif()
 
-# Find Tudat Core library on local system.
-# If TudatCore is not found, use the following to manually set the path to the TudatCore include and
-# library directories.
-#SET(TUDAT_CORE_INCLUDE_DIR "C:\My\Custom\Path\To\TudatCore\Include\Directory")
-#SET(TUDAT_CORE_LIBRARIES_DIR "C:\My\Custom\Path\To\TudatCore\Library\Directory")
-find_package(TudatCore 1.0 REQUIRED)
-
-# Include TudatCore directories.
-# Set CMake flag to suppress TudatCore warnings (platform-dependent solution).
-if(NOT APPLE)
-  include_directories(SYSTEM AFTER "${TUDAT_CORE_INCLUDE_DIR}")
-else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_CORE_INCLUDE_DIR}\"")
-endif()
-
 # Find Tudat library on local system.
-# If Tudat is not found, use the following to manually set the path to the Tudat include and
-# library directories.
-#SET(TUDAT_INCLUDE_DIR "C:\My\Custom\Path\To\Tudat\Include\Directory")
-#SET(TUDAT_LIBRARIES_DIR "C:\My\Custom\Path\To\Tudat\Library\Directory")
 find_package(Tudat 1.0 REQUIRED)
 
 # Include Tudat directories.
@@ -200,12 +179,7 @@ set(EARTHORBITINGEXAMPLE_SOURCES
 set(EARTHORBITINGEXAMPLE_HEADERS 
 )
 
-# Add static libraries.
-#add_library(tudat_earth_orbiting_example STATIC ${EARTHORBITINGEXAMPLE_SOURCES} ${EARTHORBITINGEXAMPLE_HEADERS})
-#setup_tudat_library_target(tudat_earth_orbiting_example "${SRCROOT}")
-#setup_headers("${EARTHORBITINGEXAMPLE_HEADERS}" "${SRCROOT}")
-
-# Add Hello World application.
+# Add helloWorld application.
 add_executable(application_HelloWorld "${SRCROOT}/helloWorld")
-setup_tudat_executable_target(application_HelloWorld "${SRCROOT}")
-target_link_libraries(application_HelloWorld tudat_core ${Boost_LIBRARIES} )
+setup_application_executable_target(application_HelloWorld "${SRCROOT}")
+target_link_libraries(application_HelloWorld tudat_gravitation ${TUDAT_CORE_LIBRARIES} ${Eigen_LIBRARIES} ${Boost_LIBRARIES} )

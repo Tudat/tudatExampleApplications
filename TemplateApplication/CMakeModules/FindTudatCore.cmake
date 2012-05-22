@@ -73,4 +73,3 @@ else (TUDAT_CORE_BASE_PATH)
   mark_as_advanced(TUDAT_CORE_BASE_PATH)
 
 endif(TUDAT_CORE_BASE_PATH)
-
