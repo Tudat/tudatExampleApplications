@@ -105,7 +105,7 @@ for j = 1:size(simulationDataFiles{1},1)
     end
     
     % Capture frame for movie.
-    simulationMovieFrames(i) = getframe;
+    simulationMovieFrames(j) = getframe;
     
     delete( figureHandle );
 end
