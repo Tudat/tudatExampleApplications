@@ -15,7 +15,7 @@
  #	120202    K. Kumar 	    Adapted to work with Earth orbiting satellite example.
  #	120427	  A. Ronse	    Added option for using UserSettings.txt.
  #	120522	  A. Ronse	    Adapted for automatically finding TudatCoreEnvironment.cmake
- #			            at standard location relative to project source.
+ #			            	at standard location relative to project source.
  #
  #    References
  #
@@ -170,14 +170,6 @@ if(NOT APPLE)
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
-
-# Add source files.
-set(EARTHORBITINGEXAMPLE_SOURCES
-)
-
-# Add header files.
-set(EARTHORBITINGEXAMPLE_HEADERS 
-)
 
 # Add helloWorld application.
 add_executable(application_HelloWorld "${SRCROOT}/helloWorld")
