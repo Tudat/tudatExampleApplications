@@ -56,6 +56,7 @@ else (TUDAT_CORE_BASE_PATH)
   find_path(TUDAT_CORE_BASE_PATH NAMES tudatCoreVersion.h
       PATHS
       ${PROJECT_SOURCE_DIR}/External
+      ${PROJECT_SOURCE_DIR}/../../tudatCore
       ${PROJECT_SOURCE_DIR}/../../core/trunk
       ${PROJECT_SOURCE_DIR}/../../../tudatCore/trunk
       ${CMAKE_INSTALL_PREFIX}/include
