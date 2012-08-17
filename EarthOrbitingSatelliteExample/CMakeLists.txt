@@ -90,6 +90,7 @@ include_directories(AFTER
 # Look for TudatCoreEnvironment.cmake in standard location.
 if (NOT TUDAT_CORE_ENVIRONMENT_PATH)
   find_path(TUDAT_CORE_ENVIRONMENT_PATH TudatCoreEnvironment.cmake
+      ${PROJECT_SOURCE_DIR}/../../tudatCore
       ${PROJECT_SOURCE_DIR}/../../../tudatcore/trunk
     )
 endif()
