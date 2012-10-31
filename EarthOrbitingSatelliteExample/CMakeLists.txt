@@ -70,18 +70,6 @@ macro(setup_application_executable_target target_name CUSTOM_OUTPUT_PATH)
   install(TARGETS ${target_name} RUNTIME DESTINATION "${BINROOT}/applications")
 endmacro(setup_application_executable_target)
 
-macro(setup_library_target target_name CUSTOM_OUTPUT_PATH)
-  set_property(TARGET ${target_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY "${LIBROOT}")
-  set_property(TARGET ${target_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${LIBROOT}")
-  install(TARGETS ${target_name} LIBRARY DESTINATION "${BINROOT}" ARCHIVE DESTINATION "${LIBROOT}")
-endmacro(setup_library_target)
-
-macro(setup_unit_test_executable_target target_name CUSTOM_OUTPUT_PATH)
-  set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/unit_tests")
-  get_property(CUSTOM_TEST_PROGRAM_NAME TARGET ${target_name} PROPERTY OUTPUT_NAME)
-  add_test("${target_name}" "${BINROOT}/unit_tests/${target_name}")
-endmacro(setup_unit_test_executable_target)
-
 # Include the top-level directories.
 include_directories(AFTER
   "${SRCROOT}"
@@ -140,13 +128,13 @@ endif()
 
 # Configure Boost libraries.
 if(NOT Boost_USE_STATIC_LIBS)
-set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_STATIC_LIBS ON)
 endif()
 if(NOT Boost_USE_MULTITHREADED)
-set(Boost_USE_MULTITHREADED ON)
+  set(Boost_USE_MULTITHREADED ON)
 endif()
 if(NOT Boost_USE_STATIC_RUNTIME)
-set(Boost_USE_STATIC_RUNTIME ON)
+  set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
 # Find Boost libraries on local system.
@@ -171,28 +159,12 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
 
-# Add source files.
-set(EARTHORBITINGEXAMPLE_SOURCES
-  "${SRCROOT}/stateAssembly.cpp"
-  "${SRCROOT}/stateDerivativeModel.cpp"
-)
-
-# Add header files.
-set(EARTHORBITINGEXAMPLE_HEADERS 
-  "${SRCROOT}/stateAssembly.h"
-  "${SRCROOT}/stateDerivativeModel.h"
-)
-
-# Add static libraries.
-add_library(tudat_earth_orbiting_example STATIC ${EARTHORBITINGEXAMPLE_SOURCES} ${EARTHORBITINGEXAMPLE_HEADERS})
-setup_library_target(tudat_earth_orbiting_example "${SRCROOT}")
-
 # Add Earth-orbiting satellite example application.
 add_executable(application_EarthOrbitingSatelliteExample "${SRCROOT}/earthOrbitingSatelliteExample.cpp")
 setup_application_executable_target(application_EarthOrbitingSatelliteExample "${SRCROOT}")
-target_link_libraries(application_EarthOrbitingSatelliteExample tudat_earth_orbiting_example tudat_gravitation tudat_core ${Boost_LIBRARIES} )
+target_link_libraries(application_EarthOrbitingSatelliteExample tudat_gravitation tudat_core ${Boost_LIBRARIES} )
 
 # Add Galileo constellation application.
 add_executable(application_GalileoConstellation "${SRCROOT}/galileoConstellationSimulation.cpp")
 setup_application_executable_target(application_GalileoConstellation "${SRCROOT}")
-target_link_libraries(application_GalileoConstellation tudat_earth_orbiting_example tudat_gravitation tudat_core ${Boost_LIBRARIES} )
+target_link_libraries(application_GalileoConstellation tudat_gravitation tudat_core ${Boost_LIBRARIES} )

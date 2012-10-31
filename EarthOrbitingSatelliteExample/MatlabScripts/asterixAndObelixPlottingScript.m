@@ -22,8 +22,13 @@ clear all; close all; clc;
 
 % Input deck.
 
-% Set simulation data files directory.
-simulationDataFilesDirectory = 'build';
+% Set simulation data files.
+
+% Set Asterix simulation data file
+asterixSimulationDataFile =
+         
+% Set Asterix simulation data file
+obelixSimulationDataFile =
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -67,11 +72,11 @@ axis equal
 % Read and store simulation data files.
 % First column is epoch, subsequent columns are Cartesian state elements.
 
-for i = 1:30
-    simulationDataFiles{i} = csvread(strcat(simulationDataFilesDirectory,...
-                                            '/galileoSatellite', num2str(i),...
-                                            '.dat'));
-end
+% Read and store Asterix simulation data
+asterixSimulationData = csvread( asterixSimulationDataFile );
+
+% Read and store Obelix simulation data.
+obelixSimulationData = csvread( obelixSimulationDataFile );
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -80,34 +85,43 @@ end
 % Plot orbits of Asterix and Obelix.
 % Simulation data is given in m and m/s, so needs to be converted to km.
 
+% Convert data to km.
+asterixSimulationData = asterixSimulationData / 1000;
+obelixSimulationData = obelixSimulationData / 1000;
+
 % Plot orbits.
 grid on;
 xlabel( 'Cartesian x-position [km]' );
 ylabel( 'Cartesian y-position [km]' );
 zlabel( 'Cartesian z-position [km]' );
 
-for i = 1:30
-plot3( simulationDataFiles{i}(:,2)/1000,simulationDataFiles{i}(:,3)/1000,...
-    simulationDataFiles{i}(:,4)/1000, 'LineWidth', 3 );
-end
+plot3( asterixSimulationData(:,2),asterixSimulationData(:,3),...
+    asterixSimulationData(:,4), 'LineWidth', 3 );
+plot3( obelixSimulationData(:,2),obelixSimulationData(:,3),...
+    obelixSimulationData(:,4), 'r', 'LineWidth', 3 );
 
-
-for j = 1:size(simulationDataFiles{1},1)
-    for i = 1:30
-        
-        % Plot instantaneous position of Asterix and Obelix.
-        figureHandle(i) = plot3( simulationDataFiles{i}(j,2)/1000,...
-            simulationDataFiles{i}(j,3)/1000,...
-            simulationDataFiles{i}(j,4)/1000, 'o',...
-            'MarkerFaceColor', 'y',...
-            'MarkerEdgeColor', 'k',...
-            'MarkerSize', 10 );
-    end
+for i = 1:size(asterixSimulationData,1)
     
-    % Capture frame for movie.
-    simulationMovieFrames(j) = getframe;
+    % Plot instantaneous position of Asterix and Obelix.
+    figureHandleAsterix = plot3( asterixSimulationData(i,2),...
+                                 asterixSimulationData(i,3),...
+                                 asterixSimulationData(i,4), 'o',...
+                                 'MarkerFaceColor', 'y',...
+                                 'MarkerEdgeColor', 'k',...
+                                 'MarkerSize', 10 );
+                             
+    figureHandleObelix = plot3( obelixSimulationData(i,2),...
+                                obelixSimulationData(i,3),...
+                                obelixSimulationData(i,4), 'o',...
+                                'MarkerFaceColor', 'y',...
+                                'MarkerEdgeColor', 'k',...
+                                'MarkerSize', 10 );
     
-    delete( figureHandle );
+   % Capture frame for movie.
+    simulationMovieFrames(i) = getframe;
+    
+    delete( figureHandleAsterix );
+    delete( figureHandleObelix );
 end
 
 % Play movie.

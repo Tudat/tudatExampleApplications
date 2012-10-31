@@ -23,18 +23,20 @@
  *      120221    K. Kumar          Rewrote application from scratch; now propagates two
  *                                  satellites.
  *      120502    K. Kumar          Updated code to use shared pointers.
+ *      121030    K. Kumar          Updated code to use new state derivative models.
  *
  *    References
+ *
+ *    Notes
  *
  */
 
 #include <fstream>
-#include <map>
-#include <sstream>
+#include <limits>
 #include <string>
-#include <vector>
 #include <utility>
 
+#include <boost/assign/list_of.hpp>
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
@@ -46,39 +48,59 @@
 #include <TudatCore/Astrodynamics/BasicAstrodynamics/unitConversions.h>
 #include <TudatCore/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
 
-#include <Tudat/Astrodynamics/Bodies/vehicle.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/forceModel.h>
-#include <Tudat/Astrodynamics/Gravitation/gravitationalForceModel.h>
-#include <Tudat/Astrodynamics/Gravitation/centralGravityField.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
+#include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravitationalAccelerationModel.h>
+#include <Tudat/Astrodynamics/StateDerivativeModels/cartesianStateDerivativeModel.h>
+#include <Tudat/Astrodynamics/StateDerivativeModels/compositeStateDerivativeModel.h>
 
-#include "stateAssembly.h"
-#include "stateDerivativeModel.h"
+#include <Tudat/InputOutput/basicInputOutput.h>
+
+#include "body.h"
 
 //! Execute example of an Earth-orbiting satellite.
 int main( )
 {
-    using tudat::orbital_element_conversions::semiMajorAxisIndex;
-    using tudat::orbital_element_conversions::eccentricityIndex;
-    using tudat::orbital_element_conversions::inclinationIndex;
-    using tudat::orbital_element_conversions::argumentOfPeriapsisIndex;
-    using tudat::orbital_element_conversions::longitudeOfAscendingNodeIndex;
-    using tudat::orbital_element_conversions::trueAnomalyIndex;
+    using namespace satellite_example;
 
-    using tudat::orbital_element_conversions::xPositionIndex;
-    using tudat::orbital_element_conversions::yPositionIndex;
-    using tudat::orbital_element_conversions::zPositionIndex;
-    using tudat::orbital_element_conversions::xVelocityIndex;
-    using tudat::orbital_element_conversions::yVelocityIndex;
-    using tudat::orbital_element_conversions::zVelocityIndex;
+    using tudat::basic_astrodynamics::acceleration_models::AccelerationModel3dPointer;
+    using tudat::basic_astrodynamics::semiMajorAxisIndex;
+    using tudat::basic_astrodynamics::eccentricityIndex;
+    using tudat::basic_astrodynamics::inclinationIndex;
+    using tudat::basic_astrodynamics::argumentOfPeriapsisIndex;
+    using tudat::basic_astrodynamics::longitudeOfAscendingNodeIndex;
+    using tudat::basic_astrodynamics::trueAnomalyIndex;
+    using tudat::basic_astrodynamics::xCartesianPositionIndex;
+    using tudat::basic_astrodynamics::yCartesianPositionIndex;
+    using tudat::basic_astrodynamics::zCartesianPositionIndex;
+    using tudat::basic_astrodynamics::xCartesianVelocityIndex;
+    using tudat::basic_astrodynamics::yCartesianVelocityIndex;
+    using tudat::basic_astrodynamics::zCartesianVelocityIndex;
+
+    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModeld;
+
+    using tudat::input_output::writeDataMapToTextFile;
+
+    using tudat::mathematics::numerical_integrators::RungeKutta4Integrator;
+
+    using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
+
+    using tudat::state_derivative_models::CartesianStateDerivativeModel6d;
+    using tudat::state_derivative_models::CartesianStateDerivativeModel6dPointer;
+    using tudat::state_derivative_models::CompositeStateDerivativeModel;
 
     using tudat::unit_conversions::convertDegreesToRadians;
+
+    typedef Eigen::Matrix< double, 12, 1 > Vector12d;
+    typedef CompositeStateDerivativeModel< double, Vector12d, Vector6d >
+            CompositionStateDerivativeModel12d;
 
     ///////////////////////////////////////////////////////////////////////////
 
     // Input deck.
 
     // Set output directory.
-    std::string outputDirectory = "";
+    std::string outputDirectory = "/Users/kartikkumar/Desktop";
 
     // Set simulation start epoch.
     double simulationStartEpoch = 0.0;
@@ -115,148 +137,148 @@ int main( )
             = convertDegreesToRadians( 367.9 );
     obelixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 93.4 );
 
-    ///////////////////////////////////////////////////////////////////////////
+    // Set Earth gravitational parameter [m^3 s^-2].
+    const double earthGravitationalParameter = 3.986004415e14;
 
-    ///////////////////////////////////////////////////////////////////////////
+    // Set spherical harmonics zonal term coefficients.
+    const double earthJ2 = 0.0010826269;
+    const double earthJ3 = -0.0000025323;
+    const double earthJ4 = -0.0000016204;
 
-    // Declare Earth environment.
-
-    // Declare shared pointer to a new pre-defined Earth central gravity field.
-    using tudat::astrodynamics::gravitation::CentralGravityField;
-    boost::shared_ptr< CentralGravityField > earthCentralGravityField
-            = boost::make_shared< CentralGravityField >( CentralGravityField::earth );
+    // Set equatorial radius of Earth [m].
+    const double earthEquatorialRadius = 6378.1363e3;
 
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
 
     // Convert initial states from Keplerian to Cartesian elements.
-    using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
 
     // Convert Asterix state from Keplerian elements to Cartesian elements.
     Eigen::VectorXd asterixInitialState = convertKeplerianToCartesianElements(
                 asterixInitialStateInKeplerianElements,
-                earthCentralGravityField->getGravitationalParameter( ) );
+                earthGravitationalParameter );
 
     // Convert Obelix state from Keplerian elements to Cartesian elements.
     Eigen::VectorXd obelixInitialState = convertKeplerianToCartesianElements(
                 obelixInitialStateInKeplerianElements,
-                earthCentralGravityField->getGravitationalParameter( ) );
+                earthGravitationalParameter );
 
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // Create satellite vehicles and set their respective masses [kg].
-    using tudat::bodies::Vehicle;
+    // Create Asterix and Obelix satellites, and gravitational acceleration models.
 
-    // Declare a shared pointer to a new vehicle object for Asterix and set its mass.
-    boost::shared_ptr< Vehicle > asterix = boost::make_shared< Vehicle >( );
-    asterix->setMass( 1.0 );
+    // Create Asterix and set initial state and epoch.
+    BodyPointer asterix = boost::make_shared< Body >(
+                asterixInitialStateInKeplerianElements, 0.0 );
 
-    // Declare a shared pointer to a new vehicle object for Obelix and set its mass.
-    boost::shared_ptr< Vehicle > obelix = boost::make_shared< Vehicle >( );
-    obelix->setMass( 1.0 );
+    // Create gravitational acceleration model for asterix.
+    CartesianStateDerivativeModel6d::AccelerationModelPointerVector asterixGravity
+            = boost::assign::list_of(
+                boost::make_shared< CentralJ2J3J4GravitationalAccelerationModeld >(
+                    boost::bind( &Body::getCurrentPosition, asterix ),
+                    earthGravitationalParameter,
+                    earthJ2, earthJ3, earthJ4, earthEquatorialRadius ) );
 
-    ///////////////////////////////////////////////////////////////////////////
+    // Create Obelix and set initial state and epoch.
+    BodyPointer obelix = boost::make_shared< Body >(
+                asterixInitialStateInKeplerianElements, 0.0 );
 
-    ///////////////////////////////////////////////////////////////////////////
+    // Create gravitational acceleration model for obelix.
+    CartesianStateDerivativeModel6d::AccelerationModelPointerVector obelixGravity
+            = boost::assign::list_of(
+                boost::make_shared< CentralJ2J3J4GravitationalAccelerationModeld >(
+                    boost::bind( &Body::getCurrentPosition, obelix ),
+                    earthGravitationalParameter,
+                    earthJ2, earthJ3, earthJ4, earthEquatorialRadius ) );
 
-    // Create Earth gravitational force models for both satellites.
-
-    // Declare shared pointers to new Earth gravitational force models.
-    using tudat::astrodynamics::force_models::GravitationalForceModel;
-    boost::shared_ptr< GravitationalForceModel > earthGravitationalForceModelForAsterix
-            = boost::make_shared< GravitationalForceModel >( asterix, earthCentralGravityField );
-    boost::shared_ptr< GravitationalForceModel > earthGravitationalForceModelForObelix
-            = boost::make_shared< GravitationalForceModel >( obelix, earthCentralGravityField );
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Setup forces acting on satellites.
-
-    // Add Earth gravitational forces for Asterix and Obelix.
-    using earth_orbiting_satellite_example::StateDerivativeModel;
-    using tudat::astrodynamics::force_models::ForceModel;
-    StateDerivativeModel::ListOfForces listOfForces;
-
-    std::vector< boost::shared_ptr< ForceModel > > listOfForcesActingOnAsterix;
-    listOfForcesActingOnAsterix.push_back( earthGravitationalForceModelForAsterix );
-
-    listOfForces[ asterix ] = listOfForcesActingOnAsterix;
-
-    std::vector< boost::shared_ptr< ForceModel > > listOfForcesActingOnObelix;
-    listOfForcesActingOnObelix.push_back( earthGravitationalForceModelForObelix );
-
-    listOfForces[ obelix ] = listOfForcesActingOnObelix;
+    // Add Asterix and Obelix to list of satellites.
+    ListOfSatellites satellites;
+    satellites[ asterix ] = asterixGravity;
+    satellites[ obelix ] = obelixGravity;
 
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // Setup initial states for propagation of satellites.
+    // Create Cartesian state derivative models for Asterix and Obelix.
 
-    // Add initial states.
-    earth_orbiting_satellite_example::ListOfStates listOfInitialStates;
-    listOfInitialStates[ asterix ] = asterixInitialState;
-    listOfInitialStates[ obelix ] = obelixInitialState;
+    // Create Cartesian state derivative model for Asterix.
+    CartesianStateDerivativeModel6dPointer asterixStateDerivativeModel
+            = boost::make_shared< CartesianStateDerivativeModel6d >(
+                asterixGravity, boost::bind( &Body::setCurrentTimeAndState, asterix, _1, _2 ) );
+
+    // Create Cartesian state derivative model for Obelix.
+    CartesianStateDerivativeModel6dPointer obelixStateDerivativeModel
+            = boost::make_shared< CartesianStateDerivativeModel6d >(
+                obelixGravity, boost::bind( &Body::setCurrentTimeAndState, obelix, _1, _2 ) );
 
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // Setup state derivative model and numerical integrator.
+    // Construct composite state derivative model for Asterix and Obelix.
 
-    // Declare state derivative model.
-    StateDerivativeModel stateDerivativeModelForEarthSatellites( listOfForces );
+    // Create state derivative model map and bind Asterix and Obelix, in that order.
+    CompositionStateDerivativeModel12d::VectorStateDerivativeModelMap stateDerivativeModelMap;
+
+    stateDerivativeModelMap[ std::make_pair( 0, 6 ) ]
+            = boost::bind( &CartesianStateDerivativeModel6d::computeStateDerivative,
+                           asterixStateDerivativeModel, _1, _2 );
+
+    stateDerivativeModelMap[ std::make_pair( 6, 6 ) ]
+            = boost::bind( &CartesianStateDerivativeModel6d::computeStateDerivative,
+                           asterixStateDerivativeModel, _1, _2 );
+
+    // Create data updater.
+    DataUpdater updater( satellites );
+
+    // Create composite state derivative model.
+    boost::shared_ptr< CompositionStateDerivativeModel12d > stateDerivativeModel
+            = boost::make_shared< CompositionStateDerivativeModel12d >(
+                stateDerivativeModelMap,
+                boost::bind( &DataUpdater::updateBodyData, updater, _1, _2 ) );
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Set up numerical integrator and execute simulation.
 
     // Declare Runge-Kutta 4 integrator.
     // Since the state derivative function is a member-function, it must be passed by using
     // boost::bind. The "_1" and "_2" in the boost::bind call specifies that the argument list
     // for the computeStateDerivative function takes two arguments (t, x).
-    earth_orbiting_satellite_example::AssembledStateWithBodyIndices assembledStateAndBodyIndices;
-    assembledStateAndBodyIndices = earth_orbiting_satellite_example::assembleState(
-                listOfInitialStates );
-
-    tudat::mathematics::numerical_integrators::RungeKutta4Integrator<
-            double, Eigen::VectorXd, Eigen::VectorXd > rungeKutta4(
-                boost::bind( &StateDerivativeModel::computeStateDerivative,
-                             &stateDerivativeModelForEarthSatellites, _1, _2 ),
-                0.0, assembledStateAndBodyIndices.first );
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Execute simulation.
+    RungeKutta4Integrator< double, Vector12d, Vector12d > rungeKutta4(
+                boost::bind( &CompositionStateDerivativeModel12d::computeStateDerivative,
+                             stateDerivativeModel, _1, _2 ),
+                0.0, ( Eigen::VectorXd( 12 ) << asterixInitialState,
+                       obelixInitialState ).finished( ) );
 
     // Set running time, updated after each step that the numerical integrator takes.
     double runningTime = simulationStartEpoch;
 
     // Declare propagation history to store state history of satellites.
-    using earth_orbiting_satellite_example::ListOfStates;
-    typedef std::map< double, ListOfStates > PropagationHistory;
-    PropagationHistory propagationHistory;
+    PropagationHistory asterixPropagationHistory;
+    PropagationHistory obelixPropagationHistory;
 
     // Set initial states in propagation history.
-    propagationHistory[ 0.0 ] = listOfInitialStates;
+    asterixPropagationHistory[ 0.0 ] = asterixInitialState;
+    obelixPropagationHistory[ 0.0 ] = obelixInitialState;
 
     // Execute simulation from start to end epoch and save intermediate states in propagation
     // history.
     while ( runningTime < simulationEndEpoch )
     {
         // Execute integration step and store state at end.
-        Eigen::VectorXd integratedState = rungeKutta4.performIntegrationStep( fixedStepSize );
+        Vector12d integratedState = rungeKutta4.performIntegrationStep( fixedStepSize );
 
         // Update running time to value of current time.
         runningTime = rungeKutta4.getCurrentIndependentVariable( );
 
         // Disassemble state into states per body, and store in propagation history.
-        propagationHistory[ runningTime ]
-                = earth_orbiting_satellite_example::disassembleState(
-                    std::make_pair( integratedState, assembledStateAndBodyIndices.second ) );
+        asterixPropagationHistory[ runningTime ] = integratedState.segment( 0, 6 );
+        obelixPropagationHistory[ runningTime ] = integratedState.segment( 6, 6 );
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -265,39 +287,23 @@ int main( )
 
     // Write results to file.
 
-    // Declare results file for propagation history for satellites.
-    std::ofstream asterixPropagationHistoryFile( ( outputDirectory
-                                                   + "asterixPropagationHistory.dat" ).c_str( ) );
+    // Write Asterix propagation history to file.
+    writeDataMapToTextFile( asterixPropagationHistory,
+                            "asterixPropagationHistory.dat",
+                            outputDirectory,
+                            "",
+                            std::numeric_limits< double >::digits10,
+                            std::numeric_limits< double >::digits10,
+                            " " );
 
-    std::ofstream obelixPropagationHistoryFile( ( outputDirectory
-                                                   + "obelixPropagationHistory.dat" ).c_str( ) );
-
-    // Store state history in propagation history files.
-    for ( PropagationHistory::iterator iteratorPropagationHistory = propagationHistory.begin( );
-          iteratorPropagationHistory != propagationHistory.end( ); iteratorPropagationHistory++ )
-    {
-        asterixPropagationHistoryFile
-                << iteratorPropagationHistory->first << ", "
-                << iteratorPropagationHistory->second[ asterix ]( xPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ asterix ]( yPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ asterix ]( zPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ asterix ]( xVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ asterix ]( yVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ asterix ]( zVelocityIndex ) << std::endl;
-
-        obelixPropagationHistoryFile
-                << iteratorPropagationHistory->first << ", "
-                << iteratorPropagationHistory->second[ obelix ]( xPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ obelix ]( yPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ obelix ]( zPositionIndex ) << ", "
-                << iteratorPropagationHistory->second[ obelix ]( xVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ obelix ]( yVelocityIndex ) << ", "
-                << iteratorPropagationHistory->second[ obelix ]( zVelocityIndex ) << std::endl;
-    }
-
-    // Close simulation output files.
-    asterixPropagationHistoryFile.close( );
-    obelixPropagationHistoryFile.close( );
+    // Write obelix propagation history to file.
+    writeDataMapToTextFile( obelixPropagationHistory,
+                            "obelixPropagationHistory.dat",
+                            outputDirectory,
+                            "",
+                            std::numeric_limits< double >::digits10,
+                            std::numeric_limits< double >::digits10,
+                            " " );
 
     ///////////////////////////////////////////////////////////////////////////
 
