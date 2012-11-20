@@ -25,7 +25,8 @@
 #include <Eigen/Core>
 
 #include <TudatCore/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-#include <Tudat/Astrodynamics/Gravitation/gravitationalAccelerationModel.h>
+
+#include <Tudat/Astrodynamics/Gravitation/centralGravityModel.h>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
@@ -40,7 +41,7 @@ int main( )
             generateRandomNumbers( randomNumbergenerator, uniformDistribution );
 
     // Generate random altitude value between 0 and 10 km.
-    double altitudeKilometers = generateRandomNumbers();
+    double altitudeKilometers = generateRandomNumbers( );
 
     // Use the TudatCore library to convert Km to m
     double altitudeMeters = tudat::unit_conversions::convertKilometersToMeters(
@@ -53,7 +54,7 @@ int main( )
 
     // Use the Tudat library to compute the acceleration vector.
     Eigen::Vector3d gravitationalAcceleration =
-            tudat::astrodynamics::acceleration_models::computeGravitationalAcceleration(
+            tudat::gravitation::computeGravitationalAcceleration(
                     positionOfBodySubjectToAcceleration, 4.9e12,
                     positionOfBodyExertingAcceleration );
 
