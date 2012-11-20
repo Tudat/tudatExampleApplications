@@ -140,7 +140,7 @@ typedef boost::shared_ptr< Body > BodyPointer;
 
 //! Typedef for map of satellites with associated list of acceleration models.
 typedef std::map< BodyPointer, std::vector< tudat::basic_astrodynamics::
-acceleration_models::AccelerationModel3dPointer > > ListOfSatellites;
+AccelerationModel3dPointer > > ListOfSatellites;
 
 //! Data updater class.
 /*!

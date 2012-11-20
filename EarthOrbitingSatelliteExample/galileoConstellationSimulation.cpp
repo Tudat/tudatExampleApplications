@@ -42,7 +42,7 @@
 
 #include <Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
-#include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravitationalAccelerationModel.h>
+#include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravityModel.h>
 #include <Tudat/Astrodynamics/StateDerivativeModels/cartesianStateDerivativeModel.h>
 #include <Tudat/Astrodynamics/StateDerivativeModels/compositeStateDerivativeModel.h>
 
@@ -62,7 +62,7 @@ int main( )
     using tudat::basic_astrodynamics::yCartesianVelocityIndex;
     using tudat::basic_astrodynamics::zCartesianVelocityIndex;
 
-    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModeld;
+    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel3d;
 
     using tudat::input_output::writeDataMapToTextFile;
 
@@ -86,7 +86,7 @@ int main( )
     // Input deck.
 
     // Set output directory.
-    std::string outputDirectory = "/Users/kartikkumar/Desktop/Galileo";
+    std::string outputDirectory = "";
 
     // Set simulation start epoch.
     const double simulationStartEpoch = 0.0;
@@ -206,10 +206,10 @@ int main( )
 
         satellites[ satellite ]
                 = boost::assign::list_of(
-                    boost::make_shared< CentralJ2J3J4GravitationalAccelerationModeld >(
+                    boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel3d >(
                         boost::bind( &Body::getCurrentPosition, satellite ),
-                        earthGravitationalParameter,
-                        earthJ2, earthJ3, earthJ4, earthEquatorialRadius ) );
+                        earthGravitationalParameter, earthEquatorialRadius,
+                        earthJ2, earthJ3, earthJ4 ) );
     }
 
     ///////////////////////////////////////////////////////////////////////////

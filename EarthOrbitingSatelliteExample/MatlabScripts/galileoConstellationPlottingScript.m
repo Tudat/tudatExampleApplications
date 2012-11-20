@@ -23,7 +23,7 @@ clear all; close all; clc;
 % Input deck.
 
 % Set simulation data files directory.
-simulationDataFilesDirectory = '/Users/kartikkumar/Desktop/Galileo/';
+simulationDataFilesDirectory =
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

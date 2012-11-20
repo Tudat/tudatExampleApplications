@@ -50,7 +50,7 @@
 
 #include <Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
-#include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravitationalAccelerationModel.h>
+#include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravityModel.h>
 #include <Tudat/Astrodynamics/StateDerivativeModels/cartesianStateDerivativeModel.h>
 #include <Tudat/Astrodynamics/StateDerivativeModels/compositeStateDerivativeModel.h>
 
@@ -63,7 +63,7 @@ int main( )
 {
     using namespace satellite_example;
 
-    using tudat::basic_astrodynamics::acceleration_models::AccelerationModel3dPointer;
+    using tudat::basic_astrodynamics::AccelerationModel3dPointer;
     using tudat::basic_astrodynamics::semiMajorAxisIndex;
     using tudat::basic_astrodynamics::eccentricityIndex;
     using tudat::basic_astrodynamics::inclinationIndex;
@@ -77,7 +77,8 @@ int main( )
     using tudat::basic_astrodynamics::yCartesianVelocityIndex;
     using tudat::basic_astrodynamics::zCartesianVelocityIndex;
 
-    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModeld;
+    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel3d;
+    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel3dPointer;
 
     using tudat::input_output::writeDataMapToTextFile;
 
@@ -100,7 +101,7 @@ int main( )
     // Input deck.
 
     // Set output directory.
-    std::string outputDirectory = "/Users/kartikkumar/Desktop";
+    std::string outputDirectory = "";
 
     // Set simulation start epoch.
     double simulationStartEpoch = 0.0;
@@ -175,24 +176,30 @@ int main( )
                 asterixInitialStateInKeplerianElements, 0.0 );
 
     // Create gravitational acceleration model for asterix.
+    CentralJ2J3J4GravitationalAccelerationModel3dPointer asterixGravityModel
+            = boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel3d >(
+                boost::bind( &Body::getCurrentPosition, asterix ),
+                earthGravitationalParameter, earthEquatorialRadius,
+                earthJ2, earthJ3, earthJ4 );
+
+    // Create Cartesian state derivative model for asterix.
     CartesianStateDerivativeModel6d::AccelerationModelPointerVector asterixGravity
-            = boost::assign::list_of(
-                boost::make_shared< CentralJ2J3J4GravitationalAccelerationModeld >(
-                    boost::bind( &Body::getCurrentPosition, asterix ),
-                    earthGravitationalParameter,
-                    earthJ2, earthJ3, earthJ4, earthEquatorialRadius ) );
+            = boost::assign::list_of( asterixGravityModel );
 
     // Create Obelix and set initial state and epoch.
     BodyPointer obelix = boost::make_shared< Body >(
                 asterixInitialStateInKeplerianElements, 0.0 );
 
     // Create gravitational acceleration model for obelix.
+    CentralJ2J3J4GravitationalAccelerationModel3dPointer obelixGravityModel
+            = boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel3d >(
+                boost::bind( &Body::getCurrentPosition, asterix ),
+                earthGravitationalParameter, earthEquatorialRadius,
+                earthJ2, earthJ3, earthJ4 );
+
+    // Create Cartesian state derivative model model for obelix.
     CartesianStateDerivativeModel6d::AccelerationModelPointerVector obelixGravity
-            = boost::assign::list_of(
-                boost::make_shared< CentralJ2J3J4GravitationalAccelerationModeld >(
-                    boost::bind( &Body::getCurrentPosition, obelix ),
-                    earthGravitationalParameter,
-                    earthJ2, earthJ3, earthJ4, earthEquatorialRadius ) );
+            = boost::assign::list_of( obelixGravityModel );
 
     // Add Asterix and Obelix to list of satellites.
     ListOfSatellites satellites;
@@ -294,7 +301,7 @@ int main( )
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
-                            " " );
+                            "," );
 
     // Write obelix propagation history to file.
     writeDataMapToTextFile( obelixPropagationHistory,
@@ -303,7 +310,7 @@ int main( )
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
-                            " " );
+                            "," );
 
     ///////////////////////////////////////////////////////////////////////////
 
