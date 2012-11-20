@@ -154,7 +154,7 @@ int main( )
             = Eigen::MatrixXd::Constant( 1, numberOfSatellites, argumentOfPeriapsis );
 
     // Set longitude of ascending node.
-    for ( unsigned int i = 0; i <= numberOfSatellitesPerPlane; i++ )
+    for ( unsigned int i = 0; i <= numberOfPlanes; i++ )
 
     {
         initialConditionsInKeplerianElements.block( 4, i * numberOfSatellitesPerPlane,
