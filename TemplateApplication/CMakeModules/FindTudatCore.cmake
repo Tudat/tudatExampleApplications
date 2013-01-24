@@ -57,7 +57,7 @@ else (TUDAT_CORE_BASE_PATH)
       PATHS
       ${PROJECT_SOURCE_DIR}/External
       ${PROJECT_SOURCE_DIR}/../../tudatCore
-      ${PROJECT_SOURCE_DIR}/../../core/trunk
+      ${PROJECT_SOURCE_DIR}/../../tudatCore/trunk
       ${PROJECT_SOURCE_DIR}/../../../tudatCore/trunk
       ${CMAKE_INSTALL_PREFIX}/include
       PATH_SUFFIXES TudatCore

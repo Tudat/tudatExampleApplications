@@ -118,7 +118,7 @@ else()
 endif()
 
 # Find Tudat Core library on local system.
-find_package(TudatCore 1.1 REQUIRED)
+find_package(TudatCore 2.1 REQUIRED)
 
 # Include TudatCore directories.
 # Set CMake flag to suppress TudatCore warnings (platform-dependent solution).
@@ -162,7 +162,7 @@ else()
 endif()
 
 # Find Tudat library on local system.
-find_package(Tudat 1.0 REQUIRED)
+find_package(Tudat 2.0 REQUIRED)
 
 # Include Tudat directories.
 # Set CMake flag to suppress Tudat warnings (platform-dependent solution).
