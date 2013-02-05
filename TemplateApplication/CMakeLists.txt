@@ -1,13 +1,26 @@
- #    Copyright (c) 2010-2012 Delft University of Technology.
+ #    Copyright (c) 2010-2013, Delft University of Technology
+ #    All rights reserved.
  #
- #    This software is protected by national and international copyright.
- #    Any unauthorized use, reproduction or modification is unlawful and
- #    will be prosecuted. Commercial and non-private application of the
- #    software in any form is strictly prohibited unless otherwise granted
- #    by the authors.
+ #    Redistribution and use in source and binary forms, with or without modification, are
+ #    permitted provided that the following conditions are met:
+ #      - Redistributions of source code must retain the above copyright notice, this list of
+ #        conditions and the following disclaimer.
+ #      - Redistributions in binary form must reproduce the above copyright notice, this list of
+ #        conditions and the following disclaimer in the documentation and/or other materials
+ #        provided with the distribution.
+ #      - Neither the name of the Delft University of Technology nor the names of its contributors
+ #        may be used to endorse or promote products derived from this software without specific
+ #        prior written permission.
  #
- #    The code is provided without any warranty; without even the implied
- #    warranty of merchantibility or fitness for a particular purpose.
+ #    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+ #    OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ #    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ #    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ #    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ #    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ #    AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ #    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ #    OF THE POSSIBILITY OF SUCH DAMAGE.
  #
  #    Changelog
  #      YYMMDD    Author            Comment
@@ -15,11 +28,12 @@
  #	120202    K. Kumar 	    Adapted to work with Earth orbiting satellite example.
  #	120427	  A. Ronse	    Added option for using UserSettings.txt.
  #	120522	  A. Ronse	    Adapted for automatically finding TudatCoreEnvironment.cmake
- #			            	at standard location relative to project source.
+ #			            at standard location relative to project source.
  #
  #    References
  #
- #/
+ #    Notes
+ #
 
 # Specify minimum CMake version required to compile application.
 cmake_minimum_required( VERSION 2.6 )
@@ -88,20 +102,6 @@ include_directories(AFTER
   "${SRCROOT}"
 )
 
-# Look for TudatCoreEnvironment.cmake in standard location.
-if (NOT TUDAT_CORE_ENVIRONMENT_PATH)
-  find_path(TUDAT_CORE_ENVIRONMENT_PATH TudatCoreEnvironment.cmake
-      ${PROJECT_SOURCE_DIR}/../../tudatCore
-      ${PROJECT_SOURCE_DIR}/../../../tudatCore/trunk
-    )
-endif()
-
-# Load the environment file from the core distribution if specified or found. This sets the paths for TudatCore, Boost and Eigen.
-if(TUDAT_CORE_ENVIRONMENT_PATH)
-    message(STATUS "Loading Tudat Core distribution from ${TUDAT_CORE_ENVIRONMENT_PATH}/TudatCoreEnvironment.cmake")
-    include("${TUDAT_CORE_ENVIRONMENT_PATH}/TudatCoreEnvironment.cmake")
-endif(TUDAT_CORE_ENVIRONMENT_PATH)
-
 # Load user specific settings. These can overwrite all previous settings. 
 if(NOT TUDAT_USER_SETTINGS AND NOT DEFINED ENV{TUDAT_USER_SETTINGS})
   # Load from default paths, least important first.
@@ -118,7 +118,7 @@ else()
 endif()
 
 # Find Tudat Core library on local system.
-find_package(TudatCore 2.1 REQUIRED)
+find_package(TudatCore 2.0 REQUIRED)
 
 # Include TudatCore directories.
 # Set CMake flag to suppress TudatCore warnings (platform-dependent solution).

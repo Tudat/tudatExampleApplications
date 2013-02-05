@@ -1,13 +1,26 @@
-/*    Copyright (c) 2010-2012 Delft University of Technology.
+/*    Copyright (c) 2010-2013, Delft University of Technology
+ *    All rights reserved.
  *
- *    This software is protected by national and international copyright.
- *    Any unauthorized use, reproduction or modification is unlawful and
- *    will be prosecuted. Commercial and non-private application of the
- *    software in any form is strictly prohibited unless otherwise granted
- *    by the authors.
+ *    Redistribution and use in source and binary forms, with or without modification, are
+ *    permitted provided that the following conditions are met:
+ *      - Redistributions of source code must retain the above copyright notice, this list of
+ *        conditions and the following disclaimer.
+ *      - Redistributions in binary form must reproduce the above copyright notice, this list of
+ *        conditions and the following disclaimer in the documentation and/or other materials
+ *        provided with the distribution.
+ *      - Neither the name of the Delft University of Technology nor the names of its contributors
+ *        may be used to endorse or promote products derived from this software without specific
+ *        prior written permission.
  *
- *    The code is provided without any warranty; without even the implied
- *    warranty of merchantibility or fitness for a particular purpose.
+ *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+ *    OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ *    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ *    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ *    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ *    AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ *    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ *    OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *    Changelog
  *      YYMMDD    Author            Comment
@@ -17,20 +30,22 @@
  *      Williams, Dr. David R., "Moon Fact Sheet", NASA (National Space Science Data Center),
  *         http://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html, last accessed: 22 May 2012
  *
+ *    Notes
+ *
  */
 
-#include <iostream>
 #include <ctime>
+#include <iostream>
+
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
 
 #include <Eigen/Core>
 
 #include <TudatCore/Astrodynamics/BasicAstrodynamics/unitConversions.h>
 
 #include <Tudat/Astrodynamics/Gravitation/centralGravityModel.h>
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-#include <boost/random/variate_generator.hpp>
 
 int main( )
 {
@@ -41,19 +56,19 @@ int main( )
             generateRandomNumbers( randomNumbergenerator, uniformDistribution );
 
     // Generate random altitude value between 0 and 10 km.
-    double altitudeKilometers = generateRandomNumbers( );
+    const double altitudeKilometers = generateRandomNumbers( );
 
-    // Use the TudatCore library to convert Km to m
-    double altitudeMeters = tudat::unit_conversions::convertKilometersToMeters(
+    // Use the Tudat Core library to convert km to m.
+    const double altitudeMeters = tudat::unit_conversions::convertKilometersToMeters(
             altitudeKilometers );
 
     // Use the Eigen library to create position vectors.
     Eigen::Vector3d positionOfBodySubjectToAcceleration;
-    positionOfBodySubjectToAcceleration << 1737.1e3 + altitudeMeters, 0, 0;
-    Eigen::Vector3d positionOfBodyExertingAcceleration = Eigen::Vector3d::Zero( );
+    positionOfBodySubjectToAcceleration << 1737.1e3 + altitudeMeters, 0.0, 0.0;
+    const Eigen::Vector3d positionOfBodyExertingAcceleration = Eigen::Vector3d::Zero( );
 
     // Use the Tudat library to compute the acceleration vector.
-    Eigen::Vector3d gravitationalAcceleration =
+    const Eigen::Vector3d gravitationalAcceleration =
             tudat::gravitation::computeGravitationalAcceleration(
                     positionOfBodySubjectToAcceleration, 4.9e12,
                     positionOfBodyExertingAcceleration );
