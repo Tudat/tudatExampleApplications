@@ -47,7 +47,6 @@
  # This should be used in case the FILE token does not given the full-path in the getRootPath() function in basicFunctions.h.
 #add_definitions(-DTUDAT_CUSTOM_ROOT_PATH="C:/My/Custom/Path/To/Tudat")
 
-
  #--------------------------------------
  # Tudat Core
  #--------------------------------------
