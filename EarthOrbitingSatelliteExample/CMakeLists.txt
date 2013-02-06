@@ -168,8 +168,7 @@ else()
 endif()
 
 # Add library.
-add_library(earth_orbiting_satellite_example STATIC body.h)
-set_target_properties(earth_orbiting_satellite_example PROPERTIES LINKER_LANGUAGE CXX)
+add_library(earth_orbiting_satellite_example STATIC body.h void.cpp)
 setup_library_target(earth_orbiting_satellite_example "${SRCROOT}")
 
 # Add Earth-orbiting satellite example application.
