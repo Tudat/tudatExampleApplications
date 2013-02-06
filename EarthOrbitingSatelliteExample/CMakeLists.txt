@@ -1,13 +1,26 @@
- #    Copyright (c) 2010-2012 Delft University of Technology.
+ #    Copyright (c) 2010-2013, Delft University of Technology
+ #    All rights reserved.
  #
- #    This software is protected by national and international copyright.
- #    Any unauthorized use, reproduction or modification is unlawful and
- #    will be prosecuted. Commercial and non-private application of the
- #    software in any form is strictly prohibited unless otherwise granted
- #    by the authors.
+ #    Redistribution and use in source and binary forms, with or without modification, are
+ #    permitted provided that the following conditions are met:
+ #      - Redistributions of source code must retain the above copyright notice, this list of
+ #        conditions and the following disclaimer.
+ #      - Redistributions in binary form must reproduce the above copyright notice, this list of
+ #        conditions and the following disclaimer in the documentation and/or other materials
+ #        provided with the distribution.
+ #      - Neither the name of the Delft University of Technology nor the names of its contributors
+ #        may be used to endorse or promote products derived from this software without specific
+ #        prior written permission.
  #
- #    The code is provided without any warranty; without even the implied
- #    warranty of merchantibility or fitness for a particular purpose.
+ #    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+ #    OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ #    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ #    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ #    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ #    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ #    AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ #    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ #    OF THE POSSIBILITY OF SUCH DAMAGE.
  #
  #    Changelog
  #      YYMMDD    Author            Comment
@@ -15,15 +28,19 @@
  #      120202    K. Kumar          Adapted to work with Earth orbiting satellite example.
  #      120523    A. Ronse          Updated terminology suiting application. Included script
  #                                  to find+load TudatCoreEnvironment.cmake.
+ #      120205    K. Kumar          Removed obsolete TudatCoreEnvironment.cmake call; updated
+ #                                  Tudat Core and Tudat minimum requirements; updated license;
+ #                                  added static library so body.h shows up in project tree.
  #
  #    References
  #
- #/
+ #    Notes
+ #
 
-# Specify minimum CMake version required to compile Tudat.
+# Specify minimum CMake version required to compile application.
 cmake_minimum_required( VERSION 2.6 )
 
-# Specific Tudat project name.
+# Specific project name.
 project( EarthOrbitingSatelliteExample )
 
 # Set path to local CMake modules.
@@ -64,30 +81,21 @@ set(LIBROOT "${SRCROOT}/lib")
 set(BINROOT "${SRCROOT}/bin")
 
 # Set the global macros for setting up targets. Do not modify!
-# Different sub-directories are created for applications and unit tests.
 macro(setup_application_executable_target target_name CUSTOM_OUTPUT_PATH)
   set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/applications")
   install(TARGETS ${target_name} RUNTIME DESTINATION "${BINROOT}/applications")
 endmacro(setup_application_executable_target)
 
+macro(setup_library_target target_name CUSTOM_OUTPUT_PATH)
+  set_property(TARGET ${target_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY "${LIBROOT}")
+  set_property(TARGET ${target_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${LIBROOT}")
+  install(TARGETS ${target_name} LIBRARY DESTINATION "${BINROOT}" ARCHIVE DESTINATION "${LIBROOT}")
+endmacro(setup_library_target)
+
 # Include the top-level directories.
 include_directories(AFTER
   "${SRCROOT}"
 )
-
-# Look for TudatCoreEnvironment.cmake in standard location.
-if (NOT TUDAT_CORE_ENVIRONMENT_PATH)
-  find_path(TUDAT_CORE_ENVIRONMENT_PATH TudatCoreEnvironment.cmake
-      ${PROJECT_SOURCE_DIR}/../../tudatCore
-      ${PROJECT_SOURCE_DIR}/../../../tudatcore/trunk
-    )
-endif()
-
-# Load the environment file from the core distribution if specified or found. This sets the paths for TudatCore, Boost and Eigen.
-if(TUDAT_CORE_ENVIRONMENT_PATH)
-    message(STATUS "Loading Tudat Core distribution from ${TUDAT_CORE_ENVIRONMENT_PATH}/TudatCoreEnvironment.cmake")
-    include("${TUDAT_CORE_ENVIRONMENT_PATH}/TudatCoreEnvironment.cmake")
-endif(TUDAT_CORE_ENVIRONMENT_PATH)
 
 # Load user specific settings. These can overwrite all previous settings. 
 if(NOT TUDAT_USER_SETTINGS AND NOT DEFINED ENV{TUDAT_USER_SETTINGS})
@@ -95,7 +103,7 @@ if(NOT TUDAT_USER_SETTINGS AND NOT DEFINED ENV{TUDAT_USER_SETTINGS})
   INCLUDE( "../UserSettings.txt" OPTIONAL)
   INCLUDE( "UserSettings.txt" OPTIONAL)
 else()
-	MESSAGE(STATUS "Loading custom preset user settings")
+  MESSAGE(STATUS "Loading custom preset user settings")
   # Load the user specified file.
   if( TUDAT_USER_SETTINGS )
     #INCLUDE( $TUDAT_USER_SETTINGS OPTIONAL)
@@ -105,9 +113,9 @@ else()
 endif()
 
 # Find Tudat Core library on local system.
-find_package(TudatCore 1.1 REQUIRED)
+find_package(TudatCore 2.0 REQUIRED)
 
-# Include TudatCore directories.
+# Include Tudat Core directories.
 # Set CMake flag to suppress TudatCore warnings (platform-dependent solution).
 if(NOT APPLE)
   include_directories(SYSTEM AFTER "${TUDAT_CORE_INCLUDE_DIR}")
@@ -149,7 +157,7 @@ else()
 endif()
 
 # Find Tudat library on local system.
-find_package(Tudat 1.0 REQUIRED)
+find_package(Tudat 2.0 REQUIRED)
 
 # Include Tudat directories.
 # Set CMake flag to suppress Tudat warnings (platform-dependent solution).
@@ -159,12 +167,17 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
 
+# Add library.
+add_library(earth_orbiting_satellite_example STATIC body.h)
+set_target_properties(earth_orbiting_satellite_example PROPERTIES LINKER_LANGUAGE CXX)
+setup_library_target(earth_orbiting_satellite_example "${SRCROOT}")
+
 # Add Earth-orbiting satellite example application.
 add_executable(application_EarthOrbitingSatelliteExample "${SRCROOT}/earthOrbitingSatelliteExample.cpp")
 setup_application_executable_target(application_EarthOrbitingSatelliteExample "${SRCROOT}")
-target_link_libraries(application_EarthOrbitingSatelliteExample tudat_gravitation tudat_core ${Boost_LIBRARIES} )
+target_link_libraries(application_EarthOrbitingSatelliteExample earth_orbiting_satellite_example tudat_gravitation tudat_core ${Boost_LIBRARIES} )
 
 # Add Galileo constellation application.
 add_executable(application_GalileoConstellation "${SRCROOT}/galileoConstellationSimulation.cpp")
 setup_application_executable_target(application_GalileoConstellation "${SRCROOT}")
-target_link_libraries(application_GalileoConstellation tudat_gravitation tudat_core ${Boost_LIBRARIES} )
+target_link_libraries(application_GalileoConstellation earth_orbiting_satellite_example tudat_gravitation tudat_core ${Boost_LIBRARIES} )
