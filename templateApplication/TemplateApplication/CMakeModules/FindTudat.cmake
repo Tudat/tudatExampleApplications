@@ -85,9 +85,10 @@ else (TUDAT_INCLUDE_DIR)
       PATHS
       ${PROJECT_SOURCE_DIR}/External
       ${PROJECT_SOURCE_DIR}/../../../tudat/trunk
+      ${PROJECT_SOURCE_DIR}/../../../../tudat/trunk
       ${PROJECT_SOURCE_DIR}/../../tudat/trunk
       ${PROJECT_SOURCE_DIR}/../../tudat
-       ${PROJECT_SOURCE_DIR}/../../../tudat
+      ${PROJECT_SOURCE_DIR}/../../../tudat
       ${CMAKE_INSTALL_PREFIX}/include
       PATH_SUFFIXES Tudat
     )

@@ -88,6 +88,7 @@ else (TUDAT_CORE_BASE_PATH)
       PATHS
       ${PROJECT_SOURCE_DIR}/External
       ${PROJECT_SOURCE_DIR}/../../../tudatCore/trunk
+      ${PROJECT_SOURCE_DIR}/../../../../tudatCore/trunk
       ${PROJECT_SOURCE_DIR}/../../tudatCore/trunk
       ${PROJECT_SOURCE_DIR}/../../tudatCore
       ${PROJECT_SOURCE_DIR}/../../../tudatCore
