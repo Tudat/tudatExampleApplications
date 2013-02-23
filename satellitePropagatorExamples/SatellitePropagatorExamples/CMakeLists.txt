@@ -31,6 +31,7 @@
  #      120205    K. Kumar          Removed obsolete TudatCoreEnvironment.cmake call; updated
  #                                  Tudat Core and Tudat minimum requirements; updated license;
  #                                  added static library so body.h shows up in project tree.
+ #      130222    K. Kumar          Updated directory definitions; added unit test macro.
  #
  #    References
  #
@@ -41,13 +42,16 @@
 cmake_minimum_required( VERSION 2.6 )
 
 # Specific project name.
-project( EarthOrbitingSatelliteExample )
+project( satelitePropagatorExamples )
 
 # Set path to local CMake modules.
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
-# Define the basic input (trunk) and output (lib & include) directories.
+# Define the directory with the source code.
 set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+
+# Define the code root directory.
+set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}/../")
 
 # Set CMake build-type.
 set(CMAKE_BUILD_TYPE Release)
@@ -77,8 +81,8 @@ else()
 endif()
 
 # Set directories for compiled libraries and binaries.
-set(LIBROOT "${SRCROOT}/lib")
-set(BINROOT "${SRCROOT}/bin")
+set(LIBROOT "${CODEROOT}/lib")
+set(BINROOT "${CODEROOT}/bin")
 
 # Set the global macros for setting up targets. Do not modify!
 macro(setup_application_executable_target target_name CUSTOM_OUTPUT_PATH)
@@ -91,6 +95,12 @@ macro(setup_library_target target_name CUSTOM_OUTPUT_PATH)
   set_property(TARGET ${target_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${LIBROOT}")
   install(TARGETS ${target_name} LIBRARY DESTINATION "${BINROOT}" ARCHIVE DESTINATION "${LIBROOT}")
 endmacro(setup_library_target)
+
+macro(setup_unit_test_executable_target target_name CUSTOM_OUTPUT_PATH)
+  set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/unit_tests")
+  get_property(CUSTOM_TEST_PROGRAM_NAME TARGET ${target_name} PROPERTY OUTPUT_NAME)
+  add_test("${target_name}" "${BINROOT}/unit_tests/${target_name}")
+endmacro(setup_unit_test_executable_target)
 
 # Include the top-level directories.
 include_directories(AFTER

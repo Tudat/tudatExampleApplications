@@ -30,14 +30,14 @@
  #      FindEigen3.cmake.
  #
  #    Notes
- #      This script tries to find the Tudat library. This module supports requiring a minimum
- #      version, e.g. you can do find_package(Tudat 3.1.2) to require version 3.1.2 or newer of
- #      Tudat.
+ #      This script tries to find the Tudat Core library. This module supports requiring a minimum
+ #      version, e.g. you can do find_package(TudatCore 3.1.2) to require version 3.1.2 or newer of
+ #      Tudat Core.
  #
  #      Once done, this will define:
  #
- #          TUDAT_FOUND - system has Tudat lib with correct version;
- #          TUDAT_INCLUDE_DIR - the Tudat include directory.
+ #          TUDAT_CORE_FOUND - system has Tudat Core lib with correct version;
+ #          TUDAT_CORE_INCLUDE_DIR - the Tudat Core include directory.
  #
  #      Original copyright statements (from FindEigen3.cmake:
  #          Copyright (c) 2006, 2007 Montel Laurent, <montel@kde.org>
@@ -48,58 +48,61 @@
  #      the 2-clause BSD license.
  #
 
-macro(_tudat_check_version)
-  file(READ "${TUDAT_INCLUDE_DIR}/Tudat/tudatVersion.h" _tudat_header)
+macro(_tudat_core_check_version)
+	MESSAGE( STATUS "Checking for TudatCore in:         " ${TUDAT_CORE_BASE_PATH} )
+  file(READ "${TUDAT_CORE_BASE_PATH}/tudatCoreVersion.h" _tudat_core_header)
 
-  string(REGEX MATCH "define[ \t]+TUDAT_VERSION_MAJOR[ \t]+([0-9]+)" _tudat_major_version_match "${_tudat_header}")
-  set(TUDAT_MAJOR_VERSION "${CMAKE_MATCH_1}")
-  string(REGEX MATCH "define[ \t]+TUDAT_VERSION_MINOR[ \t]+([0-9]+)" _tudat_minor_version_match "${_tudat_header}")
-  set(TUDAT_MINOR_VERSION "${CMAKE_MATCH_1}")
+  string(REGEX MATCH "define[ \t]+TUDAT_CORE_VERSION_MAJOR[ \t]+([0-9]+)" _tudat_core_major_version_match "${_tudat_core_header}")
+  set(TUDAT_CORE_MAJOR_VERSION "${CMAKE_MATCH_1}")
+  string(REGEX MATCH "define[ \t]+TUDAT_CORE_VERSION_MINOR[ \t]+([0-9]+)" _tudat_core_minor_version_match "${_tudat_core_header}")
+  set(TUDAT_CORE_MINOR_VERSION "${CMAKE_MATCH_1}")
 
-  set(TUDAT_VERSION ${TUDAT_MAJOR_VERSION}.${TUDAT_MINOR_VERSION})
-  if(${TUDAT_VERSION} VERSION_LESS ${Tudat_FIND_VERSION})
-    set(TUDAT_VERSION_OK FALSE)
-  else(${TUDAT_VERSION} VERSION_LESS ${Tudat_FIND_VERSION})
-    set(TUDAT_VERSION_OK TRUE)
-  endif(${TUDAT_VERSION} VERSION_LESS ${Tudat_FIND_VERSION})
+  set(TUDAT_CORE_VERSION ${TUDAT_CORE_MAJOR_VERSION}.${TUDAT_CORE_MINOR_VERSION})
+  if(${TUDAT_CORE_VERSION} VERSION_LESS ${TudatCore_FIND_VERSION})
+    set(TUDAT_CORE_VERSION_OK FALSE)
+  else(${TUDAT_CORE_VERSION} VERSION_LESS ${TudatCore_FIND_VERSION})
+    set(TUDAT_CORE_VERSION_OK TRUE)
+  endif(${TUDAT_CORE_VERSION} VERSION_LESS ${TudatCore_FIND_VERSION})
 
-  if(NOT TUDAT_VERSION_OK)
+  if(NOT TUDAT_CORE_VERSION_OK)
 
-    message(STATUS "Tudat version ${TUDAT_VERSION} found in ${TUDAT_INCLUDE_DIR}, "
-                   "but at least version ${Tudat_FIND_VERSION} is required")
-  endif(NOT TUDAT_VERSION_OK)
+    message(WARNING "Tudat core version ${TUDAT_CORE_VERSION} found in ${TUDAT_CORE_INCLUDE_DIR}, "
+                    "but at least version ${TudatCore_FIND_VERSION} is required")
+  endif(NOT TUDAT_CORE_VERSION_OK)
 
-  set(TUDAT_LIBRARIES "tudat")
-  link_directories(${TUDAT_LIBRARIES_DIR})
-endmacro(_tudat_check_version)
+  set(TUDAT_CORE_LIBRARIES "tudat_core")
+  set(TUDAT_CORE_INCLUDE_DIR ${TUDAT_CORE_BASE_PATH}/..)
+  set(TUDAT_CORE_LIBRARIES_DIR ${TUDAT_CORE_BASE_PATH}/../lib)
+  link_directories(${TUDAT_CORE_LIBRARIES_DIR})
+endmacro(_tudat_core_check_version)
 
-if (TUDAT_INCLUDE_DIR)
+if (TUDAT_CORE_BASE_PATH)
 
   # in cache already
-  _tudat_check_version()
-  set(TUDAT_FOUND ${TUDAT_VERSION_OK})
+  _tudat_core_check_version( )
+  set(TUDAT_CORE_FOUND ${TUDAT_CORE_VERSION_OK})
 
-else (TUDAT_INCLUDE_DIR)
+else (TUDAT_CORE_BASE_PATH)
 
-  find_path(TUDAT_BASE_PATH NAMES tudatVersion.h
+  find_path(TUDAT_CORE_BASE_PATH NAMES tudatCoreVersion.h
       PATHS
       ${PROJECT_SOURCE_DIR}/External
-      ${PROJECT_SOURCE_DIR}/../../../tudat/trunk
-      ${PROJECT_SOURCE_DIR}/../../tudat/trunk
-      ${PROJECT_SOURCE_DIR}/../../tudat
+      ${PROJECT_SOURCE_DIR}/../../../tudatCore/trunk
+      ${PROJECT_SOURCE_DIR}/../../../../tudatCore/trunk
+      ${PROJECT_SOURCE_DIR}/../../tudatCore/trunk
+      ${PROJECT_SOURCE_DIR}/../../tudatCore
+      ${PROJECT_SOURCE_DIR}/../../../tudatCore
       ${CMAKE_INSTALL_PREFIX}/include
-      PATH_SUFFIXES Tudat
+      PATH_SUFFIXES TudatCore
     )
-  set(TUDAT_INCLUDE_DIR ${TUDAT_BASE_PATH}/..)
-  set(TUDAT_LIBRARIES_DIR ${TUDAT_BASE_PATH}/../lib)
 
-  if(TUDAT_INCLUDE_DIR)
-    _tudat_check_version()
-  endif(TUDAT_INCLUDE_DIR)
+  if(TUDAT_CORE_BASE_PATH)
+    _tudat_core_check_version( )
+  endif(TUDAT_CORE_BASE_PATH)
 
   include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(Tudat DEFAULT_MSG TUDAT_INCLUDE_DIR TUDAT_VERSION_OK)
+  find_package_handle_standard_args(TudatCore DEFAULT_MSG TUDAT_CORE_BASE_PATH TUDAT_CORE_VERSION_OK)
 
-  mark_as_advanced(TUDAT_INCLUDE_DIR)
+  mark_as_advanced(TUDAT_CORE_BASE_PATH)
 
-endif(TUDAT_INCLUDE_DIR)
+endif(TUDAT_CORE_BASE_PATH)
