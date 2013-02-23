@@ -65,6 +65,7 @@ else (EIGEN3_INCLUDE_DIR)
       PATHS
       ${PROJECT_SOURCE_DIR}/../
       ${PROJECT_SOURCE_DIR}/../../tudatCore
+      ${PROJECT_SOURCE_DIR}/../../../tudatCore
       ${CMAKE_INSTALL_PREFIX}/include
       ${KDE4_INCLUDE_DIR}
       PATH_SUFFIXES eigen3 eigen

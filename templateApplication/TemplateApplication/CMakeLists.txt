@@ -29,6 +29,7 @@
  #	120427	  A. Ronse	    Added option for using UserSettings.txt.
  #	120522	  A. Ronse	    Adapted for automatically finding TudatCoreEnvironment.cmake
  #			            at standard location relative to project source.
+ #      130222    K. Kumar          Updated directory definitions.
  #
  #    References
  #
@@ -44,8 +45,11 @@ project( TemplateApplication )
 # Set path to local CMake modules.
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 
-# Define the basic input (trunk) and output (lib & include) directories.
+# Define the directory with the source code.
 set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+
+# Define the code root directory.
+set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}/../")
 
 # Set CMake build-type.
 set(CMAKE_BUILD_TYPE Release)
@@ -75,8 +79,8 @@ else()
 endif()
 
 # Set directories for compiled libraries and binaries.
-set(LIBROOT "${SRCROOT}/lib")
-set(BINROOT "${SRCROOT}/bin")
+set(LIBROOT "${CODEROOT}/lib")
+set(BINROOT "${CODEROOT}/bin")
 
 # Set the global macros for setting up targets. Do not modify!
 # Different sub-directories are created for applications and unit tests.
@@ -108,7 +112,7 @@ if(NOT TUDAT_USER_SETTINGS AND NOT DEFINED ENV{TUDAT_USER_SETTINGS})
   INCLUDE( "../UserSettings.txt" OPTIONAL)
   INCLUDE( "UserSettings.txt" OPTIONAL)
 else()
-	MESSAGE(STATUS "Loading custom preset user settings")
+	MESSAGE(STATUS "Loading custom preset user settings.")
   # Load the user specified file.
   if( TUDAT_USER_SETTINGS )
     #INCLUDE( $TUDAT_USER_SETTINGS OPTIONAL)
@@ -141,13 +145,13 @@ endif()
 
 # Configure Boost libraries.
 if(NOT Boost_USE_STATIC_LIBS)
-set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_STATIC_LIBS ON)
 endif()
 if(NOT Boost_USE_MULTITHREADED)
-set(Boost_USE_MULTITHREADED ON)
+  set(Boost_USE_MULTITHREADED ON)
 endif()
 if(NOT Boost_USE_STATIC_RUNTIME)
-set(Boost_USE_STATIC_RUNTIME ON)
+  set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
 # Find Boost libraries on local system.

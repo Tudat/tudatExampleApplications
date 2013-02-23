@@ -90,6 +90,7 @@ else (TUDAT_CORE_BASE_PATH)
       ${PROJECT_SOURCE_DIR}/../../../tudatCore/trunk
       ${PROJECT_SOURCE_DIR}/../../tudatCore/trunk
       ${PROJECT_SOURCE_DIR}/../../tudatCore
+      ${PROJECT_SOURCE_DIR}/../../../tudatCore
       ${CMAKE_INSTALL_PREFIX}/include
       PATH_SUFFIXES TudatCore
     )
