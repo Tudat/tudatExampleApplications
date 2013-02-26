@@ -29,6 +29,8 @@
  *      121030    K. Kumar          Updated code to use new state derivative models.
  *      130107    S. Billemont      Fixed bugs in set up of initial conditions.
  *      130107    K. Kumar          Updated license in file header.
+ *      130225    K. Kumar          Updated gravitational acceleration model references; renamed
+ *                                  file; made variables const-correct.
  *
  *    References
  *
@@ -60,15 +62,15 @@
 #include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravityModel.h>
 #include <Tudat/Astrodynamics/StateDerivativeModels/cartesianStateDerivativeModel.h>
 #include <Tudat/Astrodynamics/StateDerivativeModels/compositeStateDerivativeModel.h>
-
 #include <Tudat/InputOutput/basicInputOutput.h>
+#include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
 
-#include "body.h"
+#include "SatellitePropagatorExamples/body.h"
 
 //! Execute simulation of Galileo constellation around the Earth.
 int main( )
 {
-    using namespace satellite_example;
+    using namespace satellite_propagator_examples;
 
     using tudat::basic_astrodynamics::xCartesianPositionIndex;
     using tudat::basic_astrodynamics::yCartesianPositionIndex;
@@ -77,13 +79,15 @@ int main( )
     using tudat::basic_astrodynamics::yCartesianVelocityIndex;
     using tudat::basic_astrodynamics::zCartesianVelocityIndex;
 
-    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel3d;
+    using tudat::basic_mathematics::Vector6d;
+
+    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel;
 
     using tudat::input_output::writeDataMapToTextFile;
 
     using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
 
-    using tudat::mathematics::numerical_integrators::RungeKutta4Integrator;
+    using tudat::numerical_integrators::RungeKutta4Integrator;
 
     using tudat::state_derivative_models::CartesianStateDerivativeModel6d;
     using tudat::state_derivative_models::CartesianStateDerivativeModel6dPointer;
@@ -101,7 +105,7 @@ int main( )
     // Input deck.
 
     // Set output directory.
-    std::string outputDirectory = "";
+    const std::string outputDirectory = "";
 
     // Set simulation start epoch.
     const double simulationStartEpoch = 0.0;
@@ -221,7 +225,7 @@ int main( )
 
         satellites[ satellite ]
                 = boost::assign::list_of(
-                    boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel3d >(
+                    boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel >(
                         boost::bind( &Body::getCurrentPosition, satellite ),
                         earthGravitationalParameter, earthEquatorialRadius,
                         earthJ2, earthJ3, earthJ4 ) );

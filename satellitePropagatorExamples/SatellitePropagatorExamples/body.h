@@ -25,6 +25,8 @@
  *    Changelog
  *      YYMMDD    Author            Comment
  *      121030    K. Kumar          File created.
+ *      130225    K. Kumar          Updated include-guard and namespace names; updated Vector6d
+ *                                  references to use Tudat definition.
  *
  *    References
  *
@@ -32,8 +34,8 @@
  *
  */
 
-#ifndef EARTH_ORBITING_SATELLITE_EXAMPLE_BODY_H
-#define EARTH_ORBITING_SATELLITE_EXAMPLE_BODY_H
+#ifndef SATELLITE_PROPAGATOR_EXAMPLES_BODY_H
+#define SATELLITE_PROPAGATOR_EXAMPLES_BODY_H
 
 #include <map>
 #include <vector>
@@ -43,15 +45,13 @@
 #include <Eigen/Core>
 
 #include <Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h>
+#include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
 
-namespace satellite_example
+namespace satellite_propagator_examples
 {
 
-//! Typedef for Eigen::Vector6d.
-typedef Eigen::Matrix< double, 6, 1 > Vector6d;
-
 //! Typedef for propagation history container.
-typedef std::map< double, Eigen::VectorXd > PropagationHistory;
+typedef std::map< double, tudat::basic_mathematics::Vector6d > PropagationHistory;
 
 //! Test body class.
 /*!
@@ -79,7 +79,7 @@ public:
      * \param aState An input state vector.
      * \param aTime An input time.
      */
-    Body( const Vector6d& aState, const double aTime )
+    Body( const tudat::basic_mathematics::Vector6d& aState, const double aTime )
         : currentState( aState ),
           currentPosition( aState.segment( 0, 3 ) ),
           currentVelocity( aState.segment( 3, 3 ) ),
@@ -90,12 +90,13 @@ public:
     /*!
      * Sets the current time, position and current velocity internally based on the input
      * arguments. The current position is taken as a segment of the input state given by the
-     * indices (0, SpatialDimensions)), and the current velocity is taken as a segment of the input
-     * state given by the indices (SpatialDimensions, SpatialDimensions).
+     * indices (0, 3)), and the current velocity is taken as a segment of the input state given by
+     * the indices (3, 3).
      * \param aTime An input time.
      * \param aState An input state vector.
      */
-    void setCurrentTimeAndState( const double aTime, const Vector6d& aState )
+    void setCurrentTimeAndState( const double aTime,
+                                 const tudat::basic_mathematics::Vector6d& aState )
     {
         currentTime = aTime;
         currentState = aState;
@@ -108,7 +109,7 @@ public:
      * Returns the internally stored current state vector.
      * \return Current state.
      */
-    Vector6d getCurrentState( ) { return currentState; }
+    tudat::basic_mathematics::Vector6d getCurrentState( ) { return currentState; }
 
     //! Get current position.
     /*!
@@ -136,7 +137,7 @@ protected:
 private:
 
     //! Current state.
-    Vector6d currentState;
+    tudat::basic_mathematics::Vector6d currentState;
 
     //! Current position.
     Eigen::Vector3d currentPosition;
@@ -206,6 +207,6 @@ private:
     const ListOfSatellites satellites;
 };
 
-} // namespace example_satellite
+} // namespace satellite_propagator_examples
 
-#endif // EARTH_ORBITING_SATELLITE_EXAMPLE_BODY_H
+#endif // SATELLITE_PROPAGATOR_EXAMPLES_BODY_H

@@ -38,6 +38,9 @@
  *      120502    K. Kumar          Updated code to use shared pointers.
  *      121030    K. Kumar          Updated code to use new state derivative models.
  *      130107    K. Kumar          Updated license in file header.
+ *      130225    K. Kumar          Updated gravitational acceleration model references; renamed
+ *                                  file; fixed error in assigning Obelix state derivative model;
+ *                                  made variables const-correct.
  *
  *    References
  *
@@ -67,15 +70,15 @@
 #include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravityModel.h>
 #include <Tudat/Astrodynamics/StateDerivativeModels/cartesianStateDerivativeModel.h>
 #include <Tudat/Astrodynamics/StateDerivativeModels/compositeStateDerivativeModel.h>
-
 #include <Tudat/InputOutput/basicInputOutput.h>
+#include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
 
-#include "body.h"
+#include "SatellitePropagatorExamples/body.h"
 
-//! Execute example of an Earth-orbiting satellite.
+//! Execute propagation of orbits of Asterix and Obelix around the Earth.
 int main( )
 {
-    using namespace satellite_example;
+    using namespace satellite_propagator_examples;
 
     using tudat::basic_astrodynamics::AccelerationModel3dPointer;
     using tudat::basic_astrodynamics::semiMajorAxisIndex;
@@ -91,12 +94,14 @@ int main( )
     using tudat::basic_astrodynamics::yCartesianVelocityIndex;
     using tudat::basic_astrodynamics::zCartesianVelocityIndex;
 
-    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel3d;
-    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel3dPointer;
+    using tudat::basic_mathematics::Vector6d;
+
+    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel;
+    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModelPointer;
 
     using tudat::input_output::writeDataMapToTextFile;
 
-    using tudat::mathematics::numerical_integrators::RungeKutta4Integrator;
+    using tudat::numerical_integrators::RungeKutta4Integrator;
 
     using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
 
@@ -108,30 +113,30 @@ int main( )
 
     typedef Eigen::Matrix< double, 12, 1 > Vector12d;
     typedef CompositeStateDerivativeModel< double, Vector12d, Vector6d >
-            CompositionStateDerivativeModel12d;
+            CompositeStateDerivativeModel12d;
 
     ///////////////////////////////////////////////////////////////////////////
 
     // Input deck.
 
     // Set output directory.
-    std::string outputDirectory = "";
+    const std::string outputDirectory = "";
 
     // Set simulation start epoch.
-    double simulationStartEpoch = 0.0;
+    const double simulationStartEpoch = 0.0;
 
     // Set simulation end epoch.
-    double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
+    const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
 
     // Set numerical integration fixed step size.
-    double fixedStepSize = 60.0;
+    const double fixedStepSize = 60.0;
 
     // Set initial conditions for satellites that will be propagated in this simulation.
     // The initial conditions are given in Keplerian elements and later on converted to
     // Cartesian elements.
 
     // Set Keplerian elements for Asterix.
-    Eigen::VectorXd asterixInitialStateInKeplerianElements( 6 );
+    Vector6d asterixInitialStateInKeplerianElements;
     asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0e3;
     asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
     asterixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 85.3 );
@@ -142,7 +147,7 @@ int main( )
     asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 139.87 );
 
     // Set Keplerian elements for Obelix.
-    Eigen::VectorXd obelixInitialStateInKeplerianElements( 6 );
+    Vector6d obelixInitialStateInKeplerianElements( 6 );
     obelixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 12040.6e3;
     obelixInitialStateInKeplerianElements( eccentricityIndex ) = 0.4;
     obelixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( -23.5 );
@@ -170,12 +175,12 @@ int main( )
     // Convert initial states from Keplerian to Cartesian elements.
 
     // Convert Asterix state from Keplerian elements to Cartesian elements.
-    Eigen::VectorXd asterixInitialState = convertKeplerianToCartesianElements(
+    const Vector6d asterixInitialState = convertKeplerianToCartesianElements(
                 asterixInitialStateInKeplerianElements,
                 earthGravitationalParameter );
 
     // Convert Obelix state from Keplerian elements to Cartesian elements.
-    Eigen::VectorXd obelixInitialState = convertKeplerianToCartesianElements(
+    const Vector6d obelixInitialState = convertKeplerianToCartesianElements(
                 obelixInitialStateInKeplerianElements,
                 earthGravitationalParameter );
 
@@ -186,33 +191,33 @@ int main( )
     // Create Asterix and Obelix satellites, and gravitational acceleration models.
 
     // Create Asterix and set initial state and epoch.
-    BodyPointer asterix = boost::make_shared< Body >(
+    const BodyPointer asterix = boost::make_shared< Body >(
                 asterixInitialStateInKeplerianElements, 0.0 );
 
     // Create gravitational acceleration model for asterix.
-    CentralJ2J3J4GravitationalAccelerationModel3dPointer asterixGravityModel
-            = boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel3d >(
+    const CentralJ2J3J4GravitationalAccelerationModelPointer asterixGravityModel
+            = boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel >(
                 boost::bind( &Body::getCurrentPosition, asterix ),
                 earthGravitationalParameter, earthEquatorialRadius,
                 earthJ2, earthJ3, earthJ4 );
 
     // Create Cartesian state derivative model for asterix.
-    CartesianStateDerivativeModel6d::AccelerationModelPointerVector asterixGravity
+    const CartesianStateDerivativeModel6d::AccelerationModelPointerVector asterixGravity
             = boost::assign::list_of( asterixGravityModel );
 
     // Create Obelix and set initial state and epoch.
-    BodyPointer obelix = boost::make_shared< Body >(
+    const BodyPointer obelix = boost::make_shared< Body >(
                 asterixInitialStateInKeplerianElements, 0.0 );
 
     // Create gravitational acceleration model for obelix.
-    CentralJ2J3J4GravitationalAccelerationModel3dPointer obelixGravityModel
-            = boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel3d >(
+    const CentralJ2J3J4GravitationalAccelerationModelPointer obelixGravityModel
+            = boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel >(
                 boost::bind( &Body::getCurrentPosition, asterix ),
                 earthGravitationalParameter, earthEquatorialRadius,
                 earthJ2, earthJ3, earthJ4 );
 
     // Create Cartesian state derivative model model for obelix.
-    CartesianStateDerivativeModel6d::AccelerationModelPointerVector obelixGravity
+    const CartesianStateDerivativeModel6d::AccelerationModelPointerVector obelixGravity
             = boost::assign::list_of( obelixGravityModel );
 
     // Add Asterix and Obelix to list of satellites.
@@ -227,12 +232,12 @@ int main( )
     // Create Cartesian state derivative models for Asterix and Obelix.
 
     // Create Cartesian state derivative model for Asterix.
-    CartesianStateDerivativeModel6dPointer asterixStateDerivativeModel
+    const CartesianStateDerivativeModel6dPointer asterixStateDerivativeModel
             = boost::make_shared< CartesianStateDerivativeModel6d >(
                 asterixGravity, boost::bind( &Body::setCurrentTimeAndState, asterix, _1, _2 ) );
 
     // Create Cartesian state derivative model for Obelix.
-    CartesianStateDerivativeModel6dPointer obelixStateDerivativeModel
+    const CartesianStateDerivativeModel6dPointer obelixStateDerivativeModel
             = boost::make_shared< CartesianStateDerivativeModel6d >(
                 obelixGravity, boost::bind( &Body::setCurrentTimeAndState, obelix, _1, _2 ) );
 
@@ -243,7 +248,7 @@ int main( )
     // Construct composite state derivative model for Asterix and Obelix.
 
     // Create state derivative model map and bind Asterix and Obelix, in that order.
-    CompositionStateDerivativeModel12d::VectorStateDerivativeModelMap stateDerivativeModelMap;
+    CompositeStateDerivativeModel12d::VectorStateDerivativeModelMap stateDerivativeModelMap;
 
     stateDerivativeModelMap[ std::make_pair( 0, 6 ) ]
             = boost::bind( &CartesianStateDerivativeModel6d::computeStateDerivative,
@@ -251,14 +256,14 @@ int main( )
 
     stateDerivativeModelMap[ std::make_pair( 6, 6 ) ]
             = boost::bind( &CartesianStateDerivativeModel6d::computeStateDerivative,
-                           asterixStateDerivativeModel, _1, _2 );
+                           obelixStateDerivativeModel, _1, _2 );
 
     // Create data updater.
     DataUpdater updater( satellites );
 
     // Create composite state derivative model.
-    boost::shared_ptr< CompositionStateDerivativeModel12d > stateDerivativeModel
-            = boost::make_shared< CompositionStateDerivativeModel12d >(
+    const boost::shared_ptr< CompositeStateDerivativeModel12d > stateDerivativeModel
+            = boost::make_shared< CompositeStateDerivativeModel12d >(
                 stateDerivativeModelMap,
                 boost::bind( &DataUpdater::updateBodyData, updater, _1, _2 ) );
 
@@ -271,7 +276,7 @@ int main( )
     // boost::bind. The "_1" and "_2" in the boost::bind call specifies that the argument list
     // for the computeStateDerivative function takes two arguments (t, x).
     RungeKutta4Integrator< double, Vector12d, Vector12d > rungeKutta4(
-                boost::bind( &CompositionStateDerivativeModel12d::computeStateDerivative,
+                boost::bind( &CompositeStateDerivativeModel12d::computeStateDerivative,
                              stateDerivativeModel, _1, _2 ),
                 0.0, ( Eigen::VectorXd( 12 ) << asterixInitialState,
                        obelixInitialState ).finished( ) );
