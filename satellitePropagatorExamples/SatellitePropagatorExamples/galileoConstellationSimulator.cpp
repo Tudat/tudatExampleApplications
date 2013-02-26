@@ -83,6 +83,7 @@ int main( )
 
     using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel;
 
+    using tudat::input_output::DoubleKeyTypeVectorXdValueTypeMap;
     using tudat::input_output::writeDataMapToTextFile;
 
     using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
@@ -308,7 +309,8 @@ int main( )
     double currentEpoch = simulationStartEpoch;
 
     // Declare vector of propagation histories for satellites.
-    std::vector< PropagationHistory > allSatellitesPropagationHistory( numberOfSatellites );
+    std::vector< DoubleKeyTypeVectorXdValueTypeMap > allSatellitesPropagationHistory(
+                numberOfSatellites );
 
     // Execute simulation from start to end epoch and save intermediate states in vector of
     // propagation histories.

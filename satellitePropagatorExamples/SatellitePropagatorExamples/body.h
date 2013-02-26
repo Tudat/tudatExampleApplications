@@ -50,21 +50,13 @@
 namespace satellite_propagator_examples
 {
 
-//! Typedef for propagation history container.
-typedef std::map< double, tudat::basic_mathematics::Vector6d > PropagationHistory;
-
 //! Test body class.
 /*!
- * This class serves as an example of how a container can be constructed that stored state and
+ * This class serves as an example of how a container can be constructed that stores state and
  * time information, which can be used in conjunction with acceleration models, the Cartesian state
  * derivative model, and the composite state derivative model. It should be noted that this class
- * should NOT be used as is in the rest of the library, and is only used in conjunction with unit
- * tests. Classes of this nature should go in user applications, since they are typically
- * application-specific, hence not general enough to be added to the Tudat libraries.
- * \tparam SpatialDimensions Spatial dimensions of position and velocity vectors. The state vector
- *          is taken to be twice the number of spatial dimensions. All vectors are represented by
- *          Eigen::Matrix-types.
- * \tparam DataType The data type of all of the internally stored state-related vectors and time.
+ * should NOT be used "as is", without consideration for the application at hand. Classes such as
+ * this are application-specific, hence unavailable through the Tudat libraries.
  */
 class Body
 {
@@ -74,12 +66,12 @@ public:
     /*!
      * Constructor taking an input state and time. The input state is used internally to
      * set the current position (taken as a segment of the input state given by the indices
-     * (0, SpatialDimensions)) and the current velocity (taken as a segment of the input state
-     * given by the indices (SpatialDimensions, SpatialDimensions).
+     * (0, 3)) and the current velocity (taken as a segment of the input state given by the indices
+     * (3, 3).
      * \param aState An input state vector.
-     * \param aTime An input time.
+     * \param aTime An input time (default = 0.0) [s].
      */
-    Body( const tudat::basic_mathematics::Vector6d& aState, const double aTime )
+    Body( const tudat::basic_mathematics::Vector6d& aState, const double aTime = 0.0 )
         : currentState( aState ),
           currentPosition( aState.segment( 0, 3 ) ),
           currentVelocity( aState.segment( 3, 3 ) ),
@@ -92,7 +84,7 @@ public:
      * arguments. The current position is taken as a segment of the input state given by the
      * indices (0, 3)), and the current velocity is taken as a segment of the input state given by
      * the indices (3, 3).
-     * \param aTime An input time.
+     * \param aTime An input time [s].
      * \param aState An input state vector.
      */
     void setCurrentTimeAndState( const double aTime,
@@ -153,8 +145,8 @@ private:
 typedef boost::shared_ptr< Body > BodyPointer;
 
 //! Typedef for map of satellites with associated list of acceleration models.
-typedef std::map< BodyPointer, std::vector< tudat::basic_astrodynamics::
-AccelerationModel3dPointer > > ListOfSatellites;
+typedef std::map< BodyPointer,
+std::vector< tudat::basic_astrodynamics::AccelerationModel3dPointer > > ListOfSatellites;
 
 //! Data updater class.
 /*!
@@ -180,7 +172,7 @@ public:
     /*!
      * Updates body data by decomposing the composite state into its constituent states, and
      * storing the results in the Body objects associated with each satellite.
-     * \param time Current time.
+     * \param time Current time [s].
      * \param compositeState Composite state (Eigen::VectorXd-type).
      */
     void updateBodyData( const double time, const Eigen::VectorXd compositeState )

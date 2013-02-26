@@ -99,6 +99,7 @@ int main( )
     using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel;
     using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModelPointer;
 
+    using tudat::input_output::DoubleKeyTypeVectorXdValueTypeMap;
     using tudat::input_output::writeDataMapToTextFile;
 
     using tudat::numerical_integrators::RungeKutta4Integrator;
@@ -191,33 +192,29 @@ int main( )
     // Create Asterix and Obelix satellites, and gravitational acceleration models.
 
     // Create Asterix and set initial state and epoch.
-    const BodyPointer asterix = boost::make_shared< Body >(
-                asterixInitialStateInKeplerianElements, 0.0 );
+    const BodyPointer asterix = boost::make_shared< Body >( asterixInitialState );
 
     // Create gravitational acceleration model for asterix.
     const CentralJ2J3J4GravitationalAccelerationModelPointer asterixGravityModel
             = boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel >(
                 boost::bind( &Body::getCurrentPosition, asterix ),
-                earthGravitationalParameter, earthEquatorialRadius,
-                earthJ2, earthJ3, earthJ4 );
+                earthGravitationalParameter, earthEquatorialRadius, earthJ2, earthJ3, earthJ4  );
 
     // Create Cartesian state derivative model for asterix.
     const CartesianStateDerivativeModel6d::AccelerationModelPointerVector asterixGravity
             = boost::assign::list_of( asterixGravityModel );
 
     // Create Obelix and set initial state and epoch.
-    const BodyPointer obelix = boost::make_shared< Body >(
-                asterixInitialStateInKeplerianElements, 0.0 );
+    const BodyPointer obelix = boost::make_shared< Body >( obelixInitialState );
 
     // Create gravitational acceleration model for obelix.
     const CentralJ2J3J4GravitationalAccelerationModelPointer obelixGravityModel
             = boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel >(
-                boost::bind( &Body::getCurrentPosition, asterix ),
-                earthGravitationalParameter, earthEquatorialRadius,
-                earthJ2, earthJ3, earthJ4 );
+                boost::bind( &Body::getCurrentPosition, obelix ),
+                earthGravitationalParameter, earthEquatorialRadius, earthJ2, earthJ3, earthJ4  );
 
     // Create Cartesian state derivative model model for obelix.
-    const CartesianStateDerivativeModel6d::AccelerationModelPointerVector obelixGravity
+   const  CartesianStateDerivativeModel6d::AccelerationModelPointerVector obelixGravity
             = boost::assign::list_of( obelixGravityModel );
 
     // Add Asterix and Obelix to list of satellites.
@@ -262,7 +259,7 @@ int main( )
     DataUpdater updater( satellites );
 
     // Create composite state derivative model.
-    const boost::shared_ptr< CompositeStateDerivativeModel12d > stateDerivativeModel
+    boost::shared_ptr< CompositeStateDerivativeModel12d > stateDerivativeModel
             = boost::make_shared< CompositeStateDerivativeModel12d >(
                 stateDerivativeModelMap,
                 boost::bind( &DataUpdater::updateBodyData, updater, _1, _2 ) );
@@ -285,8 +282,8 @@ int main( )
     double runningTime = simulationStartEpoch;
 
     // Declare propagation history to store state history of satellites.
-    PropagationHistory asterixPropagationHistory;
-    PropagationHistory obelixPropagationHistory;
+    DoubleKeyTypeVectorXdValueTypeMap asterixPropagationHistory;
+    DoubleKeyTypeVectorXdValueTypeMap obelixPropagationHistory;
 
     // Set initial states in propagation history.
     asterixPropagationHistory[ 0.0 ] = asterixInitialState;

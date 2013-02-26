@@ -54,7 +54,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Define the code root directory.
-set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(CODEROOT "${SRCROOT}/..")
 
 # Set lib and bin directories where static libraries, applications, and unit tests are built.
 set(LIBROOT "${CODEROOT}/lib")
