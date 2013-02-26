@@ -30,6 +30,8 @@
  #	120522	  A. Ronse	    Adapted for automatically finding TudatCoreEnvironment.cmake
  #			            at standard location relative to project source.
  #      130222    K. Kumar          Updated directory definitions.
+ #      130225    K. Kumar          Updated set-function calls to check if variables have been set
+ #                                  already.
  #
  #    References
  #
@@ -49,10 +51,11 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Define the code root directory.
-set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}/../")
+set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
-# Set CMake build-type.
-set(CMAKE_BUILD_TYPE Release)
+# Set lib and bin directories where static libraries, applications, and unit tests are built.
+set(LIBROOT "${CODEROOT}/lib")
+set(BINROOT "${CODEROOT}/bin")
 
 # Set testing options based on platform.
 enable_testing()
@@ -78,59 +81,56 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
 endif()
 
-# Set directories for compiled libraries and binaries.
-set(LIBROOT "${CODEROOT}/lib")
-set(BINROOT "${CODEROOT}/bin")
+# ------------------------------------------------------------------------------------
+# Don't define any new variables with SET that the user might change beyond this point.
+#
+# Load user specific settings. These can overwrite all previous settings.
+if(NOT TEMPLATE_APPLICATION_USER_SETTINGS AND NOT DEFINED ENV{TEMPLATE_APPLICATION_USER_SETTINGS})
+  # Load from default paths, least important first.
+  include( "../UserSettings.txt" OPTIONAL)
+  include( "UserSettings.txt" OPTIONAL)
+else()
+  message(STATUS "Loading preset...")
+  # Load the user specified file.
+  if( TEMPLATE_APPLICATION_USER_SETTINGS )
+    include( $TEMPLATE_APPLICATION_USER_SETTINGS OPTIONAL)
+  else()
+    include( $ENV{TEMPLATE_APPLICATION_USER_SETTINGS} OPTIONAL)
+  endif()
+endif()
 
-# Set the global macros for setting up targets. Do not modify!
-# Different sub-directories are created for applications and unit tests.
-macro(setup_application_executable_target target_name CUSTOM_OUTPUT_PATH)
+# Set CMake build-type. If it not supplied by the user (either directly as an argument of through
+# the "UserSettings.txt" file, the default built type is "Release". NB: It is important this
+# section is placed AFTER the "UserSettings.txt" file is included, to ensure that that the correct
+# indiciation is given for which build type has been selected.
+if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Release"))
+    message(STATUS "WARNING: building release version!")
+    set(CMAKE_BUILD_TYPE Release)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "WARNING: building debug version!")
+endif()
+
+# Set the global macros for setting up targets.
+macro(setup_executable_target target_name CUSTOM_OUTPUT_PATH)
   set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/applications")
   install(TARGETS ${target_name} RUNTIME DESTINATION "${BINROOT}/applications")
-endmacro(setup_application_executable_target)
+endmacro(setup_executable_target)
 
 macro(setup_library_target target_name CUSTOM_OUTPUT_PATH)
   set_property(TARGET ${target_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY "${LIBROOT}")
   set_property(TARGET ${target_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${LIBROOT}")
-  install(TARGETS ${target_name} LIBRARY DESTINATION "${BINROOT}" ARCHIVE DESTINATION "${LIBROOT}")
 endmacro(setup_library_target)
 
-macro(setup_unit_test_executable_target target_name CUSTOM_OUTPUT_PATH)
+macro(setup_unit_test_target target_name CUSTOM_OUTPUT_PATH)
   set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/unit_tests")
   get_property(CUSTOM_TEST_PROGRAM_NAME TARGET ${target_name} PROPERTY OUTPUT_NAME)
   add_test("${target_name}" "${BINROOT}/unit_tests/${target_name}")
-endmacro(setup_unit_test_executable_target)
+endmacro(setup_unit_test_target)
 
 # Include the top-level directories.
 include_directories(AFTER
-  "${SRCROOT}"
+  "${CODEROOT}"
 )
-
-# Load user specific settings. These can overwrite all previous settings. 
-if(NOT TUDAT_USER_SETTINGS AND NOT DEFINED ENV{TUDAT_USER_SETTINGS})
-  # Load from default paths, least important first.
-  INCLUDE( "../UserSettings.txt" OPTIONAL)
-  INCLUDE( "UserSettings.txt" OPTIONAL)
-else()
-	MESSAGE(STATUS "Loading custom preset user settings.")
-  # Load the user specified file.
-  if( TUDAT_USER_SETTINGS )
-    #INCLUDE( $TUDAT_USER_SETTINGS OPTIONAL)
-  else()  
-    #INCLUDE( $ENV{TUDAT_USER_SETTINGS} OPTIONAL)
-  endif()
-endif()
-
-# Find Tudat Core library on local system.
-find_package(TudatCore 2.0 REQUIRED)
-
-# Include TudatCore directories.
-# Set CMake flag to suppress TudatCore warnings (platform-dependent solution).
-if(NOT APPLE)
-  include_directories(SYSTEM AFTER "${TUDAT_CORE_INCLUDE_DIR}")
-else( )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_CORE_INCLUDE_DIR}\"")
-endif( )
 
 # Find Eigen3 library on local system.
 find_package(Eigen3 REQUIRED)
@@ -165,6 +165,17 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${Boost_INCLUDE_DIRS}\"")
 endif()
 
+# Find Tudat Core library on local system.
+find_package(TudatCore 2.0 REQUIRED)
+
+# Include TudatCore directories.
+# Set CMake flag to suppress TudatCore warnings (platform-dependent solution).
+if(NOT APPLE)
+  include_directories(SYSTEM AFTER "${TUDAT_CORE_INCLUDE_DIR}")
+else( )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_CORE_INCLUDE_DIR}\"")
+endif( )
+
 # Find Tudat library on local system.
 find_package(Tudat 2.0 REQUIRED)
 
@@ -177,6 +188,6 @@ else()
 endif()
 
 # Add helloWorld application.
-add_executable(application_HelloWorld "${SRCROOT}/helloWorld")
-setup_application_executable_target(application_HelloWorld "${SRCROOT}")
+add_executable(application_HelloWorld "${SRCROOT}/helloWorld.cpp")
+setup_executable_target(application_HelloWorld "${SRCROOT}")
 target_link_libraries(application_HelloWorld tudat_gravitation ${TUDAT_CORE_LIBRARIES} ${Eigen_LIBRARIES} ${Boost_LIBRARIES} )
