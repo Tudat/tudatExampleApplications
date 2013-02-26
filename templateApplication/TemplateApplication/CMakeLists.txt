@@ -81,6 +81,11 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
 endif()
 
+# Defines the install target to create a distribution..
+if(NOT TEMPLATE_APPLICATION_DISTRIBUTION_PATH)
+    set(TEMPLATE_APPLICATION_DISTRIBUTION_PATH "${CODEROOT}/dist/templateApplication")
+endif(NOT TEMPLATE_APPLICATION_DISTRIBUTION_PATH)
+
 # ------------------------------------------------------------------------------------
 # Don't define any new variables with SET that the user might change beyond this point.
 #
@@ -109,6 +114,17 @@ if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Release"))
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "WARNING: building debug version!")
 endif()
+
+# Install Template Application files.
+install(DIRECTORY "${SRCROOT}/"
+        DESTINATION "${TEMPLATE_APPLICATION_DISTRIBUTION_PATH}/TemplateApplication"
+        FILES_MATCHING
+            PATTERN "*"
+            PATTERN "CMakeLists.txt.user" EXCLUDE
+)
+
+install(FILES ${CODEROOT}/LICENSE ${CODEROOT}/NOTICE ${CODEROOT}/README ${CODEROOT}/UserSettings.txt.example
+  DESTINATION "${TEMPLATE_APPLICATION_DISTRIBUTION_PATH}")
 
 # Set the global macros for setting up targets.
 macro(setup_executable_target target_name CUSTOM_OUTPUT_PATH)
