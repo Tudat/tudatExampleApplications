@@ -81,7 +81,7 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
 endif()
 
-# Defines the install target to create a distribution..
+# Defines the install target to create a distribution.
 if(NOT TEMPLATE_APPLICATION_DISTRIBUTION_PATH)
     set(TEMPLATE_APPLICATION_DISTRIBUTION_PATH "${CODEROOT}/dist/templateApplication")
 endif(NOT TEMPLATE_APPLICATION_DISTRIBUTION_PATH)
