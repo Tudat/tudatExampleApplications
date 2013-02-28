@@ -118,7 +118,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "WARNING: building debug version!")
 endif()
 
-# Install Template Application files.
+# Install files.
 install(DIRECTORY "${SRCROOT}/"
         DESTINATION "${SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH}/SatellitePropagatorExamples"
         FILES_MATCHING
