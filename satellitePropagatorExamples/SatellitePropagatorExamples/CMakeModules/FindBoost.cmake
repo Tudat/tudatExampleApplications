@@ -606,9 +606,9 @@ set(Boost_ERROR_REASON)
     "$ENV{ProgramFiles}/boost"
     /sw/local/include
     "${PROJECT_SOURCE_DIR}/../boost"
-    "${PROJECT_SOURCE_DIR}/../../tudatCore/boost"
-    "${PROJECT_SOURCE_DIR}/../../../tudatCore/boost"
-    "${PROJECT_SOURCE_DIR}/../../../../tudatCore/boost"
+    "${PROJECT_SOURCE_DIR}/../../boost"
+    "${PROJECT_SOURCE_DIR}/../../../boost"
+    "${PROJECT_SOURCE_DIR}/../../../../boost"
   )
 
   _Boost_CHECK_SPELLING(Boost_ROOT)
@@ -870,9 +870,9 @@ set(Boost_ERROR_REASON)
     "$ENV{ProgramFiles}/boost"
     /sw/local/lib
     "${PROJECT_SOURCE_DIR}/../boost/stage/lib"
-    "${PROJECT_SOURCE_DIR}/../../tudatCore/boost"
-    "${PROJECT_SOURCE_DIR}/../../../tudatCore/boost"
-    "${PROJECT_SOURCE_DIR}/../../../../tudatCore/boost"
+    "${PROJECT_SOURCE_DIR}/../../boost"
+    "${PROJECT_SOURCE_DIR}/../../../boost"
+    "${PROJECT_SOURCE_DIR}/../../../../boost"
   )
   set(_boost_LIBRARY_SEARCH_DIRS ${_boost_LIBRARY_SEARCH_DIRS_ALWAYS})
   if( Boost_NO_SYSTEM_PATHS )
