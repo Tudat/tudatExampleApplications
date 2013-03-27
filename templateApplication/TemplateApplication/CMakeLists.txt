@@ -46,7 +46,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # Specify project name.
-project(TudatCore)
+project(TemplateApplication)
 
 # Set module path to local CMake scripts.
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
