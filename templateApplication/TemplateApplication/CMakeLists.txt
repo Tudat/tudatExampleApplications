@@ -57,6 +57,9 @@ set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 # Define the code root directory.
 set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
+# Set testing options based on platform.
+enable_testing()
+
 # Set platform-specific compiler flags.
 if (WIN32)
   if (MSVC)
