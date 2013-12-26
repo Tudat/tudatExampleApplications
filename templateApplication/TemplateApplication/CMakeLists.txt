@@ -255,4 +255,4 @@ endif()
 add_executable(application_HelloWorld "${SRCROOT}/helloWorld.cpp")
 setup_executable_target(application_HelloWorld "${SRCROOT}")
 target_link_libraries(application_HelloWorld tudat_gravitation 
-                      ${TUDAT_CORE_LIBRARIES} ${Eigen_LIBRARIES} ${Boost_LIBRARIES} )
+                      ${TUDAT_CORE_LIBRARIES} ${Boost_LIBRARIES} )
