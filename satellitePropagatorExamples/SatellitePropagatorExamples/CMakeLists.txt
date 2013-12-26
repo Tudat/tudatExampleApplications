@@ -258,6 +258,12 @@ endif()
 add_library(satellite_propagator_examples STATIC body.h void.cpp)
 setup_library_target(satellite_propagator_examples "${SRCROOT}")
 
+# Add single, Earth-orbiting satellite propagator application.
+add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
+setup_executable_target(application_SingleSatellitePropagator "${SRCROOT}")
+target_link_libraries(application_SingleSatellitePropagator satellite_propagator_examples
+                      tudat_gravitation ${TUDAT_CORE_LIBRARIES} ${Boost_LIBRARIES} )
+
 # Add Asterix and Obelix (satellites) propagator application.
 add_executable(application_AsterixAndObelixPropagator "${SRCROOT}/asterixAndObelixPropagator.cpp")
 setup_executable_target(application_AsterixAndObelixPropagator "${SRCROOT}")
