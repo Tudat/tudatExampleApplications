@@ -43,8 +43,7 @@
 
 #include <Eigen/Core>
 
-#include <TudatCore/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-
+#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
 #include <Tudat/Astrodynamics/Gravitation/centralGravityModel.h>
 
 int main( )

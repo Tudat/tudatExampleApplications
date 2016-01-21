@@ -162,10 +162,6 @@ install(DIRECTORY "${SRCROOT}/"
         PATTERN ".bzr" EXCLUDE
 )
 
-install(FILES ${CODEROOT}/LICENSE ${CODEROOT}/NOTICE ${CODEROOT}/README 
-              ${CODEROOT}/UserSettings.txt.example
-        DESTINATION "${TEMPLATE_APPLICATION_DISTRIBUTION_PATH}")
-
 # Include the top-level directories.
 include_directories(AFTER
   "${CODEROOT}"
@@ -204,17 +200,6 @@ if(NOT APPLE)
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${Boost_INCLUDE_DIRS}\"")
 endif()
-
-# Find Tudat Core library on local system.
-find_package(TudatCore 2.0 REQUIRED)
-
-# Include TudatCore directories.
-# Set CMake flag to suppress TudatCore warnings (platform-dependent solution).
-if(NOT APPLE)
-  include_directories(SYSTEM AFTER "${TUDAT_CORE_INCLUDE_DIR}")
-else( )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_CORE_INCLUDE_DIR}\"")
-endif( )
 
 # Find Tudat library on local system.
 find_package(Tudat 2.0 REQUIRED)
