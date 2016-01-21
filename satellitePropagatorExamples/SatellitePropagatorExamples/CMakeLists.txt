@@ -86,29 +86,6 @@ else()
       "${CMAKE_CXX_FLAGS} -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
 endif()
 
-# -------------------------------------------------------------------------------------------------
-# DO NOT MANUALLY EDIT ANY SETTINGS AFTER THIS POINT IN THE FILE.
-# 
-# Pass any additional settings directly to CMake (e.g., via command-line) or by using a config file
-# (e.g., UserSettings.txt).
-# -------------------------------------------------------------------------------------------------
-
-# Load user specific settings. These can overwrite all previous settings.
-if(NOT SATELLITE_PROPAGATOR_EXAMPLES_USER_SETTINGS 
-   AND NOT DEFINED ENV{SATELLITE_PROPAGATOR_EXAMPLES_USER_SETTINGS})
-  # Load from default paths, least important first.
-  include( "../UserSettings.txt" OPTIONAL)
-  include( "UserSettings.txt" OPTIONAL)
-else()
-  message(STATUS "Loading preset...")
-  # Load the user specified file.
-  if( SATELLITE_PROPAGATOR_EXAMPLES_USER_SETTINGS )
-    include( $SATELLITE_PROPAGATOR_EXAMPLES_USER_SETTINGS OPTIONAL)
-  else()
-    include( $ENV{SATELLITE_PROPAGATOR_EXAMPLES_USER_SETTINGS} OPTIONAL)
-  endif()
-endif()
-
 # Set CMake build-type. If it not supplied by the user (either directly as an argument of through
 # the "UserSettings.txt" file, the default built type is "Release". NB: It is important this
 # section is placed AFTER the "UserSettings.txt" file is included, to ensure that that the correct
@@ -165,10 +142,6 @@ install(DIRECTORY "${SRCROOT}/"
         PATTERN ".bzr" EXCLUDE
 )
 
-install(FILES ${CODEROOT}/LICENSE ${CODEROOT}/NOTICE ${CODEROOT}/README 
-              ${CODEROOT}/UserSettings.txt.example
-        DESTINATION "${SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH}")
-
 # Include the top-level directories.
 include_directories(AFTER
   "${CODEROOT}"
@@ -207,17 +180,6 @@ if(NOT APPLE)
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${Boost_INCLUDE_DIRS}\"")
 endif()
-
-# Find Tudat Core library on local system.
-find_package(TudatCore 2.0 REQUIRED)
-
-# Include Tudat Core directories.
-# Set CMake flag to suppress TudatCore warnings (platform-dependent solution).
-if(NOT APPLE)
-  include_directories(SYSTEM AFTER "${TUDAT_CORE_INCLUDE_DIR}")
-else( )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_CORE_INCLUDE_DIR}\"")
-endif( )
 
 # Find Tudat library on local system.
 find_package(Tudat 2.0 REQUIRED)
@@ -262,17 +224,17 @@ setup_library_target(satellite_propagator_examples "${SRCROOT}")
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
 setup_executable_target(application_SingleSatellitePropagator "${SRCROOT}")
 target_link_libraries(application_SingleSatellitePropagator satellite_propagator_examples
-                      tudat_gravitation ${TUDAT_CORE_LIBRARIES} ${Boost_LIBRARIES} )
+                      tudat_gravitation tudat_basic_astrodynamics ${Boost_LIBRARIES} )
 
 # Add Asterix and Obelix (satellites) propagator application.
 add_executable(application_AsterixAndObelixPropagator "${SRCROOT}/asterixAndObelixPropagator.cpp")
 setup_executable_target(application_AsterixAndObelixPropagator "${SRCROOT}")
 target_link_libraries(application_AsterixAndObelixPropagator satellite_propagator_examples 
-                      tudat_gravitation ${TUDAT_CORE_LIBRARIES} ${Boost_LIBRARIES} )
+                      tudat_gravitation tudat_basic_astrodynamics ${Boost_LIBRARIES} )
 
 # Add Galileo constellation application.
 add_executable(application_GalileoConstellationSimulator 
                "${SRCROOT}/galileoConstellationSimulator.cpp")
 setup_executable_target(application_GalileoConstellationSimulator "${SRCROOT}")
 target_link_libraries(application_GalileoConstellationSimulator satellite_propagator_examples 
-                      tudat_gravitation ${TUDAT_CORE_LIBRARIES} ${Boost_LIBRARIES} )
+                      tudat_gravitation tudat_basic_astrodynamics ${Boost_LIBRARIES} )

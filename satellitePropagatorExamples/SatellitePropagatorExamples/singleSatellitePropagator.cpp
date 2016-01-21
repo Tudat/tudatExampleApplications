@@ -55,10 +55,10 @@
 #include <Eigen/Core>
 
 // Tudat Core library
-#include <TudatCore/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
-#include <TudatCore/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
-#include <TudatCore/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-#include <TudatCore/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
+#include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
 
 // Tudat library
 #include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
@@ -87,12 +87,12 @@ int main()
     using satellite_propagator_examples::BodyPointer;
 
     // Keplerian state vector element indices.
-    using tudat::basic_astrodynamics::semiMajorAxisIndex;
-    using tudat::basic_astrodynamics::eccentricityIndex;
-    using tudat::basic_astrodynamics::inclinationIndex;
-    using tudat::basic_astrodynamics::argumentOfPeriapsisIndex;
-    using tudat::basic_astrodynamics::longitudeOfAscendingNodeIndex;
-    using tudat::basic_astrodynamics::trueAnomalyIndex;
+    using tudat::orbital_element_conversions::semiMajorAxisIndex;
+    using tudat::orbital_element_conversions::eccentricityIndex;
+    using tudat::orbital_element_conversions::inclinationIndex;
+    using tudat::orbital_element_conversions::argumentOfPeriapsisIndex;
+    using tudat::orbital_element_conversions::longitudeOfAscendingNodeIndex;
+    using tudat::orbital_element_conversions::trueAnomalyIndex;
 
     // State vector typedef.
     using tudat::basic_mathematics::Vector6d;

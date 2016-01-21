@@ -48,6 +48,7 @@
  *
  */
 
+#include <iostream>
 #include <fstream>
 #include <limits>
 #include <string>
@@ -60,10 +61,10 @@
 
 #include <Eigen/Core>
 
-#include <TudatCore/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
-#include <TudatCore/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
-#include <TudatCore/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-#include <TudatCore/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
+#include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
 
 #include <Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
@@ -81,18 +82,18 @@ int main( )
     using namespace satellite_propagator_examples;
 
     using tudat::basic_astrodynamics::AccelerationModel3dPointer;
-    using tudat::basic_astrodynamics::semiMajorAxisIndex;
-    using tudat::basic_astrodynamics::eccentricityIndex;
-    using tudat::basic_astrodynamics::inclinationIndex;
-    using tudat::basic_astrodynamics::argumentOfPeriapsisIndex;
-    using tudat::basic_astrodynamics::longitudeOfAscendingNodeIndex;
-    using tudat::basic_astrodynamics::trueAnomalyIndex;
-    using tudat::basic_astrodynamics::xCartesianPositionIndex;
-    using tudat::basic_astrodynamics::yCartesianPositionIndex;
-    using tudat::basic_astrodynamics::zCartesianPositionIndex;
-    using tudat::basic_astrodynamics::xCartesianVelocityIndex;
-    using tudat::basic_astrodynamics::yCartesianVelocityIndex;
-    using tudat::basic_astrodynamics::zCartesianVelocityIndex;
+    using tudat::orbital_element_conversions::semiMajorAxisIndex;
+    using tudat::orbital_element_conversions::eccentricityIndex;
+    using tudat::orbital_element_conversions::inclinationIndex;
+    using tudat::orbital_element_conversions::argumentOfPeriapsisIndex;
+    using tudat::orbital_element_conversions::longitudeOfAscendingNodeIndex;
+    using tudat::orbital_element_conversions::trueAnomalyIndex;
+    using tudat::orbital_element_conversions::xCartesianPositionIndex;
+    using tudat::orbital_element_conversions::yCartesianPositionIndex;
+    using tudat::orbital_element_conversions::zCartesianPositionIndex;
+    using tudat::orbital_element_conversions::xCartesianVelocityIndex;
+    using tudat::orbital_element_conversions::yCartesianVelocityIndex;
+    using tudat::orbital_element_conversions::zCartesianVelocityIndex;
 
     using tudat::basic_mathematics::Vector6d;
 
@@ -122,6 +123,11 @@ int main( )
 
     // Set output directory.
     const std::string outputDirectory = "";
+    if( outputDirectory == "" )
+    {
+        std::cerr<<"Error, output directory not specified (modify outputDirectory variable to "<<
+                   " required output directory)."<<std::endl;
+    }
 
     // Set simulation start epoch.
     const double simulationStartEpoch = 0.0;
