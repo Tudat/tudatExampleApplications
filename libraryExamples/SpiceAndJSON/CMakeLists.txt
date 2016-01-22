@@ -197,8 +197,8 @@ else( )
 endif( )
 
 # Add application.
-add_executable(gen_ephem_main_project "${SRCROOT}/main.cpp")
-setup_executable_target(gen_ephem_main_project "${SRCROOT}")
-target_link_libraries(gen_ephem_main_project tudat_ephemerides tudat_basic_astrodynamics
+add_executable(example_library_spice_and_json "${SRCROOT}/main.cpp")
+setup_executable_target(example_library_spice_and_json "${SRCROOT}")
+target_link_libraries(example_library_spice_and_json tudat_ephemerides tudat_basic_astrodynamics
                                              tudat_basic_mathematics tudat_spice_interface
                                              cspice jsoncpp ${Boost_LIBRARIES} )
