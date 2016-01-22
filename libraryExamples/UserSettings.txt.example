@@ -1,0 +1,100 @@
+ #    Copyright (c) 2010-2013, Delft University of Technology
+ #    All rights reserved.
+ #
+ #    Redistribution and use in source and binary forms, with or without modification, are
+ #    permitted provided that the following conditions are met:
+ #      - Redistributions of source code must retain the above copyright notice, this list of
+ #        conditions and the following disclaimer.
+ #      - Redistributions in binary form must reproduce the above copyright notice, this list of
+ #        conditions and the following disclaimer in the documentation and/or other materials
+ #        provided with the distribution.
+ #      - Neither the name of the Delft University of Technology nor the names of its contributors
+ #        may be used to endorse or promote products derived from this software without specific
+ #        prior written permission.
+ #
+ #    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+ #    OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ #    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ #    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ #    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ #    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ #    AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ #    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ #    OF THE POSSIBILITY OF SUCH DAMAGE.
+ #
+ #    Changelog
+ #      YYMMDD    Author            Comment
+ #      120210    S.Billemont       File created.
+ #	120522	  A. Ronse          Included options for setting Tudat paths.
+ #
+ #    References
+ #
+ #    Notes
+ #      This file contains all the settings that the user can override to allow for the detection
+ #      of various required components and customization of the Tudat installation.
+ #
+ #      If you want to use this file, rename to "UserSettings.txt".
+ #
+	
+ #--------------------------------------
+ # Tudat
+ #--------------------------------------
+
+ # If Tudat is not found, use the following to manually set the path to the Tudat library.
+#SET(TUDAT_BASE_PATH "C:/path/to/Tudat")
+
+ # Enforce a rootpath for Tudat directory.
+ # This should be used in case the FILE token does not given the full-path in the getRootPath() function in basicFunctions.h.
+#add_definitions(-DTUDAT_CUSTOM_ROOT_PATH="C:/My/Custom/Path/To/Tudat")
+
+ #--------------------------------------
+ # Tudat Core
+ #--------------------------------------
+
+ # If Tudat Core is not found, use the following to manually set the path to the TudatCore library.
+#SET(TUDAT_CORE_BASE_PATH "C:/path/to/TudatCore")
+
+ # Enforce a rootpath for Tudat Core directory.
+ # This should be used in case the FILE token does not given the full-path in the getRootPath() function in basicFunctions.h.
+#add_definitions(-DTUDAT_CORE_CUSTOM_ROOT_PATH="C:/My/Custom/Path/To/TudatCore")
+
+ #--------------------------------------
+ # Boost
+ #--------------------------------------
+
+ # Set Boost paths manually:
+ # If Boost is not found, use the following to manually set the path to the Boost include and library directories.
+#SET(BOOST_ROOT       "C:/CWorkspace/tudatCore/trunk/boost")
+#SET(BOOST_INCLUDEDIR "C:/path/to/boost")
+ # Set the path to where your build libraries (*.a *.lib) are located
+#SET(BOOST_LIBRARYDIR "C:/path/to/boost/stage/lib")
+
+ # Additional boost debug settings, to check where things might be wrong:
+ # Show details for every boost step performed:
+#SET(Boost_DEBUG      "TRUE")
+ # Give more detailed cmake boost error messages:
+#SET(Boost_DETAILED_FAILURE_MSG "TRUE")
+
+ # Set Boost variants to be used. The defaults in the CMakeLists.txt are STATIC_LIBS ON, MULTITHREADED ON and STATIC_RUNTIME ON.
+#SET(Boost_USE_STATIC_LIBS ON)
+#SET(Boost_USE_MULTITHREADED ON)
+#SET(Boost_USE_STATIC_RUNTIME ON)
+
+ #--------------------------------------
+ # Eigen 3
+ #--------------------------------------
+
+ # If Eigen3 is not found, use the following to manually set the path to the Eigen3 directory.
+#SET(EIGEN3_INCLUDE_DIR "C:/path/to/eigen3")          # Set to the path where you extracted eigen3
+
+ #--------------------------------------
+ # Other CMakeSettings
+ #--------------------------------------
+
+ # Force build in debug or release mode.
+#SET(CMAKE_BUILD_TYPE Debug)
+#SET(CMAKE_BUILD_TYPE Release)
+
+ # Manually set lib and bin directories.
+#SET(LIBROOT "C:/path/to/lib")
+#SET(BINROOT "C:/path/to/bin")

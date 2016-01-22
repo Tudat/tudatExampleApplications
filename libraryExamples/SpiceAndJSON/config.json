@@ -1,0 +1,16 @@
+// Configuration options
+{
+  // Bodies to include
+  "bodies" : [
+    "Earth",
+    "Mars"
+  ],
+
+  // Reference frame and epoch defenitions
+  "defs" : { "observer" : "Sun", "frame" : "J2000"},
+
+  // Tab indent size
+  "sim" : { "start" : [2007,1,1,0,0,0],
+            "end": [2009,12,31,23,59,59],
+            "step": 43200 }
+}
