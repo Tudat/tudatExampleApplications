@@ -43,16 +43,11 @@
 // INCLUDE STATEMENTS
 // ------------------------------------------------------------------------------------------------
 
-// C++ Standard library
-#include <iostream>
 
 // External libraries: Boost
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
-
-// External libraries: Eigen
-#include <Eigen/Core>
 
 // Tudat Core library
 #include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
@@ -65,6 +60,13 @@
 #include <Tudat/Astrodynamics/Gravitation/centralGravityModel.h>
 #include <Tudat/Astrodynamics/StateDerivativeModels/cartesianStateDerivativeModel.h>
 #include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
+
+// C++ Standard library
+#include <iostream>
+
+// External libraries: Eigen
+#include <Eigen/Core>
+
 
 // The simulation's data repository: the body class
 #include "body.h"

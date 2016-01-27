@@ -38,23 +38,17 @@
  *
  */
 
-#include <iostream>
-#include <limits>
-#include <sstream>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include <boost/assign/list_of.hpp>
+#include <boost/function.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/multi_array.hpp>
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
-
-#include <Eigen/Core>
+#include <boost/shared_ptr.hpp>
 
 #include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-#include <Tudat/Mathematics/BasicMathematics/mathematicalConstants.h>
 #include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
 
 #include <Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h>
@@ -64,6 +58,15 @@
 #include <Tudat/Astrodynamics/StateDerivativeModels/compositeStateDerivativeModel.h>
 #include <Tudat/InputOutput/basicInputOutput.h>
 #include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
+#include <Tudat/Mathematics/BasicMathematics/mathematicalConstants.h>
+
+#include <iostream>
+#include <limits>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <Eigen/Core>
 
 #include "SatellitePropagatorExamples/body.h"
 
@@ -210,8 +213,9 @@ int main( )
 
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
     {
+		Vector6d initKepl = initialConditionsInKeplerianElements.col( i ).cast< double >();
         initialConditions.col( i ) = convertKeplerianToCartesianElements(
-                    initialConditionsInKeplerianElements.col( i ), earthGravitationalParameter );
+                    initKepl, static_cast< double >(earthGravitationalParameter) );
     }
 
 //    // DEBUG.
@@ -228,13 +232,14 @@ int main( )
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
     {
         BodyPointer satellite = boost::make_shared< Body >( initialConditions.col( i ), 0.0 );
-
-        satellites[ satellite ]
-                = boost::assign::list_of(
-                    boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel >(
+		
+        const CartesianStateDerivativeModel6d::AccelerationModelPointerVector gravityModel = 
+		    boost::assign::list_of( boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel >(
                         boost::bind( &Body::getCurrentPosition, satellite ),
                         earthGravitationalParameter, earthEquatorialRadius,
                         earthJ2, earthJ3, earthJ4 ) );
+		
+        satellites[ satellite ] = gravityModel;
     }
 
     ///////////////////////////////////////////////////////////////////////////
