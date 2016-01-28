@@ -48,18 +48,10 @@
  *
  */
 
-#include <iostream>
-#include <fstream>
-#include <limits>
-#include <string>
-#include <utility>
-
 #include <boost/assign/list_of.hpp>
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
-
-#include <Eigen/Core>
 
 #include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
@@ -73,6 +65,14 @@
 #include <Tudat/Astrodynamics/StateDerivativeModels/compositeStateDerivativeModel.h>
 #include <Tudat/InputOutput/basicInputOutput.h>
 #include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
+
+#include <iostream>
+#include <fstream>
+#include <limits>
+#include <string>
+#include <utility>
+
+#include <Eigen/Core>
 
 #include "SatellitePropagatorExamples/body.h"
 

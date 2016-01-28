@@ -51,8 +51,33 @@ cmake_minimum_required(VERSION 2.6)
 # Specify project name.
 project(SatellitePropagatorExamples)
 
+# Load UserSettings.txt
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  message(STATUS "Building ${PROJECT_NAME} standalone.")
+  include("${CMAKE_CURRENT_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
+else()
+  message(STATUS "Building ${PROJECT_NAME} from within ${CMAKE_PROJECT_NAME}.")
+  include("${CMAKE_CURRENT_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
+  include("${CMAKE_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
+  STRING(REGEX REPLACE ${CMAKE_SOURCE_DIR} "" RELATIVE_PROJECT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+  set(RELATIVE_PROJECT_PATH "${RELATIVE_PROJECT_PATH}" CACHE STRING "Relative path wrt to project for function")
+  message(STATUS "Relative path (wrt to project): ${RELATIVE_PROJECT_PATH}")
+endif()
+
+# Set CMake build-type. If it not supplied by the user (either directly as an argument of through
+# the "UserSettings.txt" file, the default built type is "Release".
+if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Release"))
+    message(STATUS "WARNING: building release version!")
+    set(CMAKE_BUILD_TYPE Release)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "WARNING: building debug version!")
+endif()
+
 # Set module path to local CMake scripts.
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
+
+# Set compiler based on preferences (e.g. USE_CLANG) and system.
+include(${CMAKE_MODULE_PATH}/compiler.cmake)
 
 # Define the directory with the source code.
 set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -63,63 +88,29 @@ set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 # Set testing options based on platform.
 enable_testing()
 
-# Set platform-specific compiler flags.
-if (WIN32)
-  if (MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /Ox /W3 /FC -D_SCL_SECURE_NO_WARNINGS")
-    # Because we are using static boost libraries, with static runtime, we need to force MSVC to
-    # also use static runtime: (from http://www.cmake.org/Wiki/CMake_FAQ#Dynamic_Replace).
-    foreach(flag_var
-          CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-          CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-      # Find all dynamic runtime (MD) references and replace with static (MT)
-      if(${flag_var} MATCHES "/MD")
-        string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-      endif(${flag_var} MATCHES "/MD")
-    endforeach(flag_var)
-  else()
-    set(CMAKE_CXX_FLAGS 
-        "${CMAKE_CXX_FLAGS} -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
-  endif()
-else()
-  set(CMAKE_CXX_FLAGS 
-      "${CMAKE_CXX_FLAGS} -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
-endif()
-
-# Set CMake build-type. If it not supplied by the user (either directly as an argument of through
-# the "UserSettings.txt" file, the default built type is "Release". NB: It is important this
-# section is placed AFTER the "UserSettings.txt" file is included, to ensure that that the correct
-# indiciation is given for which build type has been selected.
-if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Release"))
-    message(STATUS "WARNING: building release version!")
-    set(CMAKE_BUILD_TYPE Release)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "WARNING: building debug version!")
-endif()
-
 # Set lib and bin directories where static libraries and unit tests are built.
-if(NOT LIB_ROOT)
-  set(LIB_ROOT "${CODEROOT}/lib")
+if(NOT LIBROOT)
+  set(LIBROOT "${CODEROOT}/lib")
 endif()
-if(NOT BIN_ROOT)
-  set(BIN_ROOT "${CODEROOT}/bin")
+if(NOT BINROOT)
+  set(BINROOT "${CODEROOT}/bin")
 endif()
 
 # Set the global macros for setting up targets.
 macro(setup_executable_target target_name CUSTOM_OUTPUT_PATH)
-  set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BIN_ROOT}/applications")
-  install(TARGETS ${target_name} RUNTIME DESTINATION "${BIN_ROOT}/applications")
+  set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/applications")
+  install(TARGETS ${target_name} RUNTIME DESTINATION "${BINROOT}/applications")
 endmacro(setup_executable_target)
 
 macro(setup_library_target target_name CUSTOM_OUTPUT_PATH)
-  set_property(TARGET ${target_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY "${LIB_ROOT}")
-  set_property(TARGET ${target_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${LIB_ROOT}")
+  set_property(TARGET ${target_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY "${LIBROOT}")
+  set_property(TARGET ${target_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${LIBROOT}")
 endmacro(setup_library_target)
 
 macro(setup_unit_test_target target_name CUSTOM_OUTPUT_PATH)
-  set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BIN_ROOT}/unit_tests")
+  set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/unit_tests")
   get_property(CUSTOM_TEST_PROGRAM_NAME TARGET ${target_name} PROPERTY OUTPUT_NAME)
-  add_test("${target_name}" "${BIN_ROOT}/unit_tests/${target_name}")
+  add_test("${target_name}" "${BINROOT}/unit_tests/${target_name}")
 endmacro(setup_unit_test_target)
 
 # Define the install targets to create a distribution.
