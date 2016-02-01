@@ -48,8 +48,34 @@ cmake_minimum_required(VERSION 2.6)
 # Specify project name.
 project(TemplateApplication)
 
+# Load UserSettings.txt
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  message(STATUS "Building ${PROJECT_NAME} standalone.")
+  include("${CMAKE_CURRENT_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
+else()
+  message(STATUS "Building ${PROJECT_NAME} from within ${CMAKE_PROJECT_NAME}.")
+  include("${CMAKE_CURRENT_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
+  include("${CMAKE_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
+  STRING(REGEX REPLACE ${CMAKE_SOURCE_DIR} "" RELATIVE_PROJECT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+  set(RELATIVE_PROJECT_PATH "${RELATIVE_PROJECT_PATH}" CACHE STRING "Relative path wrt to project for function")
+  message(STATUS "Relative path (wrt to project): ${RELATIVE_PROJECT_PATH}")
+endif()
+
+# Set CMake build-type. If it not supplied by the user (either directly as an argument of through
+# the "UserSettings.txt" file, the default built type is "Release".
+if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Release"))
+  message(STATUS "WARNING: building release version!")
+  set(CMAKE_BUILD_TYPE Release)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  message(STATUS "WARNING: building debug version!")
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
+
 # Set module path to local CMake scripts.
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
+
+# Set compiler based on preferences (e.g. USE_CLANG) and system.
+include(${CMAKE_MODULE_PATH}/compiler.cmake)
 
 # Define the directory with the source code.
 set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -59,63 +85,6 @@ set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
 # Set testing options based on platform.
 enable_testing()
-
-# Set platform-specific compiler flags.
-if (WIN32)
-  if (MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /Ox /W3 /FC -D_SCL_SECURE_NO_WARNINGS")
-    # Because we are using static boost libraries, with static runtime, we need to force MSVC to
-    # also use static runtime: (from http://www.cmake.org/Wiki/CMake_FAQ#Dynamic_Replace).
-    foreach(flag_var
-          CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-          CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-      # Find all dynamic runtime (MD) references and replace with static (MT)
-      if(${flag_var} MATCHES "/MD")
-        string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-      endif(${flag_var} MATCHES "/MD")
-    endforeach(flag_var)
-  else()
-    set(CMAKE_CXX_FLAGS 
-        "${CMAKE_CXX_FLAGS} -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
-  endif()
-else()
-  set(CMAKE_CXX_FLAGS 
-      "${CMAKE_CXX_FLAGS} -Wall -g -Woverloaded-virtual -Wold-style-cast -Wnon-virtual-dtor")
-endif()
-
-# -------------------------------------------------------------------------------------------------
-# DO NOT MANUALLY EDIT ANY SETTINGS AFTER THIS POINT IN THE FILE.
-# 
-# Pass any additional settings directly to CMake (e.g., via command-line) or by using a config file
-# (e.g., UserSettings.txt).
-# -------------------------------------------------------------------------------------------------
-
-# Load user specific settings. These can overwrite all previous settings.
-if(NOT TEMPLATE_APPLICATION_USER_SETTINGS AND NOT DEFINED ENV{TEMPLATE_APPLICATION_USER_SETTINGS})
-  # Load from default paths, least important first.
-  include( "../UserSettings.txt" OPTIONAL)
-  include( "UserSettings.txt" OPTIONAL)
-else()
-  message(STATUS "Loading preset...")
-  # Load the user specified file.
-  if( TEMPLATE_APPLICATION_USER_SETTINGS )
-    include( $TEMPLATE_APPLICATION_USER_SETTINGS OPTIONAL)
-  else()
-    include( $ENV{TEMPLATE_APPLICATION_USER_SETTINGS} OPTIONAL)
-  endif()
-endif()
-
-# Set CMake build-type. If it not supplied by the user (either directly as an argument of through
-# the "UserSettings.txt" file, the default built type is "Release". NB: It is important this
-# section is placed AFTER the "UserSettings.txt" file is included, to ensure that that the correct
-# indiciation is given for which build type has been selected.
-if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Release"))
-  message(STATUS "WARNING: building release version!")
-  set(CMAKE_BUILD_TYPE Release)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  message(STATUS "WARNING: building debug version!")
-  set(CMAKE_BUILD_TYPE Debug)
-endif()
 
 # Set lib and bin directories where static libraries and unit tests are built.
 if(NOT LIB_ROOT)
