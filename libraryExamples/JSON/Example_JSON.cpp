@@ -42,12 +42,11 @@
  *                                  file; fixed error in assigning Obelix state derivative model;
  *                                  made variables const-correct.
  *
- *      160322    R. Hoogendoorn    GSL Library example
+ *      160322    R. Hoogendoorn    JSON Library example
  *
  *    References
  *
- *    https://github.com/ampl/gsl
- *    http://www.gnu.org/software/gsl/
+ *    https://github.com/open-source-parsers/jsoncpp.git
  *
  *    Notes
  *
@@ -103,8 +102,6 @@ Eigen::MatrixXd ReadJsonMatrix(Json::Value Array){
             Matrix(i,j) = Array[i][j].asDouble() ;
         }
     }
-
-//    std::cout << "Matrix size: rows = " << rows << " cols = " << cols << std::endl;
     return Matrix;
 }
 
@@ -121,10 +118,10 @@ Eigen::VectorXd ReadJsonVector(Json::Value Array){
 
 //// Read Json Array and return as Std Vector
 std::vector<double> ReadJsonStdVector(Json::Value Array){
-//    int size = Array.size();
+    int size = Array.size();
 
-    std::vector<double> Vector(Array.size());
-    for(unsigned int i = 0 ; i < Array.size() ; i++){
+    std::vector<double> Vector(size);
+    for(unsigned int i = 0 ; i < size ; i++){
         Vector[i] = Array[i].asDouble();
     }
     return Vector;
@@ -136,11 +133,17 @@ int main (void)
 {
     std::cout << "========= EXAMPLES USING JSON LIBRARY =========" << std::endl << std::endl ;
 
-    // Read config file
-    std::string folder ("C:/TuDat/tudatBundle_Reneh107/tudatExampleApplications/libraryExamples/JSON/");
+    // Open config file
+    // save path of cpp file
+    std::string cppPath( __FILE__ );
+
+    // Strip filename from temporary string and return root-path string.
+    std::string folder = cppPath.substr( 0, cppPath.find_last_of("/\\")+1);
+
     std::string filename ("Example_JSON.json");
     Json::Value settings = ReadConfigFile(folder,filename);
 
+    // Read and cout values from "Example_JSON.json"
     std::cout << "Matrix A: " << ReadJsonMatrix(settings["A"]) << std::endl << std::endl;
     std::cout << "Vector X0: " << ReadJsonVector(settings["X0"]) << std::endl << std::endl;
 

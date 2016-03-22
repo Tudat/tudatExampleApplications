@@ -50,7 +50,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # Specify project name.
-project(GSL_Example)
+project(JSON_Example)
 
 # Load UserSettings.txt
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
