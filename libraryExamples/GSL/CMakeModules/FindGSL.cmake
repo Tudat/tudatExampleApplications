@@ -39,7 +39,7 @@ message(STATUS ${GSL_BASE_PATH})
 
 # If the path has not been set previously or manually, try to autodetect the path
 if(NOT GSL_BASE_PATH)
-    find_path(GSL_BASE_PATH NAMES config.h
+    find_path(GSL_BASE_PATH NAMES gsl_version.h
         PATHS
             ${PROJECT_SOURCE_DIR}/External
             ${PROJECT_SOURCE_DIR}/..
@@ -49,7 +49,7 @@ if(NOT GSL_BASE_PATH)
             ${PROJECT_SOURCE_DIR}/../../../../..
             ${PROJECT_SOURCE_DIR}/../../../../../..
             ${PROJECT_SOURCE_DIR}/../../../../../../..
-        PATH_SUFFIXES "gsl/build-gsl"
+        PATH_SUFFIXES "gsl"
 )
 endif(NOT GSL_BASE_PATH)
 
@@ -63,10 +63,10 @@ if(NOT GSL_BASE_PATH)
 else(NOT GSL_BASE_PATH)
 
   # Good, path has been set/found, now set important variables and find libraries.
-  set(GSL_INCLUDE_DIR ${GSL_BASE_PATH})
-  set(GSL_LIBRARIES_DIR ${GSL_BASE_PATH})
-  set(GSL_LIBRARY_DIR ${GSL_BASE_PATH})
-  set(GSL_CBLAS_LIBRARY_DIR ${GSL_BASE_PATH})
+  set(GSL_INCLUDE_DIR "${GSL_BASE_PATH}/include")
+  set(GSL_LIBRARIES_DIR "${GSL_BASE_PATH}/lib")
+  set(GSL_LIBRARY_DIR "${GSL_BASE_PATH}/lib")
+  set(GSL_CBLAS_LIBRARY_DIR "${GSL_BASE_PATH}/lib")
 
   find_library(GSL_LIBRARY
 	NAMES libgsl.a
