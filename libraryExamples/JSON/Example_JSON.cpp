@@ -52,84 +52,87 @@
  *
  */
 
-#include <iostream> // cout sometimes needs this
-
-#include <cstdio>
+#include <iostream>
 #include <vector>
 #include <fstream>
-#include <iomanip> // setw
+#include <string>
 
 #include <Eigen/Core>
 
-// JSon
-#include <fstream>
 #include <json/value.h>
 #include <json/json.h>
-#include <string>
 
-//// ============================ Header / Declarations ====================== ////
-
-//// Read config file and return Json::Value member
-Json::Value ReadConfigFile(std::string folder, std::string filename){
+//! Read config file and return Json::Value member
+Json::Value readConfigFile( const std::string& folder, const std::string& filename )
+{
     // Construct Json Database
     Json::Value settings;
 
     // Read file and overwrite Json database
-    std::string filepath = folder+filename ;
-    try{
-        std::ifstream config_doc(filepath.c_str(), std::ifstream::binary);
+    std::string filepath = folder + filename ;
+    try
+    {
+        std::ifstream config_doc( filepath.c_str( ), std::ifstream::binary );
         config_doc >> settings; // write file to settings
-        std::cout << "Config file : " << settings["Name"].asString() << " (" <<settings["Date"][0]
-                  << "-" <<settings["Date"][1] << "-"<<settings["Date"][2] <<") Version: "
-                  << settings["Version"].asString() << std::endl;
+        std::cout << "Config file : " << settings[ "Name" ].asString( ) << " (" <<settings[ "Date" ][ 0 ]
+                  << "-" <<settings[ "Date" ][ 1 ] << "-"<<settings[ "Date" ][ 2 ] <<") Version: "
+                  << settings[ "Version" ].asString( ) << std::endl;
     }
-    catch(int ErrorNo){
+    catch( int ErrorNo )
+    {
         std::cerr << "Cannot read config file or write to Json::Value. Error No " << ErrorNo << std::endl;
     }
 
     return settings;
 }
 
-//// Read Json Array and return as Eigen Matrix
-Eigen::MatrixXd ReadJsonMatrix(Json::Value Array){
-    int rows = Array.size();
-    int cols = Array[0].size();
+//! Read Json array and return as Eigen Matrix
+Eigen::MatrixXd readJsonMatrix( Json::Value array )
+{
+    int rows = array.size( );
+    int cols = array[ 0 ].size( );
 
-    Eigen::MatrixXd Matrix(rows,cols) ;
+    Eigen::MatrixXd matrix( rows, cols ) ;
 
-    for(int i = 0 ; i<rows ; i++){
-        for(int j=0 ; j<cols ; j++){
-            Matrix(i,j) = Array[i][j].asDouble() ;
+    for( int i = 0 ; i < rows ; i++)
+    {
+        for(int j = 0; j < cols ; j++ )
+        {
+            matrix( i, j ) = array[ i ][ j ].asDouble( ) ;
         }
     }
-    return Matrix;
+    return matrix;
 }
 
-//// Read Json Array and return as Eigen Vector
-Eigen::VectorXd ReadJsonVector(Json::Value Array){
-    int size = Array.size();
+//! Read Json array and return as Eigen vector
+Eigen::VectorXd readJsonVector( Json::Value array )
+{
+    int size = array.size( );
 
-    Eigen::VectorXd Vector(size);
-    for(int i = 0 ; i < size ; i++){
-        Vector(i) = Array[i].asDouble();
+    Eigen::VectorXd vector( size );
+    for(int i = 0 ; i < size ; i++ )
+    {
+        vector( i ) = array[ i ].asDouble( );
     }
-    return Vector;
+    return vector;
 }
 
-//// Read Json Array and return as Std Vector
-std::vector<double> ReadJsonStdVector(Json::Value Array){
-    int size = Array.size();
+//! Read Json array and return as Std vector
+std::vector< double > readJsonStdVector( Json::Value array )
+{
+    int size = array.size( );
 
-    std::vector<double> Vector(size);
-    for(unsigned int i = 0 ; i < size ; i++){
-        Vector[i] = Array[i].asDouble();
+    std::vector< double > vector( size );
+    for( int i = 0 ; i < size ; i++)
+    {
+        vector[ i ] = array[ i ].asDouble( );
     }
-    return Vector;
+    return vector;
 }
 
 
-//// =================== Start Main code ==================== ////
-int main (void)
+//! Main function
+int main( )
 {
     std::cout << "========= EXAMPLES USING JSON LIBRARY =========" << std::endl << std::endl ;
 
@@ -138,23 +141,25 @@ int main (void)
     std::string cppPath( __FILE__ );
 
     // Strip filename from temporary string and return root-path string.
-    std::string folder = cppPath.substr( 0, cppPath.find_last_of("/\\")+1);
+    std::string folder = cppPath.substr( 0, cppPath.find_last_of( "/\\" ) + 1 );
 
-    std::string filename ("Example_JSON.json");
-    Json::Value settings = ReadConfigFile(folder,filename);
+    std::string filename( "Example_JSON.json" );
+    Json::Value settings = readConfigFile( folder, filename );
 
     // Read and cout values from "Example_JSON.json"
-    std::cout << "Matrix A: " << ReadJsonMatrix(settings["A"]) << std::endl << std::endl;
-    std::cout << "Vector X0: " << ReadJsonVector(settings["X0"]) << std::endl << std::endl;
+    std::cout << "Matrix A: " << readJsonMatrix( settings[ "A" ] ) << std::endl << std::endl;
+    std::cout << "vector X0: " << readJsonVector( settings[ "X0" ] ) << std::endl << std::endl;
 
-    std::cout << "value = " << settings["value"].asDouble() << "  as int: "
-              << settings["value"].asInt() << std::endl;
-    std::cout << "value = " << settings["intvalue"].asInt() << std::endl;
+    std::cout << "value = " << settings[ "value" ].asDouble( ) << "  as int: "
+              << settings[ "value" ].asInt( ) << std::endl;
+    std::cout << "value = " << settings[ "intvalue" ].asInt( ) << std::endl;
 
-    if(settings["tf"].asBool() == true){
+    if( settings[ "tf" ].asBool( ) == true )
+    {
         std::cout << "tf = true " << std::endl;
     }
-    else{
+    else
+    {
         std::cout << "tf = false " << std::endl;
     }
 
