@@ -8,8 +8,8 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#ifndef PAGMO_PROBLEM_EARTH_MARS_TRNANSFER_H
-#define PAGMO_PROBLEM_EARTH_MARS_TRNANSFER_H
+#ifndef TUDAT_EXAMPLE_PAGMO_PROBLEM_EARTH_MARS_TRANSFER_H
+#define TUDAT_EXAMPLE_PAGMO_PROBLEM_EARTH_MARS_TRANSFER_H
 
 #include <vector>
 
@@ -23,7 +23,11 @@
 
 #include <Eigen/Core>
 
-namespace pagmo { namespace problem {
+namespace pagmo
+{
+
+namespace problem
+{
 
 typedef Eigen::Matrix< double, 6, 1 > StateType;
 
@@ -31,23 +35,27 @@ typedef Eigen::Matrix< double, 6, 1 > StateType;
 class __PAGMO_VISIBLE EarthMarsTransfer : public base
 {
   public:
-    EarthMarsTransfer( const std::vector< std::vector< double > > );
-    base_ptr clone() const;
-    std::string get_name() const;
+    EarthMarsTransfer( const std::vector< std::vector< double > > problemBounds );
+    base_ptr clone( ) const;
+    std::string get_name( ) const;
     const std::vector< std::vector< double > > problemBounds_;
 
   protected:
-    void objfun_impl(fitness_vector &, const decision_vector &) const;
+    void objfun_impl( fitness_vector& f, const decision_vector& xv ) const;
 
   private:
     StateType getPlanetPosition( const double date, const std::string planetName ) const;
+
     friend class boost::serialization::access;
-    template <class Ar> void serialize(Ar &ar, const unsigned int)
+    template< class Ar > void serialize( Ar &ar, const unsigned int )
     {
-        ar & boost::serialization::base_object<base>(*this);
+        ar & boost::serialization::base_object< base >( *this );
     }
 };
-}} // namespace problem; namespace pagmo
+
+} // namespace problem;
+
+} // namespace pagmo
 
 // BOOST_SERIALIZATION_ASSUME_ABSTRACT( pagmo::problem::EarthMarsTransfer );
 namespace boost {
@@ -60,13 +68,14 @@ inline void serialize(
     const unsigned int file_version
 )
 {
-    for(size_t i=0; static_cast< unsigned int >(i)<t.size(); i++)
-        ar & t.data()[i];
+    for( size_t i = 0; static_cast< unsigned int >( i )< t.size( ); i++ )
+        ar & t.data( )[ i ];
 }
 
 // Because we have a non-empty constructor we need to be careful to
 // specify the save and load procedure for serialization.
-namespace serialization {
+namespace serialization
+{
 
 template<class Ar>
 inline void save_construct_data( Ar &ar, const pagmo::problem::EarthMarsTransfer * t,
@@ -84,10 +93,15 @@ inline void load_construct_data( Ar &ar, pagmo::problem::EarthMarsTransfer * t,
     std::vector< std::vector< double > > problemBounds;
     ar >> problemBounds;
     // invoke inplace constructor to initialize instance of my_class
-    ::new(t)pagmo::problem::EarthMarsTransfer( problemBounds );
+    ::new( t )pagmo::problem::EarthMarsTransfer( problemBounds );
 }
-}} // namespace serialization; namespace boost
 
-BOOST_CLASS_EXPORT_KEY(pagmo::problem::EarthMarsTransfer);
+} // namespace serialization;
 
-#endif
+} // namespace boost
+
+
+
+BOOST_CLASS_EXPORT_KEY( pagmo::problem::EarthMarsTransfer );
+
+#endif // TUDAT_EXAMPLE_PAGMO_PROBLEM_EARTH_MARS_TRANSFER_H

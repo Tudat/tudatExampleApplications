@@ -20,12 +20,13 @@ namespace pagmo { namespace problem {
 
 EarthMarsTransfer::EarthMarsTransfer(
     const std::vector< std::vector< double > > problemBounds ) :
-    base( problemBounds[0], problemBounds[1], 0, 1 ),
-    problemBounds_( problemBounds ) {}
+    base( problemBounds[ 0 ], problemBounds[ 1 ], 0, 1 ),
+    problemBounds_( problemBounds )
+{ }
 
 //! Clone method.
 base_ptr EarthMarsTransfer::clone( ) const {
-        return base_ptr(new EarthMarsTransfer(*this));
+        return base_ptr( new EarthMarsTransfer( *this ) );
 }
 
 //! Descriptive name of the problem
@@ -34,7 +35,7 @@ std::string EarthMarsTransfer::get_name() const {
 }
 
 //! Implementation of the objective function.
-void EarthMarsTransfer::objfun_impl(fitness_vector &f, const decision_vector &xv) const{
+void EarthMarsTransfer::objfun_impl( fitness_vector &f, const decision_vector &xv ) const{
     using tudat::mission_segments::MultiRevolutionLambertTargeterIzzo;
 
     // Gravitational parameter of the Sun
