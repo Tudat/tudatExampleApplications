@@ -103,22 +103,6 @@ macro(setup_executable_target target_name CUSTOM_OUTPUT_PATH)
   install(TARGETS ${target_name} RUNTIME DESTINATION "${BINROOT}/applications")
 endmacro(setup_executable_target)
 
-macro(setup_library_target target_name CUSTOM_OUTPUT_PATH)
-  set_property(TARGET ${target_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY "${LIBROOT}")
-  set_property(TARGET ${target_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${LIBROOT}")
-endmacro(setup_library_target)
-
-macro(setup_unit_test_target target_name CUSTOM_OUTPUT_PATH)
-  set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/unit_tests")
-  get_property(CUSTOM_TEST_PROGRAM_NAME TARGET ${target_name} PROPERTY OUTPUT_NAME)
-  add_test("${target_name}" "${BINROOT}/unit_tests/${target_name}")
-endmacro(setup_unit_test_target)
-
-# Define the install targets to create a distribution.
-if(NOT TUDAT_BUNDLE_DISTRIBUTION_PATH)
-    set(TUDAT_BUNDLE_DISTRIBUTION_PATH "${CODEROOT}")
-endif(NOT TUDAT_BUNDLE_DISTRIBUTION_PATH)
-
 # Include the top-level directories.
 include_directories(AFTER
   "${CODEROOT}"
@@ -135,29 +119,6 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${EIGEN3_INCLUDE_DIR}\"")
 endif()
 
-# Configure Boost libraries.
-if(NOT Boost_USE_STATIC_LIBS)
-  set(Boost_USE_STATIC_LIBS ON)
-endif()
-if(NOT Boost_USE_MULTITHREADED)
-  set(Boost_USE_MULTITHREADED ON)
-endif()
-if(NOT Boost_USE_STATIC_RUNTIME)
-  set(Boost_USE_STATIC_RUNTIME ON)
-endif()
-
-# Find Boost libraries on local system.
-find_package(Boost 1.45.0
-             COMPONENTS thread date_time system unit_test_framework filesystem regex REQUIRED)
-
-# Include Boost directories.
-# Set CMake flag to suppress Boost warnings (platform-dependent solution).
-if(NOT APPLE)
-  include_directories(SYSTEM AFTER "${Boost_INCLUDE_DIRS}")
-else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${Boost_INCLUDE_DIRS}\"")
-endif()
-
 # Find Tudat library on local system.
 find_package(Tudat 2.0 REQUIRED)
 
@@ -168,12 +129,6 @@ if(NOT APPLE)
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
-
-# Set whether to use the SPICE library integration with Tudat or not. If it not supplied by the
-# user (either directly as an argument or through the "UserSettings.txt" file, the default setting
-# is "OFF". NB: It is important this section is placed AFTER the "UserSettings.txt" file is
-# included, to ensure that that the correct indiciation is given for whether SPICE should be
-# included or not has been selected.
 
 # Find GSL library on local system.
 find_package(GSL)
@@ -188,6 +143,4 @@ endif( )
 # Add application.
 add_executable(example_library_GSL "${SRCROOT}/Example_GSL.cpp")
 setup_executable_target(example_library_GSL "${SRCROOT}")
-target_link_libraries(example_library_GSL 
-                                 gsl gslcblas
-				 ${Boost_LIBRARIES} )
+target_link_libraries(example_library_GSL gsl gslcblas )

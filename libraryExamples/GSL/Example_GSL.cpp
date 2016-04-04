@@ -53,113 +53,125 @@
  *
  */
 
-#include <iostream> // cout sometimes needs this
-
-#include <cstdio>
+#include <iostream>
 #include <vector>
 #include <fstream>
-#include <iomanip> // setw
+#include <iomanip>
 
 #include <Eigen/Core>
 
-// GSL
 #include <gsl/gsl_integration.h>    // numerical quadrature
 #include <gsl/gsl_qrng.h>           // GSL Quasi Random generators -> Sobol
 
-//// ============================ Header / Declarations ====================== ////
-
-using namespace std;
-
-// function to be integrated
-double my_integrand (double x, void *params)
+//! Function to be integrated
+double my_integrand( double independentVariable, void *parameters )
 {
-  // Mathematica form:  Log[alpha*x]/Sqrt[x]
+    // The next line recovers alpha from the passed parameters pointer
 
-  // The next line recovers alpha from the passed params pointer
-  double alpha = *(double *) params;
+    double alpha = *(double *)parameters;
 
-  return (log (alpha * x) / sqrt (x));
+    return ( std::log ( alpha * independentVariable ) / std::sqrt ( independentVariable ) );
 }
 
 //// =================== GSL Numerical quadrature ==================== ////
 /// https://www.physics.ohio-state.edu/~ntg/780/gsl_examples/qags_test.cpp
 /// https://www.physics.ohio-state.edu/~ntg/780/gsl_examples/
-void gsl_integrator_example(){
-    gsl_integration_workspace *work_ptr
-      = gsl_integration_workspace_alloc (1000);
+void gsl_integrator_example( )
+{
+    gsl_integration_workspace* work_ptr = gsl_integration_workspace_alloc( 1000 );
 
-    double lower_limit = 0;	/* lower limit a */
-    double upper_limit = 1;	/* upper limit b */
-    double abs_error = 1.0e-8;	/* to avoid round-off problems */
-    double rel_error = 1.0e-8;	/* the result will usually be much better */
     double result;		/* the result from the integration */
     double error;			/* the estimated error from the integration */
 
-    double alpha = 1.0;		// parameter in integrand
-    double expected = -4.0;	// exact answer
+    // Define limits and tolerances
+    double lower_limit = 0.0;	/* lower limit a */
+    double upper_limit = 1.0;	/* upper limit b */
+    double abs_error = 1.0E-8;	/* to avoid round-off problems */
+    double rel_error = 1.0E-8;	/* the result will usually be much better */
 
-    gsl_function My_function;
-    void *params_ptr = &alpha;
+    // Parameter in integrand
+    double alpha = 1.0;
 
-    My_function.function = &my_integrand;
-    My_function.params = params_ptr;
+    // Exact answer
+    double expected = -4.0;
 
-    gsl_integration_qags (&My_function, lower_limit, upper_limit,
-              abs_error, rel_error, 1000, work_ptr, &result,
-              &error);
+    // Define integration function
+    gsl_function my_function;
+    void *parameters_ptr = &alpha;
+    my_function.function = &my_integrand;
+    my_function.params = parameters_ptr;
 
-    cout.setf (ios::fixed, ios::floatfield);	// output in fixed format
-    cout.precision (18);		// 18 digits in doubles
+    // PErform integration.
+    gsl_integration_qags(
+                &my_function, lower_limit, upper_limit,
+                abs_error, rel_error, 1000, work_ptr, &result,
+                &error );
+
+    std::cout.setf ( std::ios::fixed, std::ios::floatfield );	// output in fixed format
+    std::cout.precision ( 18 );		// 18 digits in doubles
 
     int width = 20;  // setw width for output
-    cout << "result          = " << setw(width) << result << endl;
-    cout << "exact result    = " << setw(width) << expected << endl;
-    cout << "estimated error = " << setw(width) << error << endl;
-    cout << "actual error    = " << setw(width) << result - expected << endl;
-    cout << "intervals =  " << work_ptr->size << endl;
+    std::cout << "result          = " << std::setw( width ) << result << std::endl;
+    std::cout << "exact result    = " << std::setw( width ) << expected << std::endl;
+    std::cout << "estimated error = " << std::setw( width ) << error << std::endl;
+    std::cout << "actual error    = " << std::setw( width ) << result - expected << std::endl;
+    std::cout << "intervals =  " << work_ptr->size << std::endl;
 }
 
 //// =================== GSL Sobol Sampler ==================== ////
-std::vector< Eigen::VectorXd > GSL_Sobol_Sampler(const int Dimension, const int N){
-    std::vector< Eigen::VectorXd > SobolX(N);
+std::vector< Eigen::VectorXd > gsl_Sobol_Sampler( const int dimension, const int numberOfSamples )
+{
+    // Initialize vector list
+    std::vector< Eigen::VectorXd > sobolX( numberOfSamples );
 
-    Eigen::VectorXd x( Dimension );
-    double v[ Dimension ];
+    Eigen::VectorXd currentVector( dimension );
+    double randomArray[ dimension ];
 
-    gsl_qrng * q = gsl_qrng_alloc (gsl_qrng_sobol, Dimension );
+    // Create random number generator
+    gsl_qrng* randomNumberGenerator  = gsl_qrng_alloc( gsl_qrng_sobol, dimension );
 
-    for(int j = 0 ; j < N ; j++){ // Loop over samples
-        gsl_qrng_get (q, v); // Generate sobol [0,1]
+    // Loop over samples
+    for( int j = 0 ; j < numberOfSamples ; j++ )
+    {
+        // Generate sobol [0,1]
+        gsl_qrng_get( randomNumberGenerator, randomArray );
 
-        for(int i = 0 ; i < Dimension ; i++){ // Fill vector
-            x(i) = v[i] ;
+        // Fill Eigen vector with results from raw array.
+        for( int i = 0 ; i < dimension ; i++ )
+        {
+            currentVector( i ) = randomArray[ i ] ;
         }
-        SobolX[j] = x ; // Save vector
+
+        // Save vector
+        sobolX[ j ] = currentVector ;
     }
 
-    gsl_qrng_free (q); // don't know why?
-
-    return SobolX;
+    // Deallocate variables
+    gsl_qrng_free( randomNumberGenerator );
+    return sobolX;
 }
 
 
 //// =================== Start Main code ==================== ////
-int main (void)
+int main( )
 {
     std::cout << "========= EXAMPLES USING GSL LIBRARY =========" << std::endl << std::endl ;
     std::cout << "Numerical quadrature example using GSL" << std::endl;
 
-    gsl_integrator_example();
+    // Run integration example.
+    gsl_integrator_example( );
 
     std::cout << std::endl;
     std::cout << "Sobol sampling example using GSL" << std::endl;
 
-    std::vector< Eigen::VectorXd > Samples = GSL_Sobol_Sampler(3,10) ;
+    // Run sobol sampler example.
+    std::vector< Eigen::VectorXd > samples = gsl_Sobol_Sampler( 3, 10 ) ;
 
     std::cout << "Samples:" << std::endl;
-    for(unsigned int i = 0 ; i < Samples.size() ; i++){
-        std::cout << Samples[i] << std::endl << std::endl;
+    for( unsigned int i = 0; i < samples.size( ) ; i++)
+    {
+        std::cout << samples[ i ] << std::endl << std::endl;
     }
 
-  return 0;
+    return 0;
 }
