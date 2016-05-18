@@ -61,10 +61,14 @@
 #include <Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
 #include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravityModel.h>
-#include <Tudat/Astrodynamics/StateDerivativeModels/cartesianStateDerivativeModel.h>
-#include <Tudat/Astrodynamics/StateDerivativeModels/compositeStateDerivativeModel.h>
 #include <Tudat/InputOutput/basicInputOutput.h>
 #include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
+
+#include <Tudat/Astrodynamics/Propagators/dynamicsSimulator.h>
+#include <Tudat/External/SpiceInterface/spiceInterface.h>
+#include <Tudat/SimulationSetup/body.h>
+#include <Tudat/SimulationSetup/createAccelerationModels.h>
+#include <Tudat/SimulationSetup/defaultBodies.h>
 
 #include <iostream>
 #include <fstream>
@@ -74,12 +78,14 @@
 
 #include <Eigen/Core>
 
-#include "SatellitePropagatorExamples/body.h"
-
 //! Execute propagation of orbits of Asterix and Obelix around the Earth.
 int main( )
 {
-    using namespace satellite_propagator_examples;
+    using namespace tudat;
+
+    using namespace simulation_setup;
+    using namespace propagators;
+    using namespace numerical_integrators;
 
     using tudat::basic_astrodynamics::AccelerationModel3dPointer;
     using tudat::orbital_element_conversions::semiMajorAxisIndex;
@@ -97,32 +103,20 @@ int main( )
 
     using tudat::basic_mathematics::Vector6d;
 
-    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel;
-    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModelPointer;
-
-    using tudat::input_output::DoubleKeyTypeVectorXdValueTypeMap;
     using tudat::input_output::writeDataMapToTextFile;
 
     using tudat::numerical_integrators::RungeKutta4Integrator;
 
     using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
 
-    using tudat::state_derivative_models::CartesianStateDerivativeModel6d;
-    using tudat::state_derivative_models::CartesianStateDerivativeModel6dPointer;
-    using tudat::state_derivative_models::CompositeStateDerivativeModel;
-
     using tudat::unit_conversions::convertDegreesToRadians;
-
-    typedef Eigen::Matrix< double, 12, 1 > Vector12d;
-    typedef CompositeStateDerivativeModel< double, Vector12d, Vector6d >
-            CompositeStateDerivativeModel12d;
 
     ///////////////////////////////////////////////////////////////////////////
 
     // Input deck.
 
     // Set output directory.
-    const std::string outputDirectory = "";
+    const std::string outputDirectory = "/home/dominicdirkx/Software/JaccoNewBundle/tudatBundle/tudatExampleApplications/satellitePropagatorExamples/bin/applications";
     if( outputDirectory == "" )
     {
         std::cerr<<"Error, output directory not specified (modify outputDirectory variable to "<<
@@ -195,119 +189,80 @@ int main( )
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // Create Asterix and Obelix satellites, and gravitational acceleration models.
 
-    // Create Asterix and set initial state and epoch.
-    const BodyPointer asterix = boost::make_shared< Body >( asterixInitialState );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
 
-    // Create gravitational acceleration model for asterix.
-    const CentralJ2J3J4GravitationalAccelerationModelPointer asterixGravityModel
-            = boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel >(
-                boost::bind( &Body::getCurrentPosition, asterix ),
-                earthGravitationalParameter, earthEquatorialRadius, earthJ2, earthJ3, earthJ4  );
+    // Create list of satellites and acceleration models per satellite.
+    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
+            getDefaultBodySettings( { "Earth" }, simulationStartEpoch - 10.0 * fixedStepSize, simulationEndEpoch + 10.0 * fixedStepSize );
+    Eigen::Matrix< double, 5, 1 > earthCosineCoefficients;
+    earthCosineCoefficients << 1.0, 0.0,
+            ( 1.0 / basic_mathematics::calculateLegendreGeodesyNormalizationFactor( 2, 0 ) * earthJ2 ),
+            ( 1.0 / basic_mathematics::calculateLegendreGeodesyNormalizationFactor( 3, 0 ) * earthJ3 ),
+            ( 1.0 / basic_mathematics::calculateLegendreGeodesyNormalizationFactor( 4, 0 ) * earthJ4 );
 
-    // Create Cartesian state derivative model for asterix.
-    const CartesianStateDerivativeModel6d::AccelerationModelPointerVector asterixGravity
-            = boost::assign::list_of( asterixGravityModel );
+    bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
+                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
+    bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< simulation_setup::SphericalHarmonicsGravityFieldSettings >(
+                earthGravitationalParameter, earthEquatorialRadius, earthCosineCoefficients, Eigen::Matrix< double, 5, 1 >::Zero( ), "IAU_Earth" );
+    bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
+    bodySettings[ "Earth" ]->atmosphereSettings = NULL;
+    bodySettings[ "Earth" ]->shapeModelSettings = NULL;
 
-    // Create Obelix and set initial state and epoch.
-    const BodyPointer obelix = boost::make_shared< Body >( obelixInitialState );
+    simulation_setup::NamedBodyMap bodyMap = simulation_setup::createBodies( bodySettings );
 
-    // Create gravitational acceleration model for obelix.
-    const CentralJ2J3J4GravitationalAccelerationModelPointer obelixGravityModel
-            = boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel >(
-                boost::bind( &Body::getCurrentPosition, obelix ),
-                earthGravitationalParameter, earthEquatorialRadius, earthJ2, earthJ3, earthJ4  );
+    SelectedAccelerationMap accelerationMap;
 
-    // Create Cartesian state derivative model model for obelix.
-   const  CartesianStateDerivativeModel6d::AccelerationModelPointerVector obelixGravity
-            = boost::assign::list_of( obelixGravityModel );
+    std::vector< std::string > bodiesToPropagate;
+    std::vector< std::string > centralBodies;
+    std::map< std::string, std::string > centralBodyMap;
+    Eigen::VectorXd systemInitialState = Eigen::VectorXd( 12 );
 
-    // Add Asterix and Obelix to list of satellites.
-    ListOfSatellites satellites;
-    satellites[ asterix ] = asterixGravity;
-    satellites[ obelix ] = obelixGravity;
+    bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap[ "Obelix" ] = boost::make_shared< simulation_setup::Body >( );
 
-    ///////////////////////////////////////////////////////////////////////////
+    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
+    accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
+    accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
+    bodiesToPropagate.push_back( "Asterix" );
+    centralBodies.push_back( "Earth" );
+    centralBodyMap[  "Asterix" ] = "Earth";
 
-    ///////////////////////////////////////////////////////////////////////////
+    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfObelix;
+    accelerationsOfObelix[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
+    accelerationMap[  "Obelix" ] = accelerationsOfObelix;
+    bodiesToPropagate.push_back( "Obelix" );
+    centralBodies.push_back( "Earth" );
+    centralBodyMap[  "Obelix" ] = "Earth";
 
-    // Create Cartesian state derivative models for Asterix and Obelix.
+    systemInitialState.segment( 0, 6 ) = asterixInitialState;
+    systemInitialState.segment( 6, 6 ) = obelixInitialState;
 
-    // Create Cartesian state derivative model for Asterix.
-    const CartesianStateDerivativeModel6dPointer asterixStateDerivativeModel
-            = boost::make_shared< CartesianStateDerivativeModel6d >(
-                asterixGravity, boost::bind( &Body::setCurrentTimeAndState, asterix, _1, _2 ) );
+    // Create acceleration models and propagation settings.
+    basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
+                bodyMap, accelerationMap, centralBodyMap );
+    boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
+            boost::make_shared< TranslationalStatePropagatorSettings< double > >
+            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );
+    boost::shared_ptr< IntegratorSettings< > > integratorSettings =
+            boost::make_shared< IntegratorSettings< > >
+            ( rungeKutta4, simulationStartEpoch, simulationEndEpoch, fixedStepSize );
 
-    // Create Cartesian state derivative model for Obelix.
-    const CartesianStateDerivativeModel6dPointer obelixStateDerivativeModel
-            = boost::make_shared< CartesianStateDerivativeModel6d >(
-                obelixGravity, boost::bind( &Body::setCurrentTimeAndState, obelix, _1, _2 ) );
+    // Create simulation object and propagate dynamics.
+    SingleArcDynamicsSimulator< > dynamicsSimulator(
+                bodyMap, integratorSettings, propagatorSettings, true, false, false );
+    std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
-    ///////////////////////////////////////////////////////////////////////////
+    std::map< double, Eigen::VectorXd > asterixPropagationHistory;
+    std::map< double, Eigen::VectorXd > obelixPropagationHistory;
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Construct composite state derivative model for Asterix and Obelix.
-
-    // Create state derivative model map and bind Asterix and Obelix, in that order.
-    CompositeStateDerivativeModel12d::VectorStateDerivativeModelMap stateDerivativeModelMap;
-
-    stateDerivativeModelMap[ std::make_pair( 0, 6 ) ]
-            = boost::bind( &CartesianStateDerivativeModel6d::computeStateDerivative,
-                           asterixStateDerivativeModel, _1, _2 );
-
-    stateDerivativeModelMap[ std::make_pair( 6, 6 ) ]
-            = boost::bind( &CartesianStateDerivativeModel6d::computeStateDerivative,
-                           obelixStateDerivativeModel, _1, _2 );
-
-    // Create data updater.
-    DataUpdater updater( satellites );
-
-    // Create composite state derivative model.
-    boost::shared_ptr< CompositeStateDerivativeModel12d > stateDerivativeModel
-            = boost::make_shared< CompositeStateDerivativeModel12d >(
-                stateDerivativeModelMap,
-                boost::bind( &DataUpdater::updateBodyData, updater, _1, _2 ) );
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Set up numerical integrator and execute simulation.
-
-    // Declare Runge-Kutta 4 integrator.
-    // Since the state derivative function is a member-function, it must be passed by using
-    // boost::bind. The "_1" and "_2" in the boost::bind call specifies that the argument list
-    // for the computeStateDerivative function takes two arguments (t, x).
-    RungeKutta4Integrator< double, Vector12d, Vector12d > rungeKutta4(
-                boost::bind( &CompositeStateDerivativeModel12d::computeStateDerivative,
-                             stateDerivativeModel, _1, _2 ),
-                0.0, ( Eigen::VectorXd( 12 ) << asterixInitialState,
-                       obelixInitialState ).finished( ) );
-
-    // Set running time, updated after each step that the numerical integrator takes.
-    double runningTime = simulationStartEpoch;
-
-    // Declare propagation history to store state history of satellites.
-    DoubleKeyTypeVectorXdValueTypeMap asterixPropagationHistory;
-    DoubleKeyTypeVectorXdValueTypeMap obelixPropagationHistory;
-
-    // Set initial states in propagation history.
-    asterixPropagationHistory[ 0.0 ] = asterixInitialState;
-    obelixPropagationHistory[ 0.0 ] = obelixInitialState;
-
-    // Execute simulation from start to end epoch and save intermediate states in propagation
-    // history.
-    while ( runningTime < simulationEndEpoch )
+    for( std::map< double, Eigen::VectorXd >::const_iterator stateIterator = integrationResult.begin( );
+         stateIterator != integrationResult.end( ); stateIterator++ )
     {
-        // Execute integration step and store state at end.
-        Vector12d integratedState = rungeKutta4.performIntegrationStep( fixedStepSize );
-
-        // Update running time to value of current time.
-        runningTime = rungeKutta4.getCurrentIndependentVariable( );
-
-        // Disassemble state into states per body, and store in propagation history.
-        asterixPropagationHistory[ runningTime ] = integratedState.segment( 0, 6 );
-        obelixPropagationHistory[ runningTime ] = integratedState.segment( 6, 6 );
+        asterixPropagationHistory[ stateIterator->first ] = stateIterator->second.segment( 0, 6 );
+        obelixPropagationHistory[ stateIterator->first ] = stateIterator->second.segment( 6, 6 );
     }
 
     ///////////////////////////////////////////////////////////////////////////

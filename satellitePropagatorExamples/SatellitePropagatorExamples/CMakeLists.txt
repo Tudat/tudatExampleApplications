@@ -183,6 +183,16 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
 
+  # Find CSPICE library on local system.
+  find_package(Spice)
+
+  # Include CSpice directories.
+  if(NOT APPLE)
+    include_directories(SYSTEM AFTER "${SPICE_INCLUDE_DIR}")
+  else( )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${SPICE_INCLUDE_DIR}\"")
+  endif( )
+
 # If documentation should be built, find Doxygen package and setup config file.
 if(BUILD_DOCUMENTATION)
   find_package(Doxygen)
@@ -207,25 +217,22 @@ if(BUILD_DOCUMENTATION)
           DESTINATION "${SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH}")
 endif()
 
-# Add library.
-add_library(satellite_propagator_examples STATIC body.h void.cpp)
-setup_library_target(satellite_propagator_examples "${SRCROOT}")
 
-# Add single, Earth-orbiting satellite propagator application.
+## Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
 setup_executable_target(application_SingleSatellitePropagator "${SRCROOT}")
-target_link_libraries(application_SingleSatellitePropagator satellite_propagator_examples
-                      tudat_gravitation tudat_basic_astrodynamics ${Boost_LIBRARIES} )
+target_link_libraries(application_SingleSatellitePropagator
+                      tudat_simulation_setup tudat_propagators tudat_aerodynamics tudat_gravitation tudat_mission_segments tudat_electro_magnetism tudat_ephemerides tudat_numerical_integrators tudat_reference_frames tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_spice_interface cspice ${Boost_LIBRARIES} )
 
 # Add Asterix and Obelix (satellites) propagator application.
 add_executable(application_AsterixAndObelixPropagator "${SRCROOT}/asterixAndObelixPropagator.cpp")
 setup_executable_target(application_AsterixAndObelixPropagator "${SRCROOT}")
-target_link_libraries(application_AsterixAndObelixPropagator satellite_propagator_examples 
-                      tudat_gravitation tudat_basic_astrodynamics ${Boost_LIBRARIES} )
+target_link_libraries(application_AsterixAndObelixPropagator
+                      tudat_simulation_setup tudat_propagators tudat_aerodynamics tudat_gravitation tudat_mission_segments tudat_electro_magnetism tudat_ephemerides tudat_numerical_integrators tudat_reference_frames tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_spice_interface cspice ${Boost_LIBRARIES} )
 
 # Add Galileo constellation application.
 add_executable(application_GalileoConstellationSimulator 
                "${SRCROOT}/galileoConstellationSimulator.cpp")
 setup_executable_target(application_GalileoConstellationSimulator "${SRCROOT}")
-target_link_libraries(application_GalileoConstellationSimulator satellite_propagator_examples 
-                      tudat_gravitation tudat_basic_astrodynamics ${Boost_LIBRARIES} )
+target_link_libraries(application_GalileoConstellationSimulator
+                      tudat_simulation_setup tudat_propagators tudat_aerodynamics tudat_gravitation tudat_mission_segments tudat_electro_magnetism tudat_ephemerides tudat_numerical_integrators tudat_reference_frames tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_spice_interface cspice ${Boost_LIBRARIES} )

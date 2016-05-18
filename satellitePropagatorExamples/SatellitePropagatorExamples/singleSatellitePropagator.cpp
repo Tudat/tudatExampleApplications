@@ -58,8 +58,14 @@
 // Tudat library
 #include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
 #include <Tudat/Astrodynamics/Gravitation/centralGravityModel.h>
-#include <Tudat/Astrodynamics/StateDerivativeModels/cartesianStateDerivativeModel.h>
 #include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
+#include <Tudat/InputOutput/basicInputOutput.h>
+
+#include <Tudat/Astrodynamics/Propagators/dynamicsSimulator.h>
+#include <Tudat/External/SpiceInterface/spiceInterface.h>
+#include <Tudat/SimulationSetup/body.h>
+#include <Tudat/SimulationSetup/createBodies.h>
+#include <Tudat/SimulationSetup/createAccelerationModels.h>
 
 // C++ Standard library
 #include <iostream>
@@ -68,9 +74,6 @@
 #include <Eigen/Core>
 
 
-// The simulation's data repository: the body class
-#include "body.h"
-
 // ------------------------------------------------------------------------------------------------
 // THE MAIN FUNCTION
 // ------------------------------------------------------------------------------------------------
@@ -78,15 +81,17 @@
 //! Execute propagation of orbit of Asterix around the Earth.
 int main()
 {
-    // --------------------------------------------------------------------------------------------
-    // USING STATEMENTS (IN ALPHABETICAL ORDER)
-    // --------------------------------------------------------------------------------------------
 
-    // The body class.
-    using satellite_propagator_examples::Body;
 
-    // Type definition of a shared-pointer to the body class.
-    using satellite_propagator_examples::BodyPointer;
+    // --------------------------------------------------------------------------------------------
+    // USING STATEMENTS
+    // --------------------------------------------------------------------------------------------ter;
+
+    using namespace tudat;
+    using namespace simulation_setup;
+    using namespace propagators;
+    using namespace numerical_integrators;
+
 
     // Keplerian state vector element indices.
     using tudat::orbital_element_conversions::semiMajorAxisIndex;
@@ -108,10 +113,6 @@ int main()
 
     // Convert Keplerian elements to Cartesian elements.
     using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
-
-    // Cartesian state derivative model.
-    using tudat::state_derivative_models::CartesianStateDerivativeModel6d;
-    using tudat::state_derivative_models::CartesianStateDerivativeModel6dPointer;
 
     // Convert degrees to radians.
     using tudat::unit_conversions::convertDegreesToRadians;
@@ -161,41 +162,51 @@ int main()
     // CREATE ASTERIX SATELLITE, ACCELERATION MODEL AND STATE DERIVATIVE MODEL
     // --------------------------------------------------------------------------------------------
 
-    // Create a 'Body' data repository for Asterix.
-    const BodyPointer asterix = boost::make_shared< Body >( asterixInitialState );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
 
-    // Create the gravitational acceleration model for Asterix.
-    const CentralGravitationalAccelerationModel3dPointer asterixGravityModel
-            = boost::make_shared< CentralGravitationalAccelerationModel3d >(
-                boost::bind( &Body::getCurrentPosition, asterix ),
-                earthGravitationalParameter );
+    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings;
+    bodySettings[ "Earth" ] = boost::make_shared< BodySettings >( );
+    bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< ConstantEphemerisSettings >(
+                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
+    bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< GravityFieldSettings >( central_spice );
+    NamedBodyMap bodyMap = createBodies( bodySettings );
+    bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
 
-    // Before creating the Cartesian state derivative model, assign the acceleration model to the
-    // AccelerationModelPointerVector, which is an input to the state derivative model.
-    CartesianStateDerivativeModel6d::AccelerationModelPointerVector asterixGravity;
-    asterixGravity.push_back( asterixGravityModel );
+    SelectedAccelerationMap accelerationMap;
 
-    // Create the Cartesian state derivative model for Asterix.
-    const CartesianStateDerivativeModel6dPointer asterixStateDerivativeModel
-            = boost::make_shared< CartesianStateDerivativeModel6d >(
-                asterixGravity, boost::bind( &Body::setCurrentTimeAndState, asterix, _1, _2 ) );
+    std::vector< std::string > bodiesToPropagate;
+    std::vector< std::string > centralBodies;
+    std::map< std::string, std::string > centralBodyMap;
+    Eigen::VectorXd systemInitialState = asterixInitialState;
 
-    // --------------------------------------------------------------------------------------------
-    // NUMERICAL INTEGRATION
-    // --------------------------------------------------------------------------------------------
+    bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
 
-    // Set up the numerical integrator: the Runge-Kutta 4 integrator.
-    // Since the state derivative function is a member-function, it must be passed by using
-    // boost::bind. The "_1" and "_2" in the boost::bind call specifies that the argument list
-    // for the computeStateDerivative function takes two arguments (t, x).
-    RungeKutta4IntegratorXd rungeKutta4(
-                boost::bind( &CartesianStateDerivativeModel6d::computeStateDerivative,
-                             asterixStateDerivativeModel, _1, _2 ),
-                0.0, asterixInitialState );
+    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
+    accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >( basic_astrodynamics::central_gravity ) );
+    accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
+    bodiesToPropagate.push_back( "Asterix" );
+    centralBodies.push_back( "Earth" );
+    centralBodyMap[  "Asterix" ] = "Earth";
 
-    // Execute the simulation and compute the final state.
-    Vector6d finalIntegratedState = rungeKutta4.integrateTo( simulationEndEpoch, fixedStepSize );
 
+    // Create acceleration models and propagation settings.
+    basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
+                bodyMap, accelerationMap, centralBodyMap );
+    boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
+            boost::make_shared< TranslationalStatePropagatorSettings< double > >
+            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );
+    boost::shared_ptr< IntegratorSettings< > > integratorSettings =
+            boost::make_shared< IntegratorSettings< > >
+            ( rungeKutta4, 0.0, simulationEndEpoch, fixedStepSize );
+
+    // Create simulation object and propagate dynamics.
+    SingleArcDynamicsSimulator< > dynamicsSimulator(
+                bodyMap, integratorSettings, propagatorSettings, true, false, false );
+    std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
+
+    Eigen::VectorXd finalIntegratedState = (--integrationResult.end( ) )->second;
     // Print the position (in km) and the velocity (in km/s) at t = 0.
     std::cout << "Single Earth-Orbiting Satellite Example." << std::endl <<
                  "The initial position vector of Asterix is [km]:" << std::endl <<
