@@ -72,6 +72,8 @@
 
 #include <Eigen/Core>
 
+#include <SatellitePropagatorExamples/applicationOutput.h>
+
 //! Execute simulation of Galileo constellation around the Earth.
 int main( )
 {
@@ -105,15 +107,6 @@ int main( )
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // Input deck.
-
-    // Set output directory.
-    const std::string outputDirectory = "/home/dominicdirkx/Software/JaccoNewBundle/tudatBundle/tudatExampleApplications/satellitePropagatorExamples/bin/applications";
-    if( outputDirectory == "" )
-    {
-        std::cerr<<"Error, output directory not specified (modify outputDirectory variable to "<<
-                   " required output directory)."<<std::endl;
-    }
 
     // Set simulation start epoch.
     const double simulationStartEpoch = 0.0;
@@ -212,51 +205,56 @@ int main( )
 
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
     {
-		Vector6d initKepl = initialConditionsInKeplerianElements.col( i ).cast< double >();
+        Vector6d initKepl = initialConditionsInKeplerianElements.col( i ).cast< double >();
         initialConditions.col( i ) = convertKeplerianToCartesianElements(
                     initKepl, static_cast< double >(earthGravitationalParameter) );
     }
 
-//    // DEBUG.
-//    std::cout << initialConditionsInKeplerianElements << std::endl;
-//    std::cout << initialConditions << std::endl;
+    //    // DEBUG.
+    //    std::cout << initialConditionsInKeplerianElements << std::endl;
+    //    std::cout << initialConditions << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
 
+    // Load Spice kernels.
     spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
     spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
     spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
 
-    // Create list of satellites and acceleration models per satellite.
+    // Define environment settings
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
-            getDefaultBodySettings( { "Earth" }, simulationStartEpoch - 10.0 * fixedStepSize, simulationEndEpoch + 10.0 * fixedStepSize );
-    Eigen::Matrix< double, 50, 50 > earthCosineCoefficients = Eigen::Matrix< double, 50, 50 >::Zero( );
-    Eigen::Matrix< double, 50, 50 > earthSineCoefficients = Eigen::Matrix< double, 50, 50 >::Zero( );
+            getDefaultBodySettings( { "Earth" },
+                                    simulationStartEpoch - 10.0 * fixedStepSize, simulationEndEpoch + 10.0 * fixedStepSize );
+    Eigen::Matrix< double, 5, 1 > earthCosineCoefficients = Eigen::Matrix< double, 5, 1 >::Zero( );
+    Eigen::Matrix< double, 5, 1 > earthSineCoefficients = Eigen::Matrix< double, 5, 1 >::Zero( );
     earthCosineCoefficients( 0, 0 ) = 1.0;
     earthCosineCoefficients << 1.0, 0.0,
             ( 1.0 / basic_mathematics::calculateLegendreGeodesyNormalizationFactor( 2, 0 ) * earthJ2 ),
             ( 1.0 / basic_mathematics::calculateLegendreGeodesyNormalizationFactor( 3, 0 ) * earthJ3 ),
             ( 1.0 / basic_mathematics::calculateLegendreGeodesyNormalizationFactor( 4, 0 ) * earthJ4 );
-
     bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
                 basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
-    bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< simulation_setup::SphericalHarmonicsGravityFieldSettings >(
-                earthGravitationalParameter, earthEquatorialRadius, earthCosineCoefficients, earthSineCoefficients, "IAU_Earth" );
+    bodySettings[ "Earth" ]->gravityFieldSettings =
+            boost::make_shared< simulation_setup::SphericalHarmonicsGravityFieldSettings >(
+                earthGravitationalParameter, earthEquatorialRadius,
+                earthCosineCoefficients, earthSineCoefficients, "IAU_Earth" );
     bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
     bodySettings[ "Earth" ]->atmosphereSettings = NULL;
     bodySettings[ "Earth" ]->shapeModelSettings = NULL;
 
+    // Create Earth object
     simulation_setup::NamedBodyMap bodyMap = simulation_setup::createBodies( bodySettings );
 
+    // Define propagator settings variables.
     SelectedAccelerationMap accelerationMap;
-
     std::vector< std::string > bodiesToPropagate;
     std::vector< std::string > centralBodies;
     std::map< std::string, std::string > centralBodyMap;
     Eigen::VectorXd systemInitialState = Eigen::VectorXd( 6 * numberOfSatellites );
 
+    // Set accelerations for each satellite.
     std::string currentSatelliteName;
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
     {
@@ -264,7 +262,8 @@ int main( )
         bodyMap[ currentSatelliteName ] = boost::make_shared< simulation_setup::Body >( );
 
         std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfCurrentSatellite;
-        accelerationsOfCurrentSatellite[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
+        accelerationsOfCurrentSatellite[ "Earth" ].push_back(
+                    boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
         accelerationMap[ currentSatelliteName ] = accelerationsOfCurrentSatellite;
 
         bodiesToPropagate.push_back( currentSatelliteName );
@@ -273,6 +272,9 @@ int main( )
 
         systemInitialState.segment( i * 6, 6 ) = initialConditions.col( i );
     }
+
+    // Finalize body creation.
+    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
 
     // Create acceleration models and propagation settings.
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
@@ -287,38 +289,38 @@ int main( )
     // Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< > dynamicsSimulator(
                 bodyMap, integratorSettings, propagatorSettings, true, false, false );
-//    std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
+    std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
-//    std::vector< std::map< double, Eigen::VectorXd > > allSatellitesPropagationHistory;
-//    allSatellitesPropagationHistory.resize( numberOfSatellites );
+    // Retrieve numerically integrated state for each satellite.
+    std::vector< std::map< double, Eigen::VectorXd > > allSatellitesPropagationHistory;
+    allSatellitesPropagationHistory.resize( numberOfSatellites );
+    for( std::map< double, Eigen::VectorXd >::const_iterator stateIterator = integrationResult.begin( );
+         stateIterator != integrationResult.end( ); stateIterator++ )
+    {
+        for( unsigned int i = 0; i < allSatellitesPropagationHistory.size( ); i++ )
+        {
+            allSatellitesPropagationHistory[ i ][ stateIterator->first ] = stateIterator->second.segment( i * 6, 6 );
+        }
+    }
 
-//    for( std::map< double, Eigen::VectorXd >::const_iterator stateIterator = integrationResult.begin( );
-//         stateIterator != integrationResult.end( ); stateIterator++ )
-//    {
-//        for( unsigned int i = 0; i < allSatellitesPropagationHistory.size( ); i++ )
-//        {
-//            allSatellitesPropagationHistory[ i ][ stateIterator->first ] = stateIterator->second.segment( i * 6, 6 );
-//        }
-//    }
+    // Write results to file.
 
-//    // Write results to file.
+    // Loop over all satellites.
+    for ( unsigned int i = 0; i < numberOfSatellites; i++ )
+    {
+        // Set filename for output data.
+        std::stringstream outputFilename;
+        outputFilename << "galileoSatellite" << i + 1 << ".dat";
 
-//    // Loop over all satellites.
-//    for ( unsigned int i = 0; i < numberOfSatellites; i++ )
-//    {
-//        // Set filename for output data.
-//        std::stringstream outputFilename;
-//        outputFilename << "galileoSatellite" << i + 1 << ".dat";
-
-//        // Write propagation history to file.
-//        writeDataMapToTextFile( allSatellitesPropagationHistory.at( i ),
-//                                outputFilename.str( ),
-//                                outputDirectory,
-//                                "",
-//                                std::numeric_limits< double >::digits10,
-//                                std::numeric_limits< double >::digits10,
-//                                ", " );
-//    }
+        // Write propagation history to file.
+        writeDataMapToTextFile( allSatellitesPropagationHistory.at( i ),
+                                outputFilename.str( ),
+                                tudat_applications::getOutputPath( ),
+                                "",
+                                std::numeric_limits< double >::digits10,
+                                std::numeric_limits< double >::digits10,
+                                "," );
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 

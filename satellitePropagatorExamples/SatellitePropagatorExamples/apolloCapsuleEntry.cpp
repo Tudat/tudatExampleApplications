@@ -1,3 +1,4 @@
+
 /*    Copyright (c) 2010-2013, Delft University of Technology
  *    All rights reserved.
  *
@@ -58,6 +59,7 @@
 #include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
 #include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
 
+#include <Tudat/Astrodynamics/Aerodynamics/UnitTests/testApolloCapsuleCoefficients.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
 #include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravityModel.h>
@@ -80,38 +82,28 @@
 
 #include <SatellitePropagatorExamples/applicationOutput.h>
 
-//! Execute propagation of orbits of Asterix and Obelix around the Earth.
+//! Execute propagation of orbits of Apollo during entry.
 int main( )
 {
+    using namespace tudat::ephemerides;
+    using namespace tudat::interpolators;
+    using namespace tudat::numerical_integrators;
+    using namespace tudat::spice_interface;
+    using namespace tudat::simulation_setup;
+    using namespace tudat::basic_astrodynamics;
+    using namespace tudat::orbital_element_conversions;
+    using namespace tudat::propagators;
+    using namespace tudat::aerodynamics;
+    using namespace tudat::basic_mathematics;
+    using namespace tudat::input_output;
     using namespace tudat;
 
-    using namespace simulation_setup;
-    using namespace propagators;
-    using namespace numerical_integrators;
 
-    using tudat::basic_astrodynamics::AccelerationModel3dPointer;
-    using tudat::orbital_element_conversions::semiMajorAxisIndex;
-    using tudat::orbital_element_conversions::eccentricityIndex;
-    using tudat::orbital_element_conversions::inclinationIndex;
-    using tudat::orbital_element_conversions::argumentOfPeriapsisIndex;
-    using tudat::orbital_element_conversions::longitudeOfAscendingNodeIndex;
-    using tudat::orbital_element_conversions::trueAnomalyIndex;
-    using tudat::orbital_element_conversions::xCartesianPositionIndex;
-    using tudat::orbital_element_conversions::yCartesianPositionIndex;
-    using tudat::orbital_element_conversions::zCartesianPositionIndex;
-    using tudat::orbital_element_conversions::xCartesianVelocityIndex;
-    using tudat::orbital_element_conversions::yCartesianVelocityIndex;
-    using tudat::orbital_element_conversions::zCartesianVelocityIndex;
+    // Load Spice kernels.
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
 
-    using tudat::basic_mathematics::Vector6d;
-
-    using tudat::input_output::writeDataMapToTextFile;
-
-    using tudat::numerical_integrators::RungeKutta4Integrator;
-
-    using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
-
-    using tudat::unit_conversions::convertDegreesToRadians;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -119,36 +111,10 @@ int main( )
     const double simulationStartEpoch = 0.0;
 
     // Set simulation end epoch.
-    const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
+    const double simulationEndEpoch = 3300.0;
 
     // Set numerical integration fixed step size.
-    const double fixedStepSize = 60.0;
-
-    // Set initial conditions for satellites that will be propagated in this simulation.
-    // The initial conditions are given in Keplerian elements and later on converted to
-    // Cartesian elements.
-
-    // Set Keplerian elements for Asterix.
-    Vector6d asterixInitialStateInKeplerianElements;
-    asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0e3;
-    asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
-    asterixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 85.3 );
-    asterixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = convertDegreesToRadians( 235.7 );
-    asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = convertDegreesToRadians( 23.4 );
-    asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 139.87 );
-
-    // Set Keplerian elements for Obelix.
-    Vector6d obelixInitialStateInKeplerianElements( 6 );
-    obelixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 12040.6e3;
-    obelixInitialStateInKeplerianElements( eccentricityIndex ) = 0.4;
-    obelixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( -23.5 );
-    obelixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = convertDegreesToRadians( 10.6 );
-    obelixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = convertDegreesToRadians( 367.9 );
-    obelixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 93.4 );
+    const double fixedStepSize = 1.0;
 
     // Set Earth gravitational parameter [m^3 s^-2].
     const double earthGravitationalParameter = 3.986004415e14;
@@ -165,26 +131,29 @@ int main( )
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // Convert initial states from Keplerian to Cartesian elements.
+    // Set Keplerian elements for Asterix.
+    Vector6d apolloInitialStateInKeplerianElements;
+    apolloInitialStateInKeplerianElements( semiMajorAxisIndex ) = spice_interface::getAverageRadius( "Earth" ) + 120.0E3;
+    apolloInitialStateInKeplerianElements( eccentricityIndex ) = 0.005;
+    apolloInitialStateInKeplerianElements( inclinationIndex ) = unit_conversions::convertDegreesToRadians( 85.3 );
+    apolloInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
+            = unit_conversions::convertDegreesToRadians( 235.7 );
+    apolloInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
+            = unit_conversions::convertDegreesToRadians( 23.4 );
+    apolloInitialStateInKeplerianElements( trueAnomalyIndex ) = unit_conversions::convertDegreesToRadians( 139.87 );
 
-    // Convert Asterix state from Keplerian elements to Cartesian elements.
-    const Vector6d asterixInitialState = convertKeplerianToCartesianElements(
-                asterixInitialStateInKeplerianElements,
-                earthGravitationalParameter );
+    // --------------------------------------------------------------------------------------------
+    // CONVERT INITIAL STATE FROM KEPLERIAN TO CARTESIAN ELEMENTS
+    // --------------------------------------------------------------------------------------------
 
-    // Convert Obelix state from Keplerian elements to Cartesian elements.
-    const Vector6d obelixInitialState = convertKeplerianToCartesianElements(
-                obelixInitialStateInKeplerianElements,
+    // Convert apollo state from Keplerian elements to Cartesian elements.
+    const Vector6d apolloInitialState = convertKeplerianToCartesianElements(
+                apolloInitialStateInKeplerianElements,
                 earthGravitationalParameter );
 
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
-
-    // Load Spice kernels.
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
 
     // Define simulation body settings.
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
@@ -204,8 +173,6 @@ int main( )
                 Eigen::Matrix< double, 5, 1 >::Zero( ), "IAU_Earth" );
 
     bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
-    bodySettings[ "Earth" ]->atmosphereSettings = NULL;
-    bodySettings[ "Earth" ]->shapeModelSettings = NULL;
 
     // Create Earth object
     simulation_setup::NamedBodyMap bodyMap = simulation_setup::createBodies( bodySettings );
@@ -215,33 +182,31 @@ int main( )
     std::vector< std::string > bodiesToPropagate;
     std::vector< std::string > centralBodies;
     std::map< std::string, std::string > centralBodyMap;
-    Eigen::VectorXd systemInitialState = Eigen::VectorXd( 12 );
+    Eigen::VectorXd systemInitialState = Eigen::VectorXd( 6 );
 
     // Create vehicle objects.
-    bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
-    bodyMap[ "Obelix" ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap[ "Apollo" ] = boost::make_shared< simulation_setup::Body >( );
+
+    // Create vehicle aerodynamic coefficients
+    bodyMap[ "Apollo" ]->setAerodynamicCoefficientInterface(
+                unit_tests::getApolloCoefficientInterface( ) );
+    bodyMap[ "Apollo" ]->setConstantBodyMass( 5.0E3 );
 
     // Finalize body creation.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
 
     // Define acceleration model settings.
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
-    accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
-    accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
-    bodiesToPropagate.push_back( "Asterix" );
-    centralBodies.push_back( "Earth" );
-    centralBodyMap[  "Asterix" ] = "Earth";
+    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfApollo;
+    accelerationsOfApollo[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
+    accelerationsOfApollo[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >( aerodynamic ) );
+    accelerationMap[  "Apollo" ] = accelerationsOfApollo;
 
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfObelix;
-    accelerationsOfObelix[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
-    accelerationMap[  "Obelix" ] = accelerationsOfObelix;
-    bodiesToPropagate.push_back( "Obelix" );
+    bodiesToPropagate.push_back( "Apollo" );
     centralBodies.push_back( "Earth" );
-    centralBodyMap[  "Obelix" ] = "Earth";
+    centralBodyMap[  "Apollo" ] = "Earth";
 
     // Set initial state
-    systemInitialState.segment( 0, 6 ) = asterixInitialState;
-    systemInitialState.segment( 6, 6 ) = obelixInitialState;
+    systemInitialState.segment( 0, 6 ) = apolloInitialState;
 
     // Create acceleration models and propagation settings.
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
@@ -256,36 +221,15 @@ int main( )
     // Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< > dynamicsSimulator(
                 bodyMap, integratorSettings, propagatorSettings, true, false, false );
-    std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
-
-    // Retrieve numerically integrated states of vehicles.
-    std::map< double, Eigen::VectorXd > asterixPropagationHistory;
-    std::map< double, Eigen::VectorXd > obelixPropagationHistory;
-    for( std::map< double, Eigen::VectorXd >::const_iterator stateIterator = integrationResult.begin( );
-         stateIterator != integrationResult.end( ); stateIterator++ )
-    {
-        asterixPropagationHistory[ stateIterator->first ] = stateIterator->second.segment( 0, 6 );
-        obelixPropagationHistory[ stateIterator->first ] = stateIterator->second.segment( 6, 6 );
-    }
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////
 
     // Write results to file.
 
-    // Write Asterix propagation history to file.
-    writeDataMapToTextFile( asterixPropagationHistory,
-                            "asterixPropagationHistory.dat",
-                            tudat_applications::getOutputPath( ),
-                            "",
-                            std::numeric_limits< double >::digits10,
-                            std::numeric_limits< double >::digits10,
-                            "," );
-
-    // Write obelix propagation history to file.
-    writeDataMapToTextFile( obelixPropagationHistory,
-                            "obelixPropagationHistory.dat",
+    // Write Apollo propagation history to file.
+    writeDataMapToTextFile( dynamicsSimulator.getEquationsOfMotionNumericalSolution( ),
+                            "apolloPropagationHistory.dat",
                             tudat_applications::getOutputPath( ),
                             "",
                             std::numeric_limits< double >::digits10,

@@ -78,6 +78,9 @@
 // THE MAIN FUNCTION
 // ------------------------------------------------------------------------------------------------
 
+
+
+
 //! Execute propagation of orbit of Asterix around the Earth.
 int main()
 {
@@ -162,34 +165,43 @@ int main()
     // CREATE ASTERIX SATELLITE, ACCELERATION MODEL AND STATE DERIVATIVE MODEL
     // --------------------------------------------------------------------------------------------
 
+    // Load Spice kernels.
     spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
     spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
     spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
 
+    // Define body settings for simulation.
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings;
     bodySettings[ "Earth" ] = boost::make_shared< BodySettings >( );
     bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< ConstantEphemerisSettings >(
                 basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
     bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< GravityFieldSettings >( central_spice );
+
+    // Create Earth object
     NamedBodyMap bodyMap = createBodies( bodySettings );
+
+    // Create spacecraft object.
     bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
 
-    SelectedAccelerationMap accelerationMap;
 
+    // Finalize body creation.
+    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
+
+    // Define propagator settings variables.
+    SelectedAccelerationMap accelerationMap;
     std::vector< std::string > bodiesToPropagate;
     std::vector< std::string > centralBodies;
     std::map< std::string, std::string > centralBodyMap;
     Eigen::VectorXd systemInitialState = asterixInitialState;
 
-    bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
-
+    // Define propagation settings.
     std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
-    accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >( basic_astrodynamics::central_gravity ) );
+    accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::central_gravity ) );
     accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
     bodiesToPropagate.push_back( "Asterix" );
     centralBodies.push_back( "Earth" );
     centralBodyMap[  "Asterix" ] = "Earth";
-
 
     // Create acceleration models and propagation settings.
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
