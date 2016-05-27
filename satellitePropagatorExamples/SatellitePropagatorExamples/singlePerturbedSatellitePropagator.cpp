@@ -66,6 +66,7 @@
 #include <Tudat/SimulationSetup/body.h>
 #include <Tudat/SimulationSetup/createBodies.h>
 #include <Tudat/SimulationSetup/createAccelerationModels.h>
+#include <Tudat/SimulationSetup/defaultBodies.h>
 
 // C++ Standard library
 #include <iostream>
@@ -77,10 +78,6 @@
 // ------------------------------------------------------------------------------------------------
 // THE MAIN FUNCTION
 // ------------------------------------------------------------------------------------------------
-
-
-
-
 //! Execute propagation of orbit of Asterix around the Earth.
 int main()
 {
@@ -99,49 +96,9 @@ int main()
     using namespace gravitation;
     using namespace numerical_integrators;
 
-    // Convert degrees to radians.
-    using tudat::unit_conversions::convertDegreesToRadians;
-
-    // --------------------------------------------------------------------------------------------
-    // INPUT DECK: Constants
-    // --------------------------------------------------------------------------------------------
-
-    // Set Earth gravitational parameter [m^3 s^-2].
-    const double earthGravitationalParameter = 3.986004415E14;
-
-    // Set simulation end epoch.
+    // Set simulation time settings.
+    const double simulationStartEpoch = 0.0;
     const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
-
-    // Set numerical integration fixed step size.
-    const double fixedStepSize = 60.0;
-
-    // --------------------------------------------------------------------------------------------
-    // INPUT DECK: Initial conditions
-    // --------------------------------------------------------------------------------------------
-
-    // Set initial conditions for the Asterix satellite that will be propagated in this simulation.
-    // The initial conditions are given in Keplerian elements and later on converted to Cartesian
-    // elements.
-
-    // Set Keplerian elements for Asterix.
-    Vector6d asterixInitialStateInKeplerianElements;
-    asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0E3;
-    asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
-    asterixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 85.3 );
-    asterixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = convertDegreesToRadians( 235.7 );
-    asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = convertDegreesToRadians( 23.4 );
-    asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 139.87 );
-
-    // --------------------------------------------------------------------------------------------
-    // CONVERT INITIAL STATE FROM KEPLERIAN TO CARTESIAN ELEMENTS
-    // --------------------------------------------------------------------------------------------
-
-    // Convert Asterix state from Keplerian elements to Cartesian elements.
-    const Vector6d asterixInitialState = convertKeplerianToCartesianElements(
-                asterixInitialStateInKeplerianElements,
-                earthGravitationalParameter );
 
     // --------------------------------------------------------------------------------------------
     // CREATE ASTERIX SATELLITE, ACCELERATION MODEL AND STATE DERIVATIVE MODEL
@@ -153,44 +110,96 @@ int main()
     spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
 
     // Define body settings for simulation.
-    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings;
-    bodySettings[ "Earth" ] = boost::make_shared< BodySettings >( );
-    bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< ConstantEphemerisSettings >(
-                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
-    bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< GravityFieldSettings >( central_spice );
+    std::vector< std::string > bodiesToCreate;
+    bodiesToCreate.push_back( "Sun" );
+    bodiesToCreate.push_back( "Earth" );
+    bodiesToCreate.push_back( "Moon" );
+    bodiesToCreate.push_back( "Mars" );
+    bodiesToCreate.push_back( "Venus" );
 
+    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
+            getDefaultBodySettings( bodiesToCreate, simulationStartEpoch - 300.0, simulationEndEpoch + 300.0 );
     // Create Earth object
     NamedBodyMap bodyMap = createBodies( bodySettings );
 
     // Create spacecraft object.
     bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap[ "Asterix" ]->setConstantBodyMass( 400.0 );
+
+    double referenceArea = 4.0;
+    double aerodynamicCoefficient = 1.2;
+    boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
+            boost::make_shared< ConstantAerodynamicCoefficientSettings >(
+                referenceArea, aerodynamicCoefficient * Eigen::Vector3d::UnitZ( ), 1, 1 );
+    bodyMap[ "Asterix" ]->setAerodynamicCoefficientInterface(
+                createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "Asterix" ) );
+
+    boost::shared_ptr< RadiationPressureInterfaceSettings > asterixRadiationPressureSettings =
+            boost::make_shared< CannonBallRadiationPressureInterfaceSettings >(
+                "Sun", 4.0, 1.2, boost::assign::list_of( "Earth" )( "Moon" ) );
+    bodyMap[ "Asterix" ]->setRadiationPressureInterface(
+                "Sun", createRadiationPressureInterface(
+                    asterixRadiationPressureSettings, "Asterix", bodyMap ) );
+
 
 
     // Finalize body creation.
-    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
+    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );
 
     // Define propagator settings variables.
     SelectedAccelerationMap accelerationMap;
     std::vector< std::string > bodiesToPropagate;
     std::vector< std::string > centralBodies;
     std::map< std::string, std::string > centralBodyMap;
-    Eigen::VectorXd systemInitialState = asterixInitialState;
 
     // Define propagation settings.
     std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
-    accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 5, 5 ) );
+
+    accelerationsOfAsterix[ "Sun" ].push_back( boost::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::central_gravity ) );
+    accelerationsOfAsterix[ "Moon" ].push_back( boost::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::central_gravity ) );
+    accelerationsOfAsterix[ "Mars" ].push_back( boost::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::central_gravity ) );
+    accelerationsOfAsterix[ "Venus" ].push_back( boost::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::central_gravity ) );
+
+    accelerationsOfAsterix[ "Sun" ].push_back( boost::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::cannon_ball_radiation_pressure ) );
+
+    accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::aerodynamic ) );
+
     accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
     bodiesToPropagate.push_back( "Asterix" );
     centralBodies.push_back( "Earth" );
     centralBodyMap[  "Asterix" ] = "Earth";
 
     // Create acceleration models and propagation settings.
+
+    // Set Keplerian elements for Asterix.
+    Vector6d asterixInitialStateInKeplerianElements;
+    asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0E3;
+    asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
+    asterixInitialStateInKeplerianElements( inclinationIndex ) = unit_conversions::convertDegreesToRadians( 85.3 );
+    asterixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
+            = unit_conversions::convertDegreesToRadians( 235.7 );
+    asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
+            = unit_conversions::convertDegreesToRadians( 23.4 );
+    asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = unit_conversions::convertDegreesToRadians( 139.87 );
+
+   const Vector6d asterixInitialState = convertKeplerianToCartesianElements(
+                asterixInitialStateInKeplerianElements,
+                bodyMap[ "Earth" ]->getGravityFieldModel( )->getGravitationalParameter( ) );
+
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
                 bodyMap, accelerationMap, centralBodyMap );
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );
+            ( centralBodies, accelerationModelMap, bodiesToPropagate, asterixInitialState );
+
+    const double fixedStepSize = 60.0;
     boost::shared_ptr< IntegratorSettings< > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
             ( rungeKutta4, 0.0, simulationEndEpoch, fixedStepSize );
@@ -219,3 +228,4 @@ int main()
     // The exit code EXIT_SUCCESS indicates that the program was successfully executed.
     return EXIT_SUCCESS;
 }
+

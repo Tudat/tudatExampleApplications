@@ -224,6 +224,11 @@ setup_executable_target(application_SingleSatellitePropagator "${SRCROOT}")
 target_link_libraries(application_SingleSatellitePropagator
                       tudat_simulation_setup tudat_propagators tudat_aerodynamics tudat_gravitation tudat_mission_segments tudat_electro_magnetism tudat_ephemerides tudat_numerical_integrators tudat_reference_frames tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_spice_interface cspice ${Boost_LIBRARIES} )
 
+add_executable(application_SinglePerturbedSatellitePropagator "${SRCROOT}/singlePerturbedSatellitePropagator.cpp")
+setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROOT}")
+target_link_libraries(application_SinglePerturbedSatellitePropagator
+                      tudat_simulation_setup tudat_propagators tudat_aerodynamics tudat_gravitation tudat_mission_segments tudat_electro_magnetism tudat_ephemerides tudat_numerical_integrators tudat_reference_frames tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_spice_interface cspice ${Boost_LIBRARIES} )
+
 # Add Asterix and Obelix (satellites) propagator application.
 add_executable(application_AsterixAndObelixPropagator "${SRCROOT}/asterixAndObelixPropagator.cpp")
 setup_executable_target(application_AsterixAndObelixPropagator "${SRCROOT}")
