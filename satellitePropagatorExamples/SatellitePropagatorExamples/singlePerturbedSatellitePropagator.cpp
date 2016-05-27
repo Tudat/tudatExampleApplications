@@ -150,7 +150,6 @@ int main()
     SelectedAccelerationMap accelerationMap;
     std::vector< std::string > bodiesToPropagate;
     std::vector< std::string > centralBodies;
-    std::map< std::string, std::string > centralBodyMap;
 
     // Define propagation settings.
     std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
@@ -174,7 +173,6 @@ int main()
     accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
     bodiesToPropagate.push_back( "Asterix" );
     centralBodies.push_back( "Earth" );
-    centralBodyMap[  "Asterix" ] = "Earth";
 
     // Create acceleration models and propagation settings.
 
@@ -194,7 +192,7 @@ int main()
                 bodyMap[ "Earth" ]->getGravityFieldModel( )->getGravitationalParameter( ) );
 
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
-                bodyMap, accelerationMap, centralBodyMap );
+                bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies, accelerationModelMap, bodiesToPropagate, asterixInitialState );

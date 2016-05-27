@@ -173,7 +173,6 @@ int main()
     SelectedAccelerationMap accelerationMap;
     std::vector< std::string > bodiesToPropagate;
     std::vector< std::string > centralBodies;
-    std::map< std::string, std::string > centralBodyMap;
     Eigen::VectorXd systemInitialState = asterixInitialState;
 
     // Define propagation settings.
@@ -183,11 +182,10 @@ int main()
     accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
     bodiesToPropagate.push_back( "Asterix" );
     centralBodies.push_back( "Earth" );
-    centralBodyMap[  "Asterix" ] = "Earth";
 
     // Create acceleration models and propagation settings.
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
-                bodyMap, accelerationMap, centralBodyMap );
+                bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );

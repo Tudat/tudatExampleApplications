@@ -251,7 +251,6 @@ int main( )
     SelectedAccelerationMap accelerationMap;
     std::vector< std::string > bodiesToPropagate;
     std::vector< std::string > centralBodies;
-    std::map< std::string, std::string > centralBodyMap;
     Eigen::VectorXd systemInitialState = Eigen::VectorXd( 6 * numberOfSatellites );
 
     // Set accelerations for each satellite.
@@ -268,7 +267,6 @@ int main( )
 
         bodiesToPropagate.push_back( currentSatelliteName );
         centralBodies.push_back( "Earth" );
-        centralBodyMap[ currentSatelliteName ] = "Earth";
 
         systemInitialState.segment( i * 6, 6 ) = initialConditions.col( i );
     }
@@ -278,7 +276,7 @@ int main( )
 
     // Create acceleration models and propagation settings.
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
-                bodyMap, accelerationMap, centralBodyMap );
+                bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );

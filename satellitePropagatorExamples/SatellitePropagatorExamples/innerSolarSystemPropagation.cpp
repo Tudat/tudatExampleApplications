@@ -102,8 +102,8 @@ int main( )
         }
 
         // Define list of bodies to propagate
-        std::vector< std::string > bodiesToIntegrate = bodyNames;
-        unsigned int numberOfNumericalBodies = bodiesToIntegrate.size( );
+        std::vector< std::string > bodiesToPropagate = bodyNames;
+        unsigned int numberOfNumericalBodies = bodiesToPropagate.size( );
 
         // Define numerical integrator settings.
         boost::shared_ptr< IntegratorSettings< > > integratorSettings =
@@ -112,14 +112,12 @@ int main( )
 
         // Define central bodies to use in propagation.
         std::vector< std::string > centralBodies;
-        std::map< std::string, std::string > centralBodyMap;
         centralBodies.resize( numberOfNumericalBodies );
         if( centralBodySettings == 0 )
         {
             for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
             {
                 centralBodies[ i ] = "SSB";
-                centralBodyMap[ bodiesToIntegrate[ i ] ] = centralBodies[ i ];
             }
         }
         else if( centralBodySettings == 1 )
@@ -138,21 +136,20 @@ int main( )
                 {
                     centralBodies[ i ] = "Sun";
                 }
-                centralBodyMap[ bodiesToIntegrate[ i ] ] = centralBodies[ i ];
             }
         }
 
 
         // Get initial state vector as input to integration.
         Eigen::VectorXd systemInitialState = getInitialStatesOfBodies(
-                    bodiesToIntegrate, centralBodies, bodyMap, initialEphemerisTime );
+                    bodiesToPropagate, centralBodies, bodyMap, initialEphemerisTime );
 
         // Create acceleration models and propagation settings.
         AccelerationMap accelerationModelMap = createAccelerationModelsMap(
-                    bodyMap, accelerationMap, centralBodyMap );
+                    bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
         boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
                 boost::make_shared< TranslationalStatePropagatorSettings< double > >
-                ( centralBodies, accelerationModelMap, bodiesToIntegrate, systemInitialState );
+                ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );
 
         // Create simulation object and propagate dynamics.
         SingleArcDynamicsSimulator< > dynamicsSimulator(
