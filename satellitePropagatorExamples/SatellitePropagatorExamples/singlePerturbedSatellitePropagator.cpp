@@ -130,7 +130,7 @@ int main()
     double aerodynamicCoefficient = 1.2;
     boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
             boost::make_shared< ConstantAerodynamicCoefficientSettings >(
-                referenceArea, aerodynamicCoefficient * Eigen::Vector3d::UnitZ( ), 1, 1 );
+                referenceArea, aerodynamicCoefficient * Eigen::Vector3d::UnitX( ), 1, 1 );
     bodyMap[ "Asterix" ]->setAerodynamicCoefficientInterface(
                 createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "Asterix" ) );
 
