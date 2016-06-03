@@ -8,8 +8,6 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#define BOOST_TEST_MAIN
-
 #include <string>
 
 #include <boost/make_shared.hpp>
@@ -37,19 +35,28 @@
 
 #include "SatellitePropagatorExamples/applicationOutput.h"
 
-//Using declarations.
-using namespace tudat::ephemerides;
-using namespace tudat::interpolators;
-using namespace tudat::numerical_integrators;
-using namespace tudat::spice_interface;
-using namespace tudat::simulation_setup;
-using namespace tudat::basic_astrodynamics;
-using namespace tudat::orbital_element_conversions;
-using namespace tudat::propagators;
-using namespace tudat;
 
 int main( )
 {
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    using namespace tudat;
+    using namespace ephemerides;
+    using namespace interpolators;
+    using namespace numerical_integrators;
+    using namespace spice_interface;
+    using namespace simulation_setup;
+    using namespace basic_astrodynamics;
+    using namespace basic_mathematics;
+    using namespace orbital_element_conversions;
+    using namespace propagators;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     //Load spice kernels.
     std::string kernelsPath = input_output::getSpiceKernelPath( );
@@ -70,7 +77,6 @@ int main( )
     bodyNames[ 5 ] = "Sun";
 
 
-
     // Specify initial time
     double initialEphemerisTime = 1.0E7;
     double finalEphemerisTime = 1.0E7 + 5.0 * physical_constants::JULIAN_YEAR;
@@ -83,8 +89,14 @@ int main( )
     NamedBodyMap bodyMap = createBodies( bodySettings );
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );
 
+    // Run simulation for 2 different central body settings (barycentric and hierarchical)
     for( int centralBodySettings = 0; centralBodySettings < 2; centralBodySettings++ )
     {
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         // Set accelerations between bodies that are to be taken into account (mutual point mass gravity between all bodies).
         SelectedAccelerationMap accelerationMap;
         for( unsigned int i = 0; i < bodyNames.size( ); i++ )
@@ -104,11 +116,6 @@ int main( )
         // Define list of bodies to propagate
         std::vector< std::string > bodiesToPropagate = bodyNames;
         unsigned int numberOfNumericalBodies = bodiesToPropagate.size( );
-
-        // Define numerical integrator settings.
-        boost::shared_ptr< IntegratorSettings< > > integratorSettings =
-                boost::make_shared< IntegratorSettings< > >
-                ( rungeKutta4, initialEphemerisTime, finalEphemerisTime, 3600.0 );
 
         // Define central bodies to use in propagation.
         std::vector< std::string > centralBodies;
@@ -139,17 +146,34 @@ int main( )
             }
         }
 
+        // Create acceleration models and propagation settings.
+        AccelerationMap accelerationModelMap = createAccelerationModelsMap(
+                    bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
+
+
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////             CREATE PROPAGATION SETTINGS            ///////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
         // Get initial state vector as input to integration.
         Eigen::VectorXd systemInitialState = getInitialStatesOfBodies(
                     bodiesToPropagate, centralBodies, bodyMap, initialEphemerisTime );
 
-        // Create acceleration models and propagation settings.
-        AccelerationMap accelerationModelMap = createAccelerationModelsMap(
-                    bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
+
         boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
                 boost::make_shared< TranslationalStatePropagatorSettings< double > >
                 ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );
+
+        // Define numerical integrator settings.
+        boost::shared_ptr< IntegratorSettings< > > integratorSettings =
+                boost::make_shared< IntegratorSettings< > >
+                ( rungeKutta4, initialEphemerisTime, finalEphemerisTime, 3600.0 );
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////             PROPAGATE ORBITS            ///////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Create simulation object and propagate dynamics.
         SingleArcDynamicsSimulator< > dynamicsSimulator(
@@ -169,11 +193,17 @@ int main( )
             }
         }
 
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////        PROVIDE OUTPUT TO FILES           ////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
         for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
         {
             // Write propagation history to file.
             input_output::writeDataMapToTextFile(
-                        dynamicsSimulator.getEquationsOfMotionNumericalSolution( ),
+                        allBodiesPropagationHistory[ i ],
                         "innerSolarSystemPropagationHistory" + bodyNames.at( i ) +
                         boost::lexical_cast< std::string >( centralBodySettings ) + ".dat",
                         tudat_applications::getOutputPath( ),
@@ -183,5 +213,9 @@ int main( )
                         "," );
         }
     }
+
+    // Final statement.
+    // The exit code EXIT_SUCCESS indicates that the program was successfully executed.
+    return EXIT_SUCCESS;
 }
 

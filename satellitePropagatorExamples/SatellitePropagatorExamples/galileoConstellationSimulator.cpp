@@ -1,41 +1,11 @@
-/*    Copyright (c) 2010-2013, Delft University of Technology
- *    All rights reserved.
+/*    Copyright (c) 2010-2016, Delft University of Technology
+ *    All rigths reserved
  *
- *    Redistribution and use in source and binary forms, with or without modification, are
- *    permitted provided that the following conditions are met:
- *      - Redistributions of source code must retain the above copyright notice, this list of
- *        conditions and the following disclaimer.
- *      - Redistributions in binary form must reproduce the above copyright notice, this list of
- *        conditions and the following disclaimer in the documentation and/or other materials
- *        provided with the distribution.
- *      - Neither the name of the Delft University of Technology nor the names of its contributors
- *        may be used to endorse or promote products derived from this software without specific
- *        prior written permission.
- *
- *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
- *    OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- *    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- *    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- *    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- *    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- *    AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- *    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- *    OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- *    Changelog
- *      YYMMDD    Author            Comment
- *      120221    K. Kumar          File created.
- *      120502    K. Kumar          Updated code to use shared pointers.
- *      121030    K. Kumar          Updated code to use new state derivative models.
- *      130107    S. Billemont      Fixed bugs in set up of initial conditions.
- *      130107    K. Kumar          Updated license in file header.
- *      130250    K. Kumar          Updated gravitational acceleration model references; renamed
- *                                  file; made variables const-correct.
- *
- *    References
- *
- *    Notes
- *
+ *    This file is part of the Tudat. Redistribution and use in source and
+ *    binary forms, with or without modification, are permitted exclusively
+ *    under the terms of the Modified BSD license. You should have received
+ *    a copy of the license with this file. If not, please or visit:
+ *    http://tudat.tudelft.nl/LICENSE.
  */
 
 #include <boost/assign/list_of.hpp>
@@ -77,36 +47,24 @@
 //! Execute simulation of Galileo constellation around the Earth.
 int main( )
 {
-    using namespace tudat;
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    using namespace tudat;
     using namespace simulation_setup;
     using namespace propagators;
     using namespace numerical_integrators;
-
-    using orbital_element_conversions::xCartesianPositionIndex;
-    using orbital_element_conversions::yCartesianPositionIndex;
-    using orbital_element_conversions::zCartesianPositionIndex;
-    using orbital_element_conversions::xCartesianVelocityIndex;
-    using orbital_element_conversions::yCartesianVelocityIndex;
-    using orbital_element_conversions::zCartesianVelocityIndex;
-
-    using basic_mathematics::Vector6d;
-
-    using gravitation::CentralJ2J3J4GravitationalAccelerationModel;
-
-    using input_output::DoubleKeyTypeVectorXdValueTypeMap;
-    using input_output::writeDataMapToTextFile;
-
-    using orbital_element_conversions::convertKeplerianToCartesianElements;
-
-    using numerical_integrators::RungeKutta4Integrator;
-
-    using unit_conversions::convertDegreesToRadians;
+    using namespace basic_astrodynamics;
+    using namespace basic_mathematics;
+    using namespace orbital_element_conversions;
+    using namespace unit_conversions;
+    using namespace input_output;
 
 
-
-    ///////////////////////////////////////////////////////////////////////////
-
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////     CREATE ENVIRONMENT AND VEHICLES      //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Set simulation start epoch.
     const double simulationStartEpoch = 0.0;
@@ -126,12 +84,38 @@ int main( )
     // Set number of satellites per plane in constellation.
     const unsigned int numberOfSatellitesPerPlane = numberOfSatellites / numberOfPlanes;
 
-    // Define Earth parameters.
-    const double earthGravitationalParameter = 3.986004415e14;
-    const double earthJ2 = 0.0010826269;
-    const double earthJ3 = -0.0000050323;
-    const double earthJ4 = -0.0000016204;
-    const double earthEquatorialRadius = 6378.1363e3;
+    // Load Spice kernels.
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
+
+    // Define environment settings
+    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
+            getDefaultBodySettings( { "Earth" },
+                                    simulationStartEpoch - 10.0 * fixedStepSize, simulationEndEpoch + 10.0 * fixedStepSize );
+    bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
+                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
+    bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
+    bodySettings[ "Earth" ]->atmosphereSettings = NULL;
+    bodySettings[ "Earth" ]->shapeModelSettings = NULL;
+
+    // Create Earth object
+    simulation_setup::NamedBodyMap bodyMap = simulation_setup::createBodies( bodySettings );
+
+    // Set accelerations for each satellite.
+    std::string currentSatelliteName;
+    for ( unsigned int i = 0; i < numberOfSatellites; i++ )
+    {
+        currentSatelliteName =  "Satellite" + boost::lexical_cast< std::string >( i );
+        bodyMap[ currentSatelliteName ] = boost::make_shared< simulation_setup::Body >( );
+    }
+
+    // Finalize body creation.
+    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////    DEFINE CONSTELLATION INITIAL STATES      ///////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Set orbital parameters of Galileo constellation.
     const double semiMajorAxis = 23222.0e3 + 6378.1e3;                                // [km]
@@ -142,10 +126,6 @@ int main( )
             = 2.0 * mathematical_constants::PI / numberOfPlanes;                          // [rad]
     const double trueAnomalySpacing
             = 2.0 * mathematical_constants::PI / numberOfSatellitesPerPlane;              // [rad]
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
 
     // Set initial conditions for Galileo satellites that will be propagated in this simulation.
     // The initial conditions are given in Keplerian elements and later on converted to
@@ -203,6 +183,7 @@ int main( )
     // Convert initial conditions to Cartesian elements.
     Eigen::MatrixXd initialConditions( sizeOfState, numberOfSatellites );
 
+    double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
     {
         Vector6d initKepl = initialConditionsInKeplerianElements.col( i ).cast< double >();
@@ -210,55 +191,25 @@ int main( )
                     initKepl, static_cast< double >(earthGravitationalParameter) );
     }
 
-    //    // DEBUG.
-    //    std::cout << initialConditionsInKeplerianElements << std::endl;
-    //    std::cout << initialConditions << std::endl;
+    Eigen::VectorXd systemInitialState = Eigen::VectorXd( 6 * numberOfSatellites );
+    for ( unsigned int i = 0; i < numberOfSatellites; i++ )
+    {
+        systemInitialState.segment( i * 6, 6 ) = initialConditions.col( i );
+    }
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Load Spice kernels.
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
-
-    // Define environment settings
-    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
-            getDefaultBodySettings( { "Earth" },
-                                    simulationStartEpoch - 10.0 * fixedStepSize, simulationEndEpoch + 10.0 * fixedStepSize );
-    Eigen::Matrix< double, 5, 1 > earthCosineCoefficients = Eigen::Matrix< double, 5, 1 >::Zero( );
-    Eigen::Matrix< double, 5, 1 > earthSineCoefficients = Eigen::Matrix< double, 5, 1 >::Zero( );
-    earthCosineCoefficients( 0, 0 ) = 1.0;
-    earthCosineCoefficients << 1.0, 0.0,
-            ( 1.0 / basic_mathematics::calculateLegendreGeodesyNormalizationFactor( 2, 0 ) * earthJ2 ),
-            ( 1.0 / basic_mathematics::calculateLegendreGeodesyNormalizationFactor( 3, 0 ) * earthJ3 ),
-            ( 1.0 / basic_mathematics::calculateLegendreGeodesyNormalizationFactor( 4, 0 ) * earthJ4 );
-    bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
-                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
-    bodySettings[ "Earth" ]->gravityFieldSettings =
-            boost::make_shared< simulation_setup::SphericalHarmonicsGravityFieldSettings >(
-                earthGravitationalParameter, earthEquatorialRadius,
-                earthCosineCoefficients, earthSineCoefficients, "IAU_Earth" );
-    bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
-    bodySettings[ "Earth" ]->atmosphereSettings = NULL;
-    bodySettings[ "Earth" ]->shapeModelSettings = NULL;
-
-    // Create Earth object
-    simulation_setup::NamedBodyMap bodyMap = simulation_setup::createBodies( bodySettings );
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Define propagator settings variables.
     SelectedAccelerationMap accelerationMap;
     std::vector< std::string > bodiesToPropagate;
     std::vector< std::string > centralBodies;
-    Eigen::VectorXd systemInitialState = Eigen::VectorXd( 6 * numberOfSatellites );
 
     // Set accelerations for each satellite.
-    std::string currentSatelliteName;
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
     {
         currentSatelliteName =  "Satellite" + boost::lexical_cast< std::string >( i );
-        bodyMap[ currentSatelliteName ] = boost::make_shared< simulation_setup::Body >( );
 
         std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfCurrentSatellite;
         accelerationsOfCurrentSatellite[ "Earth" ].push_back(
@@ -267,22 +218,27 @@ int main( )
 
         bodiesToPropagate.push_back( currentSatelliteName );
         centralBodies.push_back( "Earth" );
-
-        systemInitialState.segment( i * 6, 6 ) = initialConditions.col( i );
     }
 
-    // Finalize body creation.
-    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
 
     // Create acceleration models and propagation settings.
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
                 bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );
     boost::shared_ptr< IntegratorSettings< > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
             ( rungeKutta4, simulationStartEpoch, simulationEndEpoch, fixedStepSize );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< > dynamicsSimulator(
@@ -301,7 +257,10 @@ int main( )
         }
     }
 
-    // Write results to file.
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////        PROVIDE OUTPUT TO FILES           //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     // Loop over all satellites.
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
@@ -320,7 +279,7 @@ int main( )
                                 "," );
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    return 0;
+    // Final statement.
+    // The exit code EXIT_SUCCESS indicates that the program was successfully executed.
+    return EXIT_SUCCESS;
 }
