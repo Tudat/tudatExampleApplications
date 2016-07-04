@@ -164,12 +164,12 @@ int main( )
 
         boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
                 boost::make_shared< TranslationalStatePropagatorSettings< double > >
-                ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );
+                ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, finalEphemerisTime );
 
         // Define numerical integrator settings.
         boost::shared_ptr< IntegratorSettings< > > integratorSettings =
                 boost::make_shared< IntegratorSettings< > >
-                ( rungeKutta4, initialEphemerisTime, finalEphemerisTime, 3600.0 );
+                ( rungeKutta4, initialEphemerisTime, 3600.0 );
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////             PROPAGATE ORBITS            ///////////////////////////////////////////////////

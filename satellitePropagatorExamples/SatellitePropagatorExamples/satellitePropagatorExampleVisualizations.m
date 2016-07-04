@@ -36,20 +36,32 @@ zlabel('z_{J2000} [m]')
 figure(3)
 
 load(strcat(folder,'apolloPropagationHistory.dat'));
-
-subplot(1,2,1)
-distance = (sqrt(apolloPropagationHistory(:,2).^2+apolloPropagationHistory(:,3).^2+apolloPropagationHistory(:,4).^2) - 6378E3)/1000;
-plot(apolloPropagationHistory(:,1),distance);
+load(strcat(folder,'apolloDependentVariableHistory.dat'));
+subplot(2,2,1)
+plot(apolloDependentVariableHistory(:,1),apolloDependentVariableHistory(:,3));
 grid on
 xlabel('Time since propagation start [s]')
 ylabel('Earth altitude [km]')
+ylim([0 125E3])
 
-subplot(1,2,2)
+subplot(2,2,2)
 speed = sqrt(apolloPropagationHistory(:,5).^2+apolloPropagationHistory(:,6).^2+apolloPropagationHistory(:,7).^2);
 plot(apolloPropagationHistory(:,1),speed);
 grid on
 xlabel('Time since propagation start [s]')
 ylabel('Earth-centered inertial speed [m/s]')
+
+subplot(2,2,3)
+plot(apolloDependentVariableHistory(:,1),apolloDependentVariableHistory(:,2));
+grid on
+xlabel('Time since propagation start [s]')
+ylabel('Mach number [-]')
+
+subplot(2,2,4)
+plot(apolloDependentVariableHistory(:,1),apolloDependentVariableHistory(:,4)/9.80665);
+grid on
+xlabel('Time since propagation start [s]')
+ylabel('Aerodynamic acceleration [g]')
 
 %%
 
@@ -122,14 +134,43 @@ perturbedSatellite = load('singlePerturbedSatellitePropagationHistory.dat');
 unperturbedSatellite = load('singleSatellitePropagationHistory.dat');
 
 for i=1:3
-subplot(3,2,2*(i-1)+1)
-plot(perturbedSatellite(:,1),perturbedSatellite(:,i+1))
-hold on
-plot(unperturbedSatellite(:,1),unperturbedSatellite(:,i+1),'r--')
-subplot(3,2,2*i)
-plot(perturbedSatellite(:,1),perturbedSatellite(:,i+1)-unperturbedSatellite(:,i+1))
+    subplot(3,2,2*(i-1)+1)
+    plot(perturbedSatellite(:,1),perturbedSatellite(:,i+1))
+    grid on
+    xlabel('Time since epoch [s]')
+    
+    hold on
+    plot(unperturbedSatellite(:,1),unperturbedSatellite(:,i+1),'r--')
+    grid on
+    xlabel('Time since epoch [s]')
+
+    subplot(3,2,2*i)
+    plot(perturbedSatellite(:,1),perturbedSatellite(:,i+1)-unperturbedSatellite(:,i+1))
+    grid on
+    xlabel('Time since epoch [s]')
 
 end
+
+subplot(3,2,1)
+ylabel('x_{ECI} [m]')
+legend('Perturbed', 'Unperturbed');
+
+subplot(3,2,3)
+ylabel('y_{ECI} [m]')
+legend('Perturbed', 'Unperturbed');
+
+subplot(3,2,5)
+ylabel('z_{ECI} [m]')
+legend('Perturbed', 'Unperturbed');
+
+subplot(3,2,2)
+ylabel('x_{ECI} difference [m]')
+
+subplot(3,2,4)
+ylabel('y_{ECI} difference [m]')
+
+subplot(3,2,6)
+ylabel('z_{ECI} difference [m]')
 
 
 
