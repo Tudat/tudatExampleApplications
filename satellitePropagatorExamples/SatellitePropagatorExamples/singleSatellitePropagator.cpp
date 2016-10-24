@@ -8,32 +8,7 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-// External libraries: Boost
-#include <boost/bind.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
-
-// Tudat library
-#include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-#include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
-#include <Tudat/Astrodynamics/Gravitation/centralGravityModel.h>
-#include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
-#include <Tudat/InputOutput/basicInputOutput.h>
-
-#include <Tudat/Astrodynamics/Propagators/dynamicsSimulator.h>
-#include <Tudat/External/SpiceInterface/spiceInterface.h>
-#include <Tudat/SimulationSetup/body.h>
-#include <Tudat/SimulationSetup/createBodies.h>
-#include <Tudat/SimulationSetup/createAccelerationModels.h>
-
-// C++ Standard library
-#include <iostream>
-
-// External libraries: Eigen
-#include <Eigen/Core>
+#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 
 #include "SatellitePropagatorExamples/applicationOutput.h"
 
@@ -139,10 +114,10 @@ int main()
 
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );
+            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, simulationEndEpoch );
     boost::shared_ptr< IntegratorSettings< > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
-            ( rungeKutta4, 0.0, simulationEndEpoch, fixedStepSize );
+            ( rungeKutta4, 0.0, fixedStepSize );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////

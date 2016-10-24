@@ -193,65 +193,79 @@ endif()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${SPICE_INCLUDE_DIR}\"")
   endif( )
 
-# If documentation should be built, find Doxygen package and setup config file.
-if(BUILD_DOCUMENTATION)
-  find_package(Doxygen)
+option(USE_NRLMSISE00 "build Tudat with NRLMSISE-00 enabled" ON)
+if(NOT USE_NRLMSISE00)
+  message(STATUS "NRLMSISE-00 disabled!")
+  add_definitions(-DUSE_NRLMSISE00=0)
+else()
+  message(STATUS "NRLMSISE-00 enabled!")
+  add_definitions(-DUSE_NRLMSISE00=1)
+  # Find USE_NRLMSISE00 library on local system.
+  find_package(NRLMSISE00)
 
-  if(NOT DOXYGEN_FOUND)
-    message(FATAL_ERROR 
-            "Doxygen is needed to build the documentation. Please install it correctly.")
-  endif()
+  # Include NRLMSISE00 directories.
+  if(NOT APPLE)
+    include_directories(SYSTEM AFTER "${NRLMSISE00_INCLUDE_DIR}")
+  else( )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${NRLMSISE00_INCLUDE_DIR}\"")
+  endif( )
+endif( )
 
-  # Configure the Template Doxyfile for our specific project.
-  configure_file(${CODEROOT}/Doxyfile.in ${PROJECT_BINARY_DIR}/Doxyfile @ONLY IMMEDIATE)
-
-  # Add a custom target to run Doxygen when ever the project is built.
-  # IF you do NOT want the documentation to be generated EVERY time you build the project
-  # then leave out the 'ALL' keyword from the above command.
-  add_custom_target (docs ALL COMMAND ${DOXYGEN_EXECUTABLE} 
-                     ${PROJECT_BINARY_DIR}/Doxyfile 
-                     SOURCES ${PROJECT_BINARY_DIR}/Doxyfile)
-
-  # Install documentation.
-  install(DIRECTORY "${CODEROOT}/Documentation" 
-          DESTINATION "${SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH}")
+if(USE_CSPICE)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES tudat_spice_interface cspice)
 endif()
 
+if(USE_NRLMSISE00)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
+endif()
+
+#if(USE_GSL)
+#  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES gsl)
+#endif()
+
+
+list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_propagators
+    tudat_aerodynamics tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
+    tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
+    tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
 ## Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
 setup_executable_target(application_SingleSatellitePropagator "${SRCROOT}")
-target_link_libraries(application_SingleSatellitePropagator
-                      tudat_simulation_setup tudat_propagators tudat_aerodynamics tudat_gravitation tudat_mission_segments tudat_electro_magnetism tudat_ephemerides tudat_numerical_integrators tudat_reference_frames tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_spice_interface cspice ${Boost_LIBRARIES} )
+target_link_libraries(application_SingleSatellitePropagator ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 add_executable(application_SinglePerturbedSatellitePropagator "${SRCROOT}/singlePerturbedSatellitePropagator.cpp")
 setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROOT}")
 target_link_libraries(application_SinglePerturbedSatellitePropagator
-                      tudat_simulation_setup tudat_propagators tudat_aerodynamics tudat_gravitation tudat_mission_segments tudat_electro_magnetism tudat_ephemerides tudat_numerical_integrators tudat_reference_frames tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_spice_interface cspice ${Boost_LIBRARIES} )
+                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Asterix and Obelix (satellites) propagator application.
 add_executable(application_AsterixAndObelixPropagator "${SRCROOT}/asterixAndObelixPropagator.cpp")
 setup_executable_target(application_AsterixAndObelixPropagator "${SRCROOT}")
 target_link_libraries(application_AsterixAndObelixPropagator
-                      tudat_simulation_setup tudat_propagators tudat_aerodynamics tudat_gravitation tudat_mission_segments tudat_electro_magnetism tudat_ephemerides tudat_numerical_integrators tudat_reference_frames tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_spice_interface cspice ${Boost_LIBRARIES} )
+                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Galileo constellation application.
 add_executable(application_GalileoConstellationSimulator 
                "${SRCROOT}/galileoConstellationSimulator.cpp")
 setup_executable_target(application_GalileoConstellationSimulator "${SRCROOT}")
 target_link_libraries(application_GalileoConstellationSimulator
-                      tudat_simulation_setup tudat_propagators tudat_aerodynamics tudat_gravitation tudat_mission_segments tudat_electro_magnetism tudat_ephemerides tudat_numerical_integrators tudat_reference_frames tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_spice_interface cspice ${Boost_LIBRARIES} )
+                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add inner Solar system propagation
 add_executable(application_InnerSolarSystemPropagation
                "${SRCROOT}/innerSolarSystemPropagation.cpp")
 setup_executable_target(application_InnerSolarSystemPropagation "${SRCROOT}")
 target_link_libraries(application_InnerSolarSystemPropagation
-                      tudat_simulation_setup tudat_propagators tudat_aerodynamics tudat_gravitation tudat_mission_segments tudat_electro_magnetism tudat_ephemerides tudat_numerical_integrators tudat_reference_frames tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_spice_interface cspice ${Boost_LIBRARIES} )
+                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Apollo propagation
 add_executable(application_ApolloEntry
                "${SRCROOT}/apolloCapsuleEntry.cpp")
 setup_executable_target(application_ApolloEntry "${SRCROOT}")
-target_link_libraries(application_ApolloEntry
-                      tudat_simulation_setup tudat_propagators tudat_aerodynamics tudat_geometric_shapes tudat_gravitation tudat_mission_segments tudat_electro_magnetism tudat_ephemerides tudat_numerical_integrators tudat_reference_frames tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_spice_interface cspice ${Boost_LIBRARIES} )
+target_link_libraries(application_ApolloEntry ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+# Add thrust example
+add_executable(application_ThrustExample "${SRCROOT}/thrustAccelerationExample.cpp")
+setup_executable_target(application_ThrustExample "${SRCROOT}")
+target_link_libraries(application_ThrustExample ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )

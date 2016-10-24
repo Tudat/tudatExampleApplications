@@ -8,34 +8,11 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#include <string>
-
-#include <boost/make_shared.hpp>
-#include <boost/test/unit_test.hpp>
-
-#include "Tudat/Mathematics/BasicMathematics/linearAlgebra.h"
-#include "Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h"
-#include "Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h"
-
-#include "Tudat/External/SpiceInterface/spiceInterface.h"
-#include "Tudat/Mathematics/NumericalIntegrators/rungeKuttaCoefficients.h"
-#include "Tudat/Mathematics/Interpolators/lagrangeInterpolator.h"
-#include "Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h"
-#include "Tudat/Astrodynamics/BasicAstrodynamics/keplerPropagator.h"
-#include "Tudat/InputOutput/basicInputOutput.h"
-
-#include "Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h"
-#include "Tudat/SimulationSetup/body.h"
-#include "Tudat/Astrodynamics/Propagators/nBodyCowellStateDerivative.h"
-#include "Tudat/Astrodynamics/Propagators/dynamicsSimulator.h"
-#include "Tudat/Mathematics/NumericalIntegrators/createNumericalIntegrator.h"
-#include "Tudat/SimulationSetup/createBodies.h"
-#include "Tudat/SimulationSetup/createAccelerationModels.h"
-#include "Tudat/SimulationSetup/defaultBodies.h"
+#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 
 #include "SatellitePropagatorExamples/applicationOutput.h"
 
-
+//! Simulate the dynamics of the main bodies in the inner solar system
 int main( )
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,14 +62,13 @@ int main( )
 
     // Create bodies needed in simulation
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
-            getDefaultBodySettings( bodyNames, initialEphemerisTime - buffer, finalEphemerisTime + buffer );
+            getDefaultBodySettings( bodyNames, initialEphemerisTime - buffer, initialEphemerisTime + buffer );
     NamedBodyMap bodyMap = createBodies( bodySettings );
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );
 
     // Run simulation for 2 different central body settings (barycentric and hierarchical)
     for( int centralBodySettings = 0; centralBodySettings < 2; centralBodySettings++ )
     {
-
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,12 +140,12 @@ int main( )
 
         boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
                 boost::make_shared< TranslationalStatePropagatorSettings< double > >
-                ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );
+                ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, finalEphemerisTime );
 
         // Define numerical integrator settings.
         boost::shared_ptr< IntegratorSettings< > > integratorSettings =
                 boost::make_shared< IntegratorSettings< > >
-                ( rungeKutta4, initialEphemerisTime, finalEphemerisTime, 3600.0 );
+                ( rungeKutta4, initialEphemerisTime, 3600.0 );
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////             PROPAGATE ORBITS            ///////////////////////////////////////////////////
@@ -199,19 +175,19 @@ int main( )
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-        for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
-        {
-            // Write propagation history to file.
-            input_output::writeDataMapToTextFile(
-                        allBodiesPropagationHistory[ i ],
-                        "innerSolarSystemPropagationHistory" + bodyNames.at( i ) +
-                        boost::lexical_cast< std::string >( centralBodySettings ) + ".dat",
-                        tudat_applications::getOutputPath( ),
-                        "",
-                        std::numeric_limits< double >::digits10,
-                        std::numeric_limits< double >::digits10,
-                        "," );
-        }
+//        for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
+//        {
+//            // Write propagation history to file.
+//            input_output::writeDataMapToTextFile(
+//                        allBodiesPropagationHistory[ i ],
+//                        "innerSolarSystemPropagationHistory" + bodyNames.at( i ) +
+//                        boost::lexical_cast< std::string >( centralBodySettings ) + ".dat",
+//                        tudat_applications::getOutputPath( ),
+//                        "",
+//                        std::numeric_limits< double >::digits10,
+//                        std::numeric_limits< double >::digits10,
+//                        "," );
+//        }
     }
 
     // Final statement.

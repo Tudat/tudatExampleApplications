@@ -8,36 +8,9 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
-
-#include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-#include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
+#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 
 #include <Tudat/Astrodynamics/Aerodynamics/UnitTests/testApolloCapsuleCoefficients.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
-#include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravityModel.h>
-#include <Tudat/InputOutput/basicInputOutput.h>
-#include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
-
-#include <Tudat/Astrodynamics/Propagators/dynamicsSimulator.h>
-#include <Tudat/External/SpiceInterface/spiceInterface.h>
-#include <Tudat/SimulationSetup/body.h>
-#include <Tudat/SimulationSetup/createAccelerationModels.h>
-#include <Tudat/SimulationSetup/defaultBodies.h>
-
-#include <iostream>
-#include <fstream>
-#include <limits>
-#include <string>
-#include <utility>
-
-#include <Eigen/Core>
 
 #include <SatellitePropagatorExamples/applicationOutput.h>
 
@@ -132,35 +105,50 @@ int main( )
     // Create acceleration models
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
                 bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
+    bodyMap.at( "Apollo" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
+                boost::lambda::constant( 30.0 * mathematical_constants::PI / 180.0 ) );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Set Keplerian elements for Apollo.
-    Vector6d apolloInitialStateInKeplerianElements;
-    apolloInitialStateInKeplerianElements( semiMajorAxisIndex ) = spice_interface::getAverageRadius( "Earth" ) + 120.0E3;
-    apolloInitialStateInKeplerianElements( eccentricityIndex ) = 0.005;
-    apolloInitialStateInKeplerianElements( inclinationIndex ) = unit_conversions::convertDegreesToRadians( 85.3 );
-    apolloInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = unit_conversions::convertDegreesToRadians( 235.7 );
-    apolloInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = unit_conversions::convertDegreesToRadians( 23.4 );
-    apolloInitialStateInKeplerianElements( trueAnomalyIndex ) = unit_conversions::convertDegreesToRadians( 139.87 );
+    // Set spherical elements for Apollo.
+    Vector6d apolloSphericalEntryState;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::radiusIndex ) = spice_interface::getAverageRadius( "Earth" ) + 120.0E3;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::latitudeIndex ) = 0.0;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::longitudeIndex ) = 1.2;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::speedIndex ) = 7.8E3;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::flightPathIndex ) = -0.8 * mathematical_constants::PI / 180.0;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::headingAngleIndex ) = 0.6;
 
-    // Convert apollo state from Keplerian elements to Cartesian elements.
-    double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
-    const Vector6d systemInitialState = convertKeplerianToCartesianElements(
-                apolloInitialStateInKeplerianElements,
-                earthGravitationalParameter );
+    // Convert apollo state from spherical elements to Cartesian elements.
+    const Vector6d systemInitialState = convertSphericalOrbitalToCartesianState(
+                apolloSphericalEntryState );
+
+
+    // Define list of dependent variables to save.
+    std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariables;
+    dependentVariables.push_back(
+                boost::make_shared< SingleDependentVariableSaveSettings >( mach_number_dependent_variable, "Apollo" ) );
+    dependentVariables.push_back(
+                boost::make_shared< SingleDependentVariableSaveSettings >( altitude_dependent_variable,
+                                                                           "Apollo", "Earth" ) );
+    dependentVariables.push_back(
+                boost::make_shared< SingleAccelerationDependentVariableSaveSettings >(
+                    aerodynamic, "Apollo", "Earth", 1 ) );
+
 
     // Create propagation settings.
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );
+            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState,
+              boost::make_shared< PropagationDependentVariableTerminationSettings >(
+                  boost::make_shared< SingleDependentVariableSaveSettings >(
+                      altitude_dependent_variable, "Apollo", "Earth" ), 25.0E3, true ),
+              cowell, boost::make_shared< DependentVariableSaveSettings >( dependentVariables ) );
     boost::shared_ptr< IntegratorSettings< > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
-            ( rungeKutta4, simulationStartEpoch, simulationEndEpoch, fixedStepSize );
+            ( rungeKutta4, simulationStartEpoch, fixedStepSize );
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,6 +168,13 @@ int main( )
     // Write Apollo propagation history to file.
     writeDataMapToTextFile( dynamicsSimulator.getEquationsOfMotionNumericalSolution( ),
                             "apolloPropagationHistory.dat",
+                            tudat_applications::getOutputPath( ),
+                            "",
+                            std::numeric_limits< double >::digits10,
+                            std::numeric_limits< double >::digits10,
+                            "," );
+    writeDataMapToTextFile( dynamicsSimulator.getDependentVariableHistory( ),
+                            "apolloDependentVariableHistory.dat",
                             tudat_applications::getOutputPath( ),
                             "",
                             std::numeric_limits< double >::digits10,

@@ -19,7 +19,6 @@ xlabel('x_{J2000} [m]')
 ylabel('y_{J2000} [m]')
 zlabel('z_{J2000} [m]')
 %%
-close all
 figure(2)
 
 for i=1:30
@@ -131,19 +130,9 @@ plot(perturbedSatellite(:,1),perturbedSatellite(:,i+1)-unperturbedSatellite(:,i+
 
 end
 
+%%
+close all
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+load('thrustPropagationHistory.dat')
+plot3(thrustPropagationHistory(:,2),thrustPropagationHistory(:,3),thrustPropagationHistory(:,4))
+axis equal

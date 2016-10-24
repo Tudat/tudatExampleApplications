@@ -28,6 +28,7 @@ int main( )
     using namespace orbital_element_conversions;
     using namespace unit_conversions;
     using namespace input_output;
+    using namespace propulsion;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////     CREATE ENVIRONMENT AND VEHICLES      //////////////////////////////////////////////////////
@@ -42,32 +43,26 @@ int main( )
     const double simulationStartEpoch = 0.0;
 
     // Set simulation end epoch.
-    const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
+    const double simulationEndEpoch = 5000.0 * tudat::physical_constants::JULIAN_DAY;
 
     // Set numerical integration fixed step size.
-    const double fixedStepSize = 60.0;
+    const double fixedStepSize = 3600.0;
 
     // Define simulation body settings.
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
-            getDefaultBodySettings( { "Earth" }, simulationStartEpoch - 10.0 * fixedStepSize,
+            getDefaultBodySettings( { "Sun", "Earth" }, simulationStartEpoch - 10.0 * fixedStepSize,
                                     simulationEndEpoch + 10.0 * fixedStepSize );
-
-    bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
-                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
-
-    bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
-    bodySettings[ "Earth" ]->atmosphereSettings = NULL;
-    bodySettings[ "Earth" ]->shapeModelSettings = NULL;
 
     // Create Earth object
     simulation_setup::NamedBodyMap bodyMap = simulation_setup::createBodies( bodySettings );
 
     // Create vehicle objects.
+    double vehicleMass = 2000.0;
     bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
-    bodyMap[ "Obelix" ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap[ "Asterix" ]->setConstantBodyMass( vehicleMass );
 
     // Finalize body creation.
-    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
+    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////////
@@ -79,21 +74,30 @@ int main( )
     std::vector< std::string > centralBodies;
 
     // Define acceleration model settings.
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
-    accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
-    accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
-    bodiesToPropagate.push_back( "Asterix" );
-    centralBodies.push_back( "Earth" );
 
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfObelix;
-    accelerationsOfObelix[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
-    accelerationMap[  "Obelix" ] = accelerationsOfObelix;
-    bodiesToPropagate.push_back( "Obelix" );
-    centralBodies.push_back( "Earth" );
+    boost::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionSettings =
+            boost::make_shared< ThrustDirectionFromStateGuidanceSettings >(
+                "Sun", true, false );
+    boost::shared_ptr< ThrustEngineSettings > thrustMagnitudeSettings =
+            boost::make_shared< ConstantThrustEngineSettings >(
+                5.0E-2, 4000.0 );
+
+    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
+    accelerationsOfAsterix[ "Sun" ].push_back( boost::make_shared< AccelerationSettings >( central_gravity) );
+    accelerationsOfAsterix[ "Asterix" ].push_back( boost::make_shared< ThrustAccelerationSettings >(
+                                                       thrustDirectionSettings, thrustMagnitudeSettings ) );
+
+    accelerationMap[ "Asterix" ] = accelerationsOfAsterix;
+    bodiesToPropagate.push_back( "Asterix" );
+    centralBodies.push_back( "Sun" );
 
     // Create acceleration models and propagation settings.
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
                 bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
+
+    std::map< std::string, boost::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
+    massRateModels[ "Asterix" ] = createMassRateModel( "Asterix", boost::make_shared< FromThrustMassModelSettings >( 1 ),
+                                                       bodyMap, accelerationModelMap );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
@@ -104,51 +108,31 @@ int main( )
     // The initial conditions are given in Keplerian elements and later on converted to
     // Cartesian elements.
 
-    // Set Keplerian elements for Asterix.
-    Vector6d asterixInitialStateInKeplerianElements;
-    asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0e3;
-    asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
-    asterixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 85.3 );
-    asterixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = convertDegreesToRadians( 235.7 );
-    asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = convertDegreesToRadians( 23.4 );
-    asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 139.87 );
-
-    // Set Keplerian elements for Obelix.
-    Vector6d obelixInitialStateInKeplerianElements( 6 );
-    obelixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 12040.6e3;
-    obelixInitialStateInKeplerianElements( eccentricityIndex ) = 0.4;
-    obelixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( -23.5 );
-    obelixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = convertDegreesToRadians( 10.6 );
-    obelixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = convertDegreesToRadians( 367.9 );
-    obelixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 93.4 );
-
-    // Convert initial states from Keplerian to Cartesian elements.
-
-    double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
-
-    // Convert Asterix state from Keplerian elements to Cartesian elements.
-    const Vector6d asterixInitialState = convertKeplerianToCartesianElements(
-                asterixInitialStateInKeplerianElements,
-                earthGravitationalParameter );
-
-    // Convert Obelix state from Keplerian elements to Cartesian elements.
-    const Vector6d obelixInitialState = convertKeplerianToCartesianElements(
-                obelixInitialStateInKeplerianElements,
-                earthGravitationalParameter );
-
 
     // Set initial state
-    Eigen::VectorXd systemInitialState = Eigen::VectorXd( 12 );
-    systemInitialState.segment( 0, 6 ) = asterixInitialState;
-    systemInitialState.segment( 6, 6 ) = obelixInitialState;
+    Eigen::VectorXd systemInitialState = spice_interface::getBodyCartesianStateAtEpoch(
+                "Earth", "Sun", "ECLIPJ2000", "None", 0.0 );
 
-    boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
+    boost::shared_ptr< PropagationTimeTerminationSettings > terminationSettings =
+            boost::make_shared< propagators::PropagationTimeTerminationSettings >( simulationEndEpoch );
+
+    boost::shared_ptr< PropagatorSettings< double > > massPropagatorSettings =
+            boost::make_shared< MassPropagatorSettings< double > >(
+                boost::assign::list_of( "Asterix" ), massRateModels,
+                ( Eigen::Matrix< double, 1, 1 >( ) << vehicleMass ).finished( ), terminationSettings );
+
+    boost::shared_ptr< TranslationalStatePropagatorSettings< double > > translationPropagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, simulationEndEpoch );
+            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, terminationSettings );
+
+
+    std::vector< boost::shared_ptr< PropagatorSettings< double > > > propagatorSettingsVector;
+    propagatorSettingsVector.push_back( translationPropagatorSettings );
+    propagatorSettingsVector.push_back( massPropagatorSettings );
+
+    boost::shared_ptr< PropagatorSettings< double > > propagatorSettings =
+            boost::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings );
+
     boost::shared_ptr< IntegratorSettings< > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
             ( rungeKutta4, simulationStartEpoch, fixedStepSize );
@@ -162,16 +146,6 @@ int main( )
                 bodyMap, integratorSettings, propagatorSettings, true, false, false );
     std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
-    // Retrieve numerically integrated states of vehicles.
-    std::map< double, Eigen::VectorXd > asterixPropagationHistory;
-    std::map< double, Eigen::VectorXd > obelixPropagationHistory;
-    for( std::map< double, Eigen::VectorXd >::const_iterator stateIterator = integrationResult.begin( );
-         stateIterator != integrationResult.end( ); stateIterator++ )
-    {
-        asterixPropagationHistory[ stateIterator->first ] = stateIterator->second.segment( 0, 6 );
-        obelixPropagationHistory[ stateIterator->first ] = stateIterator->second.segment( 6, 6 );
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
@@ -179,22 +153,14 @@ int main( )
 
 
     // Write Asterix propagation history to file.
-    writeDataMapToTextFile( asterixPropagationHistory,
-                            "asterixPropagationHistory.dat",
+    writeDataMapToTextFile( integrationResult,
+                            "thrustPropagationHistory.dat",
                             tudat_applications::getOutputPath( ),
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
                             "," );
 
-    // Write obelix propagation history to file.
-    writeDataMapToTextFile( obelixPropagationHistory,
-                            "obelixPropagationHistory.dat",
-                            tudat_applications::getOutputPath( ),
-                            "",
-                            std::numeric_limits< double >::digits10,
-                            std::numeric_limits< double >::digits10,
-                            "," );
 
     // Final statement.
     // The exit code EXIT_SUCCESS indicates that the program was successfully executed.

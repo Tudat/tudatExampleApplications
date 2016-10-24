@@ -8,39 +8,7 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#include <boost/assign/list_of.hpp>
-#include <boost/function.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/multi_array.hpp>
-#include <boost/bind.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
-
-#include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-#include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
-
-#include <Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
-#include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravityModel.h>
-#include <Tudat/InputOutput/basicInputOutput.h>
-#include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
-#include <Tudat/Mathematics/BasicMathematics/mathematicalConstants.h>
-
-#include <Tudat/Astrodynamics/Propagators/dynamicsSimulator.h>
-#include <Tudat/External/SpiceInterface/spiceInterface.h>
-#include <Tudat/SimulationSetup/body.h>
-#include <Tudat/SimulationSetup/createAccelerationModels.h>
-#include <Tudat/SimulationSetup/defaultBodies.h>
-
-#include <iostream>
-#include <limits>
-#include <string>
-#include <utility>
-#include <vector>
-
-#include <Eigen/Core>
+#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 
 #include <SatellitePropagatorExamples/applicationOutput.h>
 
@@ -231,10 +199,10 @@ int main( )
 
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState );
+            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, simulationEndEpoch );
     boost::shared_ptr< IntegratorSettings< > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
-            ( rungeKutta4, simulationStartEpoch, simulationEndEpoch, fixedStepSize );
+            ( rungeKutta4, simulationStartEpoch, fixedStepSize );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
