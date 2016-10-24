@@ -175,19 +175,19 @@ int main( )
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//        for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
-//        {
-//            // Write propagation history to file.
-//            input_output::writeDataMapToTextFile(
-//                        allBodiesPropagationHistory[ i ],
-//                        "innerSolarSystemPropagationHistory" + bodyNames.at( i ) +
-//                        boost::lexical_cast< std::string >( centralBodySettings ) + ".dat",
-//                        tudat_applications::getOutputPath( ),
-//                        "",
-//                        std::numeric_limits< double >::digits10,
-//                        std::numeric_limits< double >::digits10,
-//                        "," );
-//        }
+        for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
+        {
+            // Write propagation history to file.
+            input_output::writeDataMapToTextFile(
+                        allBodiesPropagationHistory[ i ],
+                        "innerSolarSystemPropagationHistory" + bodyNames.at( i ) +
+                        boost::lexical_cast< std::string >( centralBodySettings ) + ".dat",
+                        tudat_applications::getOutputPath( ),
+                        "",
+                        std::numeric_limits< double >::digits10,
+                        std::numeric_limits< double >::digits10,
+                        "," );
+        }
     }
 
     // Final statement.

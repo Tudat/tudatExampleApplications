@@ -115,24 +115,45 @@ for i=1:6
 end
 
 %%
-
 figure(7)
 perturbedSatellite = load('singlePerturbedSatellitePropagationHistory.dat');
 unperturbedSatellite = load('singleSatellitePropagationHistory.dat');
 
 for i=1:3
-subplot(3,2,2*(i-1)+1)
-plot(perturbedSatellite(:,1),perturbedSatellite(:,i+1))
-hold on
-plot(unperturbedSatellite(:,1),unperturbedSatellite(:,i+1),'r--')
-subplot(3,2,2*i)
-plot(perturbedSatellite(:,1),perturbedSatellite(:,i+1)-unperturbedSatellite(:,i+1))
-
+    
+    subplot(3,2,2*(i-1)+1)
+    plot(perturbedSatellite(:,1),perturbedSatellite(:,i+1))
+    hold on
+    plot(unperturbedSatellite(:,1),unperturbedSatellite(:,i+1),'r--')
+    subplot(3,2,2*i)
+    plot(perturbedSatellite(:,1),perturbedSatellite(:,i+1)-unperturbedSatellite(:,i+1))
+    
+    if( i == 3 )
+        subplot(3,2,2*(i-1)+1)
+        xlabel('Time since epoch [s]')
+        
+        subplot(3,2,2*i)
+        xlabel('Time since epoch [s]')
+        
+    end
+    
+    if( i == 1 )
+        subplot(3,2,2*(i-1)+1)
+        title('Absolute orbit')
+        legend('Perturbed','Unperturbed')
+        
+        subplot(3,2,2*i)
+        title('Orbit difference')
+    end
+    subplot(3,2,2*(i-1)+1)
+    if( i == 1 )
+        ylabel('x-component [m]')
+    elseif( i == 2 )
+        ylabel('y-component [m]')
+        
+    else
+        ylabel('z-component [m]')
+        
+    end
+    
 end
-
-%%
-close all
-
-load('thrustPropagationHistory.dat')
-plot3(thrustPropagationHistory(:,2),thrustPropagationHistory(:,3),thrustPropagationHistory(:,4))
-axis equal
