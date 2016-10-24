@@ -1,126 +1,44 @@
-/*    Copyright (c) 2010-2013, Delft University of Technology
- *    All rights reserved.
+/*    Copyright (c) 2010-2016, Delft University of Technology
+ *    All rigths reserved
  *
- *    Redistribution and use in source and binary forms, with or without modification, are
- *    permitted provided that the following conditions are met:
- *      - Redistributions of source code must retain the above copyright notice, this list of
- *        conditions and the following disclaimer.
- *      - Redistributions in binary form must reproduce the above copyright notice, this list of
- *        conditions and the following disclaimer in the documentation and/or other materials
- *        provided with the distribution.
- *      - Neither the name of the Delft University of Technology nor the names of its contributors
- *        may be used to endorse or promote products derived from this software without specific
- *        prior written permission.
- *
- *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
- *    OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- *    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- *    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- *    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- *    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- *    AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- *    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- *    OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- *    Changelog
- *      YYMMDD    Author            Comment
- *      120221    K. Kumar          File created.
- *      120502    K. Kumar          Updated code to use shared pointers.
- *      121030    K. Kumar          Updated code to use new state derivative models.
- *      130107    S. Billemont      Fixed bugs in set up of initial conditions.
- *      130107    K. Kumar          Updated license in file header.
- *      130225    K. Kumar          Updated gravitational acceleration model references; renamed
- *                                  file; made variables const-correct.
- *
- *    References
- *
- *    Notes
- *
+ *    This file is part of the Tudat. Redistribution and use in source and
+ *    binary forms, with or without modification, are permitted exclusively
+ *    under the terms of the Modified BSD license. You should have received
+ *    a copy of the license with this file. If not, please or visit:
+ *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#include <boost/assign/list_of.hpp>
-#include <boost/function.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/multi_array.hpp>
-#include <boost/bind.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
+#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 
-#include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-#include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
-
-#include <Tudat/Astrodynamics/BasicAstrodynamics/accelerationModel.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
-#include <Tudat/Astrodynamics/Gravitation/centralJ2J3J4GravityModel.h>
-#include <Tudat/Astrodynamics/StateDerivativeModels/cartesianStateDerivativeModel.h>
-#include <Tudat/Astrodynamics/StateDerivativeModels/compositeStateDerivativeModel.h>
-#include <Tudat/InputOutput/basicInputOutput.h>
-#include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
-#include <Tudat/Mathematics/BasicMathematics/mathematicalConstants.h>
-
-#include <iostream>
-#include <limits>
-#include <string>
-#include <utility>
-#include <vector>
-
-#include <Eigen/Core>
-
-#include "SatellitePropagatorExamples/body.h"
+#include <SatellitePropagatorExamples/applicationOutput.h>
 
 //! Execute simulation of Galileo constellation around the Earth.
 int main( )
 {
-    using namespace satellite_propagator_examples;
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    using tudat::orbital_element_conversions::xCartesianPositionIndex;
-    using tudat::orbital_element_conversions::yCartesianPositionIndex;
-    using tudat::orbital_element_conversions::zCartesianPositionIndex;
-    using tudat::orbital_element_conversions::xCartesianVelocityIndex;
-    using tudat::orbital_element_conversions::yCartesianVelocityIndex;
-    using tudat::orbital_element_conversions::zCartesianVelocityIndex;
+    using namespace tudat;
+    using namespace simulation_setup;
+    using namespace propagators;
+    using namespace numerical_integrators;
+    using namespace basic_astrodynamics;
+    using namespace basic_mathematics;
+    using namespace orbital_element_conversions;
+    using namespace unit_conversions;
+    using namespace input_output;
 
-    using tudat::basic_mathematics::Vector6d;
 
-    using tudat::gravitation::CentralJ2J3J4GravitationalAccelerationModel;
-
-    using tudat::input_output::DoubleKeyTypeVectorXdValueTypeMap;
-    using tudat::input_output::writeDataMapToTextFile;
-
-    using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
-
-    using tudat::numerical_integrators::RungeKutta4Integrator;
-
-    using tudat::state_derivative_models::CartesianStateDerivativeModel6d;
-    using tudat::state_derivative_models::CartesianStateDerivativeModel6dPointer;
-
-    using tudat::unit_conversions::convertDegreesToRadians;
-
-    typedef std::vector< CartesianStateDerivativeModel6dPointer > ListOfStateDerivativeModels;
-    typedef tudat::state_derivative_models::CompositeStateDerivativeModel<
-            double, Eigen::VectorXd, Vector6d > CompositeStateDerivativeModelXd;
-    typedef boost::shared_ptr< CompositeStateDerivativeModelXd >
-            CompositeStateDerivativeModelXdPointer;
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Input deck.
-
-    // Set output directory.
-    const std::string outputDirectory = "";
-    if( outputDirectory == "" )
-    {
-        std::cerr<<"Error, output directory not specified (modify outputDirectory variable to "<<
-                   " required output directory)."<<std::endl;
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////     CREATE ENVIRONMENT AND VEHICLES      //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Set simulation start epoch.
     const double simulationStartEpoch = 0.0;
 
     // Set simulation end epoch.
-    const double simulationEndEpoch = 1.0 * tudat::physical_constants::JULIAN_DAY;
+    const double simulationEndEpoch = 1.0 * physical_constants::JULIAN_DAY;
 
     // Set numerical integration fixed step size.
     const double fixedStepSize = 30.0;
@@ -134,12 +52,38 @@ int main( )
     // Set number of satellites per plane in constellation.
     const unsigned int numberOfSatellitesPerPlane = numberOfSatellites / numberOfPlanes;
 
-    // Define Earth parameters.
-    const double earthGravitationalParameter = 3.986004415e14;
-    const double earthJ2 = 0.0010826269;
-    const double earthJ3 = -0.0000025323;
-    const double earthJ4 = -0.0000016204;
-    const double earthEquatorialRadius = 6378.1363e3;
+    // Load Spice kernels.
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
+    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
+
+    // Define environment settings
+    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
+            getDefaultBodySettings( { "Earth" },
+                                    simulationStartEpoch - 10.0 * fixedStepSize, simulationEndEpoch + 10.0 * fixedStepSize );
+    bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
+                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
+    bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
+    bodySettings[ "Earth" ]->atmosphereSettings = NULL;
+    bodySettings[ "Earth" ]->shapeModelSettings = NULL;
+
+    // Create Earth object
+    simulation_setup::NamedBodyMap bodyMap = simulation_setup::createBodies( bodySettings );
+
+    // Set accelerations for each satellite.
+    std::string currentSatelliteName;
+    for ( unsigned int i = 0; i < numberOfSatellites; i++ )
+    {
+        currentSatelliteName =  "Satellite" + boost::lexical_cast< std::string >( i );
+        bodyMap[ currentSatelliteName ] = boost::make_shared< simulation_setup::Body >( );
+    }
+
+    // Finalize body creation.
+    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////    DEFINE CONSTELLATION INITIAL STATES      ///////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Set orbital parameters of Galileo constellation.
     const double semiMajorAxis = 23222.0e3 + 6378.1e3;                                // [km]
@@ -147,13 +91,9 @@ int main( )
     const double inclination = convertDegreesToRadians( 56.0 );                       // [rad]
     const double argumentOfPeriapsis = 0.0;                                           // [rad]
     const double longitudeOfAscendingNodeSpacing
-            = 2.0 * tudat::mathematical_constants::PI / numberOfPlanes;                          // [rad]
+            = 2.0 * mathematical_constants::PI / numberOfPlanes;                          // [rad]
     const double trueAnomalySpacing
-            = 2.0 * tudat::mathematical_constants::PI / numberOfSatellitesPerPlane;              // [rad]
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
+            = 2.0 * mathematical_constants::PI / numberOfSatellitesPerPlane;              // [rad]
 
     // Set initial conditions for Galileo satellites that will be propagated in this simulation.
     // The initial conditions are given in Keplerian elements and later on converted to
@@ -211,142 +151,84 @@ int main( )
     // Convert initial conditions to Cartesian elements.
     Eigen::MatrixXd initialConditions( sizeOfState, numberOfSatellites );
 
+    double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
     {
-		Vector6d initKepl = initialConditionsInKeplerianElements.col( i ).cast< double >();
+        Vector6d initKepl = initialConditionsInKeplerianElements.col( i ).cast< double >();
         initialConditions.col( i ) = convertKeplerianToCartesianElements(
                     initKepl, static_cast< double >(earthGravitationalParameter) );
     }
 
-//    // DEBUG.
-//    std::cout << initialConditionsInKeplerianElements << std::endl;
-//    std::cout << initialConditions << std::endl;
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Create list of satellites and acceleration models per satellite.
-    ListOfSatellites satellites;
-
+    Eigen::VectorXd systemInitialState = Eigen::VectorXd( 6 * numberOfSatellites );
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
     {
-        BodyPointer satellite = boost::make_shared< Body >( initialConditions.col( i ), 0.0 );
-		
-        const CartesianStateDerivativeModel6d::AccelerationModelPointerVector gravityModel = 
-		    boost::assign::list_of( boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel >(
-                        boost::bind( &Body::getCurrentPosition, satellite ),
-                        earthGravitationalParameter, earthEquatorialRadius,
-                        earthJ2, earthJ3, earthJ4 ) );
-		
-        satellites[ satellite ] = gravityModel;
+        systemInitialState.segment( i * 6, 6 ) = initialConditions.col( i );
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////
+    // Define propagator settings variables.
+    SelectedAccelerationMap accelerationMap;
+    std::vector< std::string > bodiesToPropagate;
+    std::vector< std::string > centralBodies;
 
-    // Create list of Cartesian state derivative models.
-    ListOfStateDerivativeModels stateDerivativeModels;
-
-    for ( ListOfSatellites::iterator satelliteIterator = satellites.begin( );
-          satelliteIterator != satellites.end( ); satelliteIterator++ )
-    {
-        stateDerivativeModels.push_back(
-                    boost::make_shared< CartesianStateDerivativeModel6d >(
-                        satelliteIterator->second,
-                        boost::bind( &Body::setCurrentTimeAndState,
-                                     satelliteIterator->first, _1, _2 ) ) );
-    }
-
-    // Create state derivative model map.
-    CompositeStateDerivativeModelXd::VectorStateDerivativeModelMap stateDerivativeModelMap;
-
+    // Set accelerations for each satellite.
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
     {
-        stateDerivativeModelMap[ std::make_pair( i * sizeOfState, sizeOfState ) ]
-                = boost::bind( &CartesianStateDerivativeModel6d::computeStateDerivative,
-                               stateDerivativeModels.at( i ), _1, _2 );
+        currentSatelliteName =  "Satellite" + boost::lexical_cast< std::string >( i );
+
+        std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfCurrentSatellite;
+        accelerationsOfCurrentSatellite[ "Earth" ].push_back(
+                    boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
+        accelerationMap[ currentSatelliteName ] = accelerationsOfCurrentSatellite;
+
+        bodiesToPropagate.push_back( currentSatelliteName );
+        centralBodies.push_back( "Earth" );
     }
 
-    // Create data updater.
-    DataUpdater updater( satellites );
 
-    // Create composite state derivative model.
-    CompositeStateDerivativeModelXdPointer compositeStateDerivativeModel
-            = boost::make_shared< CompositeStateDerivativeModelXd >(
-                stateDerivativeModelMap,
-                boost::bind( &DataUpdater::updateBodyData, updater, _1, _2 ) );
+    // Create acceleration models and propagation settings.
+    basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
+                bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
 
-//    // DEBUG.
-//    std::cout << compositeStateDerivativeModel->computeStateDerivative(
-//                     0.0, initialConditions ) << std::endl;
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////
+    boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
+            boost::make_shared< TranslationalStatePropagatorSettings< double > >
+            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, simulationEndEpoch );
+    boost::shared_ptr< IntegratorSettings< > > integratorSettings =
+            boost::make_shared< IntegratorSettings< > >
+            ( rungeKutta4, simulationStartEpoch, fixedStepSize );
 
-    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Set up numerical integrator and execute simulation..
+    // Create simulation object and propagate dynamics.
+    SingleArcDynamicsSimulator< > dynamicsSimulator(
+                bodyMap, integratorSettings, propagatorSettings, true, false, false );
+    std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
-    // Integrator initial state.
-    Eigen::VectorXd initialState = Eigen::VectorXd( numberOfSatellites * sizeOfState );
-
-    unsigned int counter = 0;
-
-    for ( ListOfSatellites::iterator satelliteIterator = satellites.begin( );
-          satelliteIterator != satellites.end( ); satelliteIterator++ )
+    // Retrieve numerically integrated state for each satellite.
+    std::vector< std::map< double, Eigen::VectorXd > > allSatellitesPropagationHistory;
+    allSatellitesPropagationHistory.resize( numberOfSatellites );
+    for( std::map< double, Eigen::VectorXd >::const_iterator stateIterator = integrationResult.begin( );
+         stateIterator != integrationResult.end( ); stateIterator++ )
     {
-        initialState.segment( counter * sizeOfState, sizeOfState )
-                = satelliteIterator->first->getCurrentState( );
-        counter++;
-    }
-
-//    // DEBUG.
-//    std::cout << initialState << std::endl;
-
-    // Declare Runge-Kutta 4 integrator.
-    // Since the state derivative function is a member-function, it must be passed by using
-    // boost::bind. The "_1" and "_2" in the boost::bind call specifies that the argument list
-    // for the computeStateDerivative function takes two arguments (t, x).
-    RungeKutta4Integrator< double, Eigen::VectorXd, Eigen::VectorXd > rungeKutta4(
-                boost::bind( &CompositeStateDerivativeModelXd::computeStateDerivative,
-                             compositeStateDerivativeModel, _1, _2 ),
-                0.0, initialState );
-
-    // Numerically integrate motion of satellites.
-
-    // Set current simulation epoch to start.
-    double currentEpoch = simulationStartEpoch;
-
-    // Declare vector of propagation histories for satellites.
-    std::vector< DoubleKeyTypeVectorXdValueTypeMap > allSatellitesPropagationHistory(
-                numberOfSatellites );
-
-    // Execute simulation from start to end epoch and save intermediate states in vector of
-    // propagation histories.
-    while ( currentEpoch < simulationEndEpoch )
-    {
-        // Execute integration step and store composite state at end.
-        Eigen::VectorXd currentCompositeState = rungeKutta4.integrateTo(
-                    currentEpoch + fixedStepSize, 1.0 );
-
-        // Update current epoch.
-        currentEpoch += fixedStepSize;
-
-        // Disassemble state into states per body, and store in propagation histories.
-        for ( unsigned int i = 0; i < numberOfSatellites; i++ )
+        for( unsigned int i = 0; i < allSatellitesPropagationHistory.size( ); i++ )
         {
-            allSatellitesPropagationHistory.at( i )[ rungeKutta4.getCurrentIndependentVariable( ) ]
-                    = currentCompositeState.segment( i * sizeOfState, sizeOfState );
-
+            allSatellitesPropagationHistory[ i ][ stateIterator->first ] = stateIterator->second.segment( i * 6, 6 );
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////        PROVIDE OUTPUT TO FILES           //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Write results to file.
 
     // Loop over all satellites.
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
@@ -358,14 +240,14 @@ int main( )
         // Write propagation history to file.
         writeDataMapToTextFile( allSatellitesPropagationHistory.at( i ),
                                 outputFilename.str( ),
-                                outputDirectory,
+                                tudat_applications::getOutputPath( ),
                                 "",
                                 std::numeric_limits< double >::digits10,
                                 std::numeric_limits< double >::digits10,
-                                ", " );
+                                "," );
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    return 0;
+    // Final statement.
+    // The exit code EXIT_SUCCESS indicates that the program was successfully executed.
+    return EXIT_SUCCESS;
 }

@@ -10,27 +10,33 @@
 
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 
+#include <Tudat/Astrodynamics/Aerodynamics/UnitTests/testApolloCapsuleCoefficients.h>
+
 #include <SatellitePropagatorExamples/applicationOutput.h>
 
-//! Execute propagation of orbits of Asterix and Obelix around the Earth.
+//! Execute propagation of orbits of Apollo during entry.
 int main( )
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+    using namespace tudat::ephemerides;
+    using namespace tudat::interpolators;
+    using namespace tudat::numerical_integrators;
+    using namespace tudat::spice_interface;
+    using namespace tudat::simulation_setup;
+    using namespace tudat::basic_astrodynamics;
+    using namespace tudat::orbital_element_conversions;
+    using namespace tudat::propagators;
+    using namespace tudat::aerodynamics;
+    using namespace tudat::basic_mathematics;
+    using namespace tudat::input_output;
     using namespace tudat;
-    using namespace simulation_setup;
-    using namespace propagators;
-    using namespace numerical_integrators;
-    using namespace basic_astrodynamics;
-    using namespace basic_mathematics;
-    using namespace orbital_element_conversions;
-    using namespace unit_conversions;
-    using namespace input_output;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////     CREATE ENVIRONMENT AND VEHICLES      //////////////////////////////////////////////////////
+    ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Load Spice kernels.
@@ -42,29 +48,38 @@ int main( )
     const double simulationStartEpoch = 0.0;
 
     // Set simulation end epoch.
-    const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
+    const double simulationEndEpoch = 3100.0;
 
     // Set numerical integration fixed step size.
-    const double fixedStepSize = 60.0;
+    const double fixedStepSize = 1.0;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Define simulation body settings.
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
             getDefaultBodySettings( { "Earth" }, simulationStartEpoch - 10.0 * fixedStepSize,
-                                    simulationEndEpoch + 10.0 * fixedStepSize );
-
+                                    simulationEndEpoch + 10.0 * fixedStepSize );  
     bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
                 basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
-
     bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
-    bodySettings[ "Earth" ]->atmosphereSettings = NULL;
-    bodySettings[ "Earth" ]->shapeModelSettings = NULL;
 
     // Create Earth object
     simulation_setup::NamedBodyMap bodyMap = simulation_setup::createBodies( bodySettings );
 
     // Create vehicle objects.
-    bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
-    bodyMap[ "Obelix" ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap[ "Apollo" ] = boost::make_shared< simulation_setup::Body >( );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             CREATE VEHICLE            /////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    // Create vehicle aerodynamic coefficients
+    bodyMap[ "Apollo" ]->setAerodynamicCoefficientInterface(
+                unit_tests::getApolloCoefficientInterface( ) );
+    bodyMap[ "Apollo" ]->setConstantBodyMass( 5.0E3 );
 
     // Finalize body creation.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
@@ -79,117 +94,87 @@ int main( )
     std::vector< std::string > centralBodies;
 
     // Define acceleration model settings.
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
-    accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
-    accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
-    bodiesToPropagate.push_back( "Asterix" );
+    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfApollo;
+    accelerationsOfApollo[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
+    accelerationsOfApollo[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >( aerodynamic ) );
+    accelerationMap[  "Apollo" ] = accelerationsOfApollo;
+
+    bodiesToPropagate.push_back( "Apollo" );
     centralBodies.push_back( "Earth" );
 
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfObelix;
-    accelerationsOfObelix[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
-    accelerationMap[  "Obelix" ] = accelerationsOfObelix;
-    bodiesToPropagate.push_back( "Obelix" );
-    centralBodies.push_back( "Earth" );
-
-    // Create acceleration models and propagation settings.
+    // Create acceleration models
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
                 bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
+    bodyMap.at( "Apollo" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
+                boost::lambda::constant( 30.0 * mathematical_constants::PI / 180.0 ) );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    // Set spherical elements for Apollo.
+    Vector6d apolloSphericalEntryState;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::radiusIndex ) = spice_interface::getAverageRadius( "Earth" ) + 120.0E3;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::latitudeIndex ) = 0.0;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::longitudeIndex ) = 1.2;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::speedIndex ) = 7.8E3;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::flightPathIndex ) = -0.8 * mathematical_constants::PI / 180.0;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::headingAngleIndex ) = 0.6;
 
-    // Set initial conditions for satellites that will be propagated in this simulation.
-    // The initial conditions are given in Keplerian elements and later on converted to
-    // Cartesian elements.
-
-    // Set Keplerian elements for Asterix.
-    Vector6d asterixInitialStateInKeplerianElements;
-    asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0e3;
-    asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
-    asterixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 85.3 );
-    asterixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = convertDegreesToRadians( 235.7 );
-    asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = convertDegreesToRadians( 23.4 );
-    asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 139.87 );
-
-    // Set Keplerian elements for Obelix.
-    Vector6d obelixInitialStateInKeplerianElements( 6 );
-    obelixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 12040.6e3;
-    obelixInitialStateInKeplerianElements( eccentricityIndex ) = 0.4;
-    obelixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( -23.5 );
-    obelixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = convertDegreesToRadians( 10.6 );
-    obelixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = convertDegreesToRadians( 367.9 );
-    obelixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 93.4 );
-
-    // Convert initial states from Keplerian to Cartesian elements.
-
-    double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
-
-    // Convert Asterix state from Keplerian elements to Cartesian elements.
-    const Vector6d asterixInitialState = convertKeplerianToCartesianElements(
-                asterixInitialStateInKeplerianElements,
-                earthGravitationalParameter );
-
-    // Convert Obelix state from Keplerian elements to Cartesian elements.
-    const Vector6d obelixInitialState = convertKeplerianToCartesianElements(
-                obelixInitialStateInKeplerianElements,
-                earthGravitationalParameter );
+    // Convert apollo state from spherical elements to Cartesian elements.
+    const Vector6d systemInitialState = convertSphericalOrbitalToCartesianState(
+                apolloSphericalEntryState );
 
 
-    // Set initial state
-    Eigen::VectorXd systemInitialState = Eigen::VectorXd( 12 );
-    systemInitialState.segment( 0, 6 ) = asterixInitialState;
-    systemInitialState.segment( 6, 6 ) = obelixInitialState;
+    // Define list of dependent variables to save.
+    std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariables;
+    dependentVariables.push_back(
+                boost::make_shared< SingleDependentVariableSaveSettings >( mach_number_dependent_variable, "Apollo" ) );
+    dependentVariables.push_back(
+                boost::make_shared< SingleDependentVariableSaveSettings >( altitude_dependent_variable,
+                                                                           "Apollo", "Earth" ) );
+    dependentVariables.push_back(
+                boost::make_shared< SingleAccelerationDependentVariableSaveSettings >(
+                    aerodynamic, "Apollo", "Earth", 1 ) );
 
+
+    // Create propagation settings.
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, simulationEndEpoch );
+            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState,
+              boost::make_shared< PropagationDependentVariableTerminationSettings >(
+                  boost::make_shared< SingleDependentVariableSaveSettings >(
+                      altitude_dependent_variable, "Apollo", "Earth" ), 25.0E3, true ),
+              cowell, boost::make_shared< DependentVariableSaveSettings >( dependentVariables ) );
     boost::shared_ptr< IntegratorSettings< > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
             ( rungeKutta4, simulationStartEpoch, fixedStepSize );
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
     // Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< > dynamicsSimulator(
                 bodyMap, integratorSettings, propagatorSettings, true, false, false );
-    std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
-
-    // Retrieve numerically integrated states of vehicles.
-    std::map< double, Eigen::VectorXd > asterixPropagationHistory;
-    std::map< double, Eigen::VectorXd > obelixPropagationHistory;
-    for( std::map< double, Eigen::VectorXd >::const_iterator stateIterator = integrationResult.begin( );
-         stateIterator != integrationResult.end( ); stateIterator++ )
-    {
-        asterixPropagationHistory[ stateIterator->first ] = stateIterator->second.segment( 0, 6 );
-        obelixPropagationHistory[ stateIterator->first ] = stateIterator->second.segment( 6, 6 );
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    // Write Asterix propagation history to file.
-    writeDataMapToTextFile( asterixPropagationHistory,
-                            "asterixPropagationHistory.dat",
+    // Write Apollo propagation history to file.
+    writeDataMapToTextFile( dynamicsSimulator.getEquationsOfMotionNumericalSolution( ),
+                            "apolloPropagationHistory.dat",
                             tudat_applications::getOutputPath( ),
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
                             "," );
-
-    // Write obelix propagation history to file.
-    writeDataMapToTextFile( obelixPropagationHistory,
-                            "obelixPropagationHistory.dat",
+    writeDataMapToTextFile( dynamicsSimulator.getDependentVariableHistory( ),
+                            "apolloDependentVariableHistory.dat",
                             tudat_applications::getOutputPath( ),
                             "",
                             std::numeric_limits< double >::digits10,

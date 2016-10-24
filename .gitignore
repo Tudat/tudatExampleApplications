@@ -30,6 +30,9 @@ install_manifest.txt
 # Fortran module files
 *.mod
 
+# Data files
+*.dat
+
 # Compiled Static libraries
 *.lai
 *.la
