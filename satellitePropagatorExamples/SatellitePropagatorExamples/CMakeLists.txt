@@ -266,6 +266,6 @@ setup_executable_target(application_ApolloEntry "${SRCROOT}")
 target_link_libraries(application_ApolloEntry ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add thrust example
-#add_executable(application_ThrustExample "${SRCROOT}/thrustAccelerationExample.cpp")
-#setup_executable_target(application_ThrustExample "${SRCROOT}")
-#target_link_libraries(application_ThrustExample ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+add_executable(application_ThrustAccelerationExample "${SRCROOT}/thrustAccelerationExample.cpp")
+setup_executable_target(application_ThrustAccelerationExample "${SRCROOT}")
+target_link_libraries(application_ThrustAccelerationExample ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
