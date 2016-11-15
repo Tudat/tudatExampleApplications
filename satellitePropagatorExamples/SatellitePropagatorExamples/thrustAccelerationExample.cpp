@@ -96,7 +96,7 @@ int main()
 
 
     // Define order of Lagrange interpolator
-    int interpolatorOrder = 3;
+    int interpolatorOrder = 2;
 
     // Make interpolator
     boost::shared_ptr< interpolators::LagrangeInterpolatorSettings >
