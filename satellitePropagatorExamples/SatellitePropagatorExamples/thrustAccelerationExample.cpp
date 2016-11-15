@@ -1,22 +1,12 @@
-// This is the main file
-//#include <Eigen/Core>
-//#include <iostream>
-//#include <cmath>
-
-//#include "Tudat/Astrodynamics/BasicAstrodynamics/unifiedStateModelElementConversions.h"
-//#include "Tudat/Mathematics/NumericalIntegrators/rungeKuttaVariableStepSizeIntegrator.h"
-//#include "Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h"
-//#include <Tudat/Basics/testMacros.h>
-//#include "Tudat/SimulationSetup/PropagationSetup/dynamicsSimulator.h"
-//#include <Tudat/External/SpiceInterface/spiceEphemeris.h>
-//#include <Tudat/External/SpiceInterface/spiceRotationalEphemeris.h>
-//#include <Tudat/InputOutput/basicInputOutput.h>
-//#include <Tudat/SimulationSetup/EnvironmentSetup/body.h>
-//#include "Tudat/SimulationSetup/PropagationSetup/createNumericalSimulator.h"
-//#include <Tudat/SimulationSetup/PropagationSetup/createMassRateModels.h>
-//#include <Tudat/SimulationSetup/EnvironmentSetup/defaultBodies.h>
-//#include <Tudat/SimulationSetup/PropagationSetup/accelerationSettings.h>
-//#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
+/*    Copyright (c) 2010-2016, Delft University of Technology
+ *    All rigths reserved
+ *
+ *    This file is part of the Tudat. Redistribution and use in source and
+ *    binary forms, with or without modification, are permitted exclusively
+ *    under the terms of the Modified BSD license. You should have received
+ *    a copy of the license with this file. If not, please or visit:
+ *    http://tudat.tudelft.nl/LICENSE.
+ */
 
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 #include <tudatExampleApplications/satellitePropagatorExamples/SatellitePropagatorExamples/applicationOutput.h>
@@ -25,12 +15,14 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 
-
+//! Execute propagation of orbit of vehicle around the Earth. The vehicle is subject to a thrustforce, which is specified in
+//! the nonconstantThrust.txt file. In that file, the first column is time in seconds, the last three columns give the x, y
+//! and z components of the thrust force in the J2000 (?) frame.
 int main()
 {
-
-
-    // FOURTH TRY
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     using namespace tudat;
     using namespace simulation_setup;
@@ -42,7 +34,9 @@ int main()
     using namespace numerical_integrators;
     using namespace unit_conversions;
 
-    /// CREATE ENVIRONMENT AND VEHICLE
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////     CREATE ENVIRONMENT AND VEHICLE       //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Load Spice kernels.
     spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
@@ -72,7 +66,10 @@ int main()
     // Finalize body creation.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
 
-    /// CREATE ACCELERATIONS
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////            CREATE ACCELERATIONS          //////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     // Define propagator settings variables.
     SelectedAccelerationMap accelerationMap;
@@ -85,16 +82,16 @@ int main()
     // Find folder of this cpp file
     std::string cppFolder = cppFilePath.substr( 0 , cppFilePath.find_last_of("/\\")+1 );
     Eigen::MatrixXd thrustForceMatrix =
-            input_output::readMatrixFromFile( cppFolder + "unitTests/nonconstantThrust.txt" , " \t", "#" );
+            input_output::readMatrixFromFile( cppFolder + "nonconstantThrust.txt" , " \t", "#" );
 
     // Make map for thrust data
-    std::map< double, Eigen::Matrix3d > thrustData;
+    std::map< double, Eigen::Vector3d > thrustData;
 
     // Fill thrustData map using thrustForceMatrix Eigen matrix
     for ( int i = 0; i < thrustForceMatrix.rows(); i++ )
     {
-        Eigen::Matrix3d blabla = thrustForceMatrix.rightCols( 3 ).row( i );
-        thrustData[ thrustForceMatrix( i, 0 ) ] = blabla;
+        Eigen::Vector3d temp = thrustForceMatrix.block( i, 1, 1, 3 ).transpose( );//rightCols( 3 ).row( i );
+        thrustData[ thrustForceMatrix( i, 0 ) ] = temp;
     }
 
 
@@ -133,7 +130,10 @@ int main()
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
                 bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
 
-    /// CREATE PROPAGATION SETTINGS
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     // Set initial conditions for the vehicle satellite that will be propagated in this simulation.
     // The initial conditions are given in Keplerian elements and later on converted to Cartesian
@@ -185,7 +185,10 @@ int main()
     boost::shared_ptr< PropagatorSettings< double > > propagatorSettings =
             boost::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings );
 
-    /// PROPAGATE ORBIT
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     // Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< > dynamicsSimulator(
@@ -193,7 +196,10 @@ int main()
     std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
 
-    /// PROVIDE OUTPUT TO CONSOLE AND FILES
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////        PROVIDE OUTPUT TO CONSOLE AND FILES           //////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     Eigen::VectorXd finalIntegratedState = (--integrationResult.end( ) )->second;
     // Print the position (in km) and the velocity (in km/s) at t = 0.
@@ -209,4 +215,20 @@ int main()
                  finalIntegratedState.segment( 0, 3 ) / 1E3 << std::endl <<
                  "And the velocity vector of Vehicle is [km/s]:" << std::endl <<
                  finalIntegratedState.segment( 3, 3 ) / 1E3 << std::endl;
+
+    // Write Apollo propagation history to file.
+    input_output::writeDataMapToTextFile( dynamicsSimulator.getEquationsOfMotionNumericalSolution( ),
+                            "thrustExamplePropagationHistory.dat",
+                            tudat_applications::getOutputPath( ),
+                            "",
+                            std::numeric_limits< double >::digits10,
+                            std::numeric_limits< double >::digits10,
+                            "," );
+    input_output::writeDataMapToTextFile( dynamicsSimulator.getDependentVariableHistory( ),
+                            "thrustExampleDependentVariableHistory.dat",
+                            tudat_applications::getOutputPath( ),
+                            "",
+                            std::numeric_limits< double >::digits10,
+                            std::numeric_limits< double >::digits10,
+                            "," );
 }
