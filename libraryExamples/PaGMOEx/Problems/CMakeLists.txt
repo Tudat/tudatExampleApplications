@@ -12,9 +12,19 @@ set(MY_PAGMO_PROBLEMS_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/earthMarsTransfer.cpp"
 )
 
+# Set the source files.
+set(MY_PAGMO_PROBLEMS_SOURCES
+  "${CMAKE_CURRENT_SOURCE_DIR}/firstLegOfGtoc3.cpp"
+)
+
 # Set the header files.
 set(MY_PAGMO_PROBLEMS_HEADERS
   "${CMAKE_CURRENT_SOURCE_DIR}/earthMarsTransfer.h"
+)
+
+# Set the header files.
+set(MY_PAGMO_PROBLEMS_HEADERS
+  "${CMAKE_CURRENT_SOURCE_DIR}/firstLegOfGtoc3.h"
 )
 
 # Add static libraries, can be used later on outside this application.
