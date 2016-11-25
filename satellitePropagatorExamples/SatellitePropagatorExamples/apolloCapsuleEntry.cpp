@@ -122,9 +122,12 @@ int main( )
     apolloSphericalEntryState( SphericalOrbitalStateElementIndices::headingAngleIndex ) = 0.6;
 
     // Convert apollo state from spherical elements to Cartesian elements.
-    const Vector6d systemInitialState = convertSphericalOrbitalToCartesianState(
+    Vector6d systemInitialState = convertSphericalOrbitalToCartesianState(
                 apolloSphericalEntryState );
 
+    boost::shared_ptr< ephemerides::RotationalEphemeris > earthRotationalEphemeris =
+            bodyMap.at( "Earth" )->getRotationalEphemeris( );
+    systemInitialState = transformStateToGlobalFrame( systemInitialState, simulationStartEpoch, earthRotationalEphemeris );
 
     // Define list of dependent variables to save.
     std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariables;
