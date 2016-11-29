@@ -142,8 +142,10 @@ endif( )
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Problems")
 
+#message( STATUS "////// Boost library directory in tudatExampleApplications: " ${Boost_LIBRARIES} )
+
 # Add application.
 add_executable(example_library_pagmo "${SRCROOT}/main.cpp")
 setup_executable_target(example_library_pagmo "${SRCROOT}")
-target_link_libraries(example_library_pagmo  pthread pagmo my_pagmo_problems
-                      tudat_basic_astrodynamics tudat_mission_segments ${Boost_LIBRARIES})
+target_link_libraries( example_library_pagmo  pthread pagmo  my_pagmo_problems
+                      tudat_basic_astrodynamics tudat_mission_segments  ${Boost_LIBRARIES} )
