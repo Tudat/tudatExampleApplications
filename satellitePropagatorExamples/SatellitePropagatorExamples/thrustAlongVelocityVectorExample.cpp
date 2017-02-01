@@ -68,7 +68,7 @@ int main()
 
     // Define thrust settings
     double thrustMagnitude = 25.0;
-    double specificImpulse = 5000.0;
+    double specificImpulse = 500000000.0;
     boost::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionGuidanceSettings =
             boost::make_shared< ThrustDirectionFromStateGuidanceSettings >(
                 "Earth", true, false );

@@ -1,6 +1,7 @@
 clc
 close all
 clear all
+
 folder = '';
 %%
 
@@ -206,17 +207,59 @@ xlabel('Time since propagation start [s]')
 ylabel('Vehicle mass [kg]')
 xlim([0 14*86400])
 
+%%
+figure(9)
+load('thrustExampleFromFilePropagationHistory.dat');
+
+plot3(thrustExampleFromFilePropagationHistory(:,2),thrustExampleFromFilePropagationHistory(:,3),thrustExampleFromFilePropagationHistory(:,4))
+axis equal
+grid on
+title('Cartesian position w.r.t. Earth')
+xlabel('x-component [m]')
+ylabel('y-component [m]')
+zlabel('z-component [m]')
+
+load('thrustExampleFromFileDependentVariableHistory.dat');
+
+colors=cell(3,1);
+colors{1}='r';
+colors{2}='b';
+colors{3}='k';
+
+figure(10)
+for i=1:3
+   subplot(1,2,1)
+   plot(thrustExampleFromFileDependentVariableHistory(:,1),thrustExampleFromFileDependentVariableHistory(:,i+1),colors{i})
+   hold on
+   grid on
+   
+   subplot(1,2,2)
+   plot(thrustExampleFromFileDependentVariableHistory(:,1),thrustExampleFromFileDependentVariableHistory(:,i+13),strcat(colors{i},'--'))
+   hold on
+   grid on
+end
+subplot(1,2,1)
+xlabel('Time [s]')
+ylabel('Thrust acceleration (inertial) [m/s^2]')
+subplot(1,2,2)
+xlabel('Time [s]')
+xlabel('Time [s]')
+ylabel('Thrust force (LVLH) [N]')
+legend('x-component','y-component','z-component','Location','NorthWest')
+
+
+grid on
 
 %%
 
-for j=1:8
+for j=1:10
     set( figure(j), 'Units', 'normalized', 'Position', [0,0,1,1]);
     set( figure(j),'PaperUnits','centimeters','PaperPosition',[0 0 60 40]);
 end
 
 pause(2.0)
 
-for j=1:8
+for j=1:10
     figure(j)    
     if(j==1)
         saveas(gcf,strcat('asterixObelixOrbits'),'png');
@@ -235,6 +278,10 @@ for j=1:8
         saveas(gcf,strcat('perturbationInfluence'),'png');
     elseif(j==8)
         saveas(gcf,strcat('thrustAlongVelocityVectorResults'),'png');
+    elseif(j==9)
+        saveas(gcf,strcat('thrustFromFileResults'),'png');
+    elseif(j==8)
+        saveas(gcf,strcat('thrustFromFileProfiles'),'png');
     end
 
 end
