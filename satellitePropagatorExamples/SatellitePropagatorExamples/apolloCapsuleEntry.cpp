@@ -105,8 +105,11 @@ int main( )
     // Create acceleration models
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
                 bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
+
+    // Define constant 30 degree angle of attack
+    double constantAngleOfAttack = 30.0 * mathematical_constants::PI / 180.0;
     bodyMap.at( "Apollo" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
-                boost::lambda::constant( 30.0 * mathematical_constants::PI / 180.0 ) );
+                boost::lambda::constant( constantAngleOfAttack ) );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
@@ -114,11 +117,13 @@ int main( )
 
     // Set spherical elements for Apollo.
     Vector6d apolloSphericalEntryState;
-    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::radiusIndex ) = spice_interface::getAverageRadius( "Earth" ) + 120.0E3;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::radiusIndex ) =
+            spice_interface::getAverageRadius( "Earth" ) + 120.0E3;
     apolloSphericalEntryState( SphericalOrbitalStateElementIndices::latitudeIndex ) = 0.0;
     apolloSphericalEntryState( SphericalOrbitalStateElementIndices::longitudeIndex ) = 1.2;
-    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::speedIndex ) = 7.8E3;
-    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::flightPathIndex ) = -0.8 * mathematical_constants::PI / 180.0;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::speedIndex ) = 7.7E3;
+    apolloSphericalEntryState( SphericalOrbitalStateElementIndices::flightPathIndex ) =
+            -0.9 * mathematical_constants::PI / 180.0;
     apolloSphericalEntryState( SphericalOrbitalStateElementIndices::headingAngleIndex ) = 0.6;
 
     // Convert apollo state from spherical elements to Cartesian elements.
@@ -130,25 +135,36 @@ int main( )
     systemInitialState = transformStateToGlobalFrame( systemInitialState, simulationStartEpoch, earthRotationalEphemeris );
 
     // Define list of dependent variables to save.
-    std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariables;
-    dependentVariables.push_back(
+    std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariablesList;
+    dependentVariablesList.push_back(
                 boost::make_shared< SingleDependentVariableSaveSettings >( mach_number_dependent_variable, "Apollo" ) );
-    dependentVariables.push_back(
-                boost::make_shared< SingleDependentVariableSaveSettings >( altitude_dependent_variable,
-                                                                           "Apollo", "Earth" ) );
-    dependentVariables.push_back(
+    dependentVariablesList.push_back(
+                boost::make_shared< SingleDependentVariableSaveSettings >(
+                    altitude_dependent_variable, "Apollo", "Earth" ) );
+    dependentVariablesList.push_back(
                 boost::make_shared< SingleAccelerationDependentVariableSaveSettings >(
                     aerodynamic, "Apollo", "Earth", 1 ) );
+    dependentVariablesList.push_back(
+                boost::make_shared< SingleDependentVariableSaveSettings >(
+                    aerodynamic_force_coefficients_dependent_variable, "Apollo" ) );
 
+    // Create object with list of dependent variables
+    boost::shared_ptr< DependentVariableSaveSettings > dependentVariablesToSave =
+            boost::make_shared< DependentVariableSaveSettings >( dependentVariablesList );
+
+    // Define termination conditions
+    boost::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
+            boost::make_shared< SingleDependentVariableSaveSettings >(
+                altitude_dependent_variable, "Apollo", "Earth" );
+    boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
+            boost::make_shared< PropagationDependentVariableTerminationSettings >(
+                terminationDependentVariable, 25.0E3, true );
 
     // Create propagation settings.
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState,
-              boost::make_shared< PropagationDependentVariableTerminationSettings >(
-                  boost::make_shared< SingleDependentVariableSaveSettings >(
-                      altitude_dependent_variable, "Apollo", "Earth" ), 25.0E3, true ),
-              cowell, boost::make_shared< DependentVariableSaveSettings >( dependentVariables ) );
+              terminationSettings, cowell, dependentVariablesToSave );
     boost::shared_ptr< IntegratorSettings< > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
             ( rungeKutta4, simulationStartEpoch, fixedStepSize );
@@ -161,7 +177,7 @@ int main( )
 
     // Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< > dynamicsSimulator(
-                bodyMap, integratorSettings, propagatorSettings, true, false, false );
+                bodyMap, integratorSettings, propagatorSettings );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
@@ -186,4 +202,5 @@ int main( )
 
     // Final statement.
     // The exit code EXIT_SUCCESS indicates that the program was successfully executed.
-    return EXIT_SUCCESS;}
+    return EXIT_SUCCESS;
+}

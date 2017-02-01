@@ -69,17 +69,27 @@ int main()
     bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
     bodyMap[ "Asterix" ]->setConstantBodyMass( 400.0 );
 
+    // Create aerodynamic coefficient interface settings.
     double referenceArea = 4.0;
     double aerodynamicCoefficient = 1.2;
     boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
             boost::make_shared< ConstantAerodynamicCoefficientSettings >(
                 referenceArea, aerodynamicCoefficient * Eigen::Vector3d::UnitX( ), 1, 1 );
+
+    // Create and set aerodynamic coefficients object
     bodyMap[ "Asterix" ]->setAerodynamicCoefficientInterface(
                 createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "Asterix" ) );
 
+    // Create radiation pressure settings
+    double referenceAreaRadiation = 4.0;
+    double radiationPressureCoefficient = 1.2;
+    std::vector< std::string > occultingBodies;
+    occultingBodies.push_back( "Earth" );
     boost::shared_ptr< RadiationPressureInterfaceSettings > asterixRadiationPressureSettings =
             boost::make_shared< CannonBallRadiationPressureInterfaceSettings >(
-                "Sun", 4.0, 1.2, boost::assign::list_of( "Earth" )( "Moon" ) );
+                "Sun", referenceAreaRadiation, radiationPressureCoefficient, occultingBodies );
+
+    // Create and set radiation pressure settings
     bodyMap[ "Asterix" ]->setRadiationPressureInterface(
                 "Sun", createRadiationPressureInterface(
                     asterixRadiationPressureSettings, "Asterix", bodyMap ) );
@@ -145,7 +155,7 @@ int main()
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies, accelerationModelMap, bodiesToPropagate, asterixInitialState, simulationEndEpoch );
 
-    const double fixedStepSize = 60.0;
+    const double fixedStepSize = 10.0;
     boost::shared_ptr< IntegratorSettings< > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
             ( rungeKutta4, 0.0, fixedStepSize );

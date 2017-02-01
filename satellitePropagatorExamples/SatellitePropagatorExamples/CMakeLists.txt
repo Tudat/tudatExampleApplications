@@ -260,6 +260,13 @@ add_executable(application_ApolloEntry
 setup_executable_target(application_ApolloEntry "${SRCROOT}")
 target_link_libraries(application_ApolloEntry ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+# Add Apollo propagation
+add_executable(application_ThrustAlongVelocityVector
+               "${SRCROOT}/thrustAlongVelocityVectorExample.cpp")
+setup_executable_target(application_ThrustAlongVelocityVector "${SRCROOT}")
+target_link_libraries(application_ThrustAlongVelocityVector ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+
 # Add thrust example
 #add_executable(application_ThrustExample "${SRCROOT}/thrustAccelerationExample.cpp")
 #setup_executable_target(application_ThrustExample "${SRCROOT}")
