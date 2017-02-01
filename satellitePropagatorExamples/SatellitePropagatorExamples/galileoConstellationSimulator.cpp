@@ -20,14 +20,14 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     using namespace tudat;
-    using namespace simulation_setup;
-    using namespace propagators;
-    using namespace numerical_integrators;
-    using namespace basic_astrodynamics;
-    using namespace basic_mathematics;
-    using namespace orbital_element_conversions;
-    using namespace unit_conversions;
-    using namespace input_output;
+    using namespace tudat::simulation_setup;
+    using namespace tudat::propagators;
+    using namespace tudat::numerical_integrators;
+    using namespace tudat::basic_astrodynamics;
+    using namespace tudat::basic_mathematics;
+    using namespace tudat::orbital_element_conversions;
+    using namespace tudat::unit_conversions;
+    using namespace tudat::input_output;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

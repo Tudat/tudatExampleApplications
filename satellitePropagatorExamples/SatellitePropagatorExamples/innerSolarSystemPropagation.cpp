@@ -20,15 +20,15 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     using namespace tudat;
-    using namespace ephemerides;
-    using namespace interpolators;
-    using namespace numerical_integrators;
-    using namespace spice_interface;
-    using namespace simulation_setup;
-    using namespace basic_astrodynamics;
-    using namespace basic_mathematics;
-    using namespace orbital_element_conversions;
-    using namespace propagators;
+    using namespace tudat::ephemerides;
+    using namespace tudat::interpolators;
+    using namespace tudat::numerical_integrators;
+    using namespace tudat::spice_interface;
+    using namespace tudat::simulation_setup;
+    using namespace tudat::basic_astrodynamics;
+    using namespace tudat::basic_mathematics;
+    using namespace tudat::orbital_element_conversions;
+    using namespace tudat:: propagators;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////

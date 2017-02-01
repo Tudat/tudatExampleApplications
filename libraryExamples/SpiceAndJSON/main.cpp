@@ -136,8 +136,9 @@ int main( )
       while( currentTime <= endTime )
       {
         // Get state and set in state history.
-        stateHistory[ currentTime ] = ephem.getCartesianStateFromEphemeris(
-            currentTime, jdStart );
+        stateHistory[ currentTime ] = ephem.getCartesianState(
+            currentTime + ( jdStart - tudat::basic_astrodynamics::JULIAN_DAY_ON_J2000 ) *
+                    tudat::physical_constants::JULIAN_DAY );
 
         // Update current time.
         currentTime += timeStep;

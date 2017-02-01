@@ -159,8 +159,8 @@ if(NOT Boost_USE_STATIC_RUNTIME)
 endif()
 
 # Find Boost libraries on local system.
-find_package(Boost 1.45.0 
-            COMPONENTS thread date_time system unit_test_framework filesystem regex REQUIRED)
+find_package(Boost 1.45.0
+             COMPONENTS thread date_time system unit_test_framework filesystem regex REQUIRED)
 
 # Include Boost directories.
 # Set CMake flag to suppress Boost warnings (platform-dependent solution).
@@ -181,32 +181,48 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
 
-# If documentation should be built, find Doxygen package and setup config file.
-if(BUILD_DOCUMENTATION)
-  find_package(Doxygen)
+  # Find CSPICE library on local system.
+  find_package(Spice)
 
-  if(NOT DOXYGEN_FOUND)
-    message(FATAL_ERROR 
-            "Doxygen is needed to build the documentation. Please install it correctly.")
-  endif()
+  # Include CSpice directories.
+  if(NOT APPLE)
+    include_directories(SYSTEM AFTER "${SPICE_INCLUDE_DIR}")
+  else( )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${SPICE_INCLUDE_DIR}\"")
+  endif( )
 
-  # Configure the Template Doxyfile for our specific project.
-  configure_file(${CODEROOT}/Doxyfile.in ${PROJECT_BINARY_DIR}/Doxyfile @ONLY IMMEDIATE)
+option(USE_NRLMSISE00 "build Tudat with NRLMSISE-00 enabled" ON)
+if(NOT USE_NRLMSISE00)
+  message(STATUS "NRLMSISE-00 disabled!")
+  add_definitions(-DUSE_NRLMSISE00=0)
+else()
+  message(STATUS "NRLMSISE-00 enabled!")
+  add_definitions(-DUSE_NRLMSISE00=1)
+  # Find USE_NRLMSISE00 library on local system.
+  find_package(NRLMSISE00)
 
-  # Add a custom target to run Doxygen when ever the project is built.
-  # IF you do NOT want the documentation to be generated EVERY time you build the project
-  # then leave out the 'ALL' keyword from the above command.
-  add_custom_target (docs ALL COMMAND ${DOXYGEN_EXECUTABLE} 
-                     ${PROJECT_BINARY_DIR}/Doxyfile 
-                     SOURCES ${PROJECT_BINARY_DIR}/Doxyfile)
+  # Include NRLMSISE00 directories.
+  if(NOT APPLE)
+    include_directories(SYSTEM AFTER "${NRLMSISE00_INCLUDE_DIR}")
+  else( )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${NRLMSISE00_INCLUDE_DIR}\"")
+  endif( )
+endif( )
 
-  # Install documentation.
-  install(DIRECTORY "${CODEROOT}/Documentation" 
-        DESTINATION "${TEMPLATE_APPLICATION_DISTRIBUTION_PATH}")
+if(USE_CSPICE)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES tudat_spice_interface cspice)
 endif()
+
+if(USE_NRLMSISE00)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
+endif()
+
+list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_propagators
+    tudat_aerodynamics tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
+    tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
+    tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
 # Add helloWorld application.
 add_executable(application_HelloWorld "${SRCROOT}/helloWorld.cpp")
 setup_executable_target(application_HelloWorld "${SRCROOT}")
-target_link_libraries(application_HelloWorld tudat_gravitation 
-                      ${TUDAT_CORE_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(application_HelloWorld tudat_gravitation tudat_basic_astrodynamics ${Boost_LIBRARIES} )

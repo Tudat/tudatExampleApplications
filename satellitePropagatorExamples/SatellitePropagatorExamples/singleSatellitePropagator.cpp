@@ -17,20 +17,21 @@
 int main()
 {
 
+    const bool useDefaultEnvironment = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     using namespace tudat;
-    using namespace simulation_setup;
-    using namespace propagators;
-    using namespace numerical_integrators;
-    using namespace orbital_element_conversions;
-    using namespace basic_mathematics;
-    using namespace gravitation;
-    using namespace numerical_integrators;
-    using namespace unit_conversions;
+    using namespace tudat::simulation_setup;
+    using namespace tudat::propagators;
+    using namespace tudat::numerical_integrators;
+    using namespace tudat::orbital_element_conversions;
+    using namespace tudat::basic_mathematics;
+    using namespace tudat::gravitation;
+    using namespace tudat::numerical_integrators;
+    using namespace tudat::unit_conversions;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////     CREATE ENVIRONMENT AND VEHICLE       //////////////////////////////////////////////////////
@@ -49,10 +50,26 @@ int main()
 
     // Define body settings for simulation.
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings;
-    bodySettings[ "Earth" ] = boost::make_shared< BodySettings >( );
-    bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< ConstantEphemerisSettings >(
-                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
-    bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< GravityFieldSettings >( central_spice );
+    if( !useDefaultEnvironment )
+    {
+        bodySettings[ "Earth" ] = boost::make_shared< BodySettings >( );
+        bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< ConstantEphemerisSettings >(
+                    basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
+        bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< GravityFieldSettings >( central_spice );
+    }
+    else
+    {
+        // Define body settings for simulation.
+        std::vector< std::string > bodiesToCreate;
+        bodiesToCreate.push_back( "Earth" );
+
+        // Create body objects.
+        std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
+                getDefaultBodySettings( bodiesToCreate );
+
+        bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< ConstantEphemerisSettings >(
+                    basic_mathematics::Vector6d::Zero( ) );
+    }
 
     // Create Earth object
     NamedBodyMap bodyMap = createBodies( bodySettings );
