@@ -229,18 +229,19 @@ colors{3}='k';
 figure(10)
 for i=1:3
    subplot(1,2,1)
-   plot(thrustExampleFromFileDependentVariableHistory(:,1),thrustExampleFromFileDependentVariableHistory(:,i+1),colors{i})
+   plot(thrustExampleFromFileDependentVariableHistory(:,1),thrustExampleFromFileDependentVariableHistory(:,i+1),colors{i},'LineWidth',2)
    hold on
    grid on
    
    subplot(1,2,2)
-   plot(thrustExampleFromFileDependentVariableHistory(:,1),thrustExampleFromFileDependentVariableHistory(:,i+13),strcat(colors{i},'--'))
+   plot(thrustExampleFromFileDependentVariableHistory(:,1),thrustExampleFromFileDependentVariableHistory(:,i+13),colors{i},'LineWidth',2)
    hold on
    grid on
 end
 subplot(1,2,1)
 xlabel('Time [s]')
 ylabel('Thrust acceleration (inertial) [m/s^2]')
+
 subplot(1,2,2)
 xlabel('Time [s]')
 xlabel('Time [s]')
@@ -248,7 +249,6 @@ ylabel('Thrust force (LVLH) [N]')
 legend('x-component','y-component','z-component','Location','NorthWest')
 
 
-grid on
 
 %%
 
@@ -280,7 +280,7 @@ for j=1:10
         saveas(gcf,strcat('thrustAlongVelocityVectorResults'),'png');
     elseif(j==9)
         saveas(gcf,strcat('thrustFromFileResults'),'png');
-    elseif(j==8)
+    elseif(j==10)
         saveas(gcf,strcat('thrustFromFileProfiles'),'png');
     end
 
