@@ -59,7 +59,7 @@
 #include <Tudat/Astrodynamics/BasicAstrodynamics/timeConversions.h>
 #include <Tudat/External/SpiceInterface/spiceEphemeris.h>
 #include <Tudat/InputOutput/basicInputOutput.h>
-#include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
+#include <Tudat/Basics/basicTypedefs.h>
 
 #include <json/json.h>
 #include <json/value.h>
@@ -130,7 +130,7 @@ int main( )
       SpiceEphemeris ephem(bodyName, refObser, false, false, false, refEpoch );
 
       std::cout << "Compute ephemeri" << std::endl;
-      std::map< double, tudat::basic_mathematics::Vector6d > stateHistory;
+      std::map< double, Eigen::Vector6d > stateHistory;
       double currentTime = 0.0;
       double endTime = (jdEnd - jdStart) * tudat::physical_constants::JULIAN_DAY;
       while( currentTime <= endTime )

@@ -62,7 +62,7 @@ int main( )
             getDefaultBodySettings( { "Earth" }, simulationStartEpoch - 10.0 * fixedStepSize,
                                     simulationEndEpoch + 10.0 * fixedStepSize );  
     bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
-                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
+                Eigen::Vector6d::Zero( ), "SSB", "J2000" );
     bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
 
     // Create Earth object
@@ -116,7 +116,7 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Set spherical elements for Apollo.
-    Vector6d apolloSphericalEntryState;
+    Eigen::Vector6d apolloSphericalEntryState;
     apolloSphericalEntryState( SphericalOrbitalStateElementIndices::radiusIndex ) =
             spice_interface::getAverageRadius( "Earth" ) + 120.0E3;
     apolloSphericalEntryState( SphericalOrbitalStateElementIndices::latitudeIndex ) = 0.0;
@@ -127,7 +127,7 @@ int main( )
     apolloSphericalEntryState( SphericalOrbitalStateElementIndices::headingAngleIndex ) = 0.6;
 
     // Convert apollo state from spherical elements to Cartesian elements.
-    Vector6d systemInitialState = convertSphericalOrbitalToCartesianState(
+    Eigen::Vector6d systemInitialState = convertSphericalOrbitalToCartesianState(
                 apolloSphericalEntryState );
 
     boost::shared_ptr< ephemerides::RotationalEphemeris > earthRotationalEphemeris =

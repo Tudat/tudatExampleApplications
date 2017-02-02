@@ -62,7 +62,7 @@ int main( )
             getDefaultBodySettings( { "Earth" },
                                     simulationStartEpoch - 10.0 * fixedStepSize, simulationEndEpoch + 10.0 * fixedStepSize );
     bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
-                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
+                Eigen::Vector6d::Zero( ), "SSB", "J2000" );
     bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
     bodySettings[ "Earth" ]->atmosphereSettings = NULL;
     bodySettings[ "Earth" ]->shapeModelSettings = NULL;
@@ -154,7 +154,7 @@ int main( )
     double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
     {
-        Vector6d initKepl = initialConditionsInKeplerianElements.col( i ).cast< double >();
+        Eigen::Vector6d initKepl = initialConditionsInKeplerianElements.col( i ).cast< double >();
         initialConditions.col( i ) = convertKeplerianToCartesianElements(
                     initKepl, static_cast< double >(earthGravitationalParameter) );
     }

@@ -136,7 +136,7 @@ int main()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Set Keplerian elements for Asterix.
-    Vector6d asterixInitialStateInKeplerianElements;
+    Eigen::Vector6d asterixInitialStateInKeplerianElements;
     asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0E3;
     asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
     asterixInitialStateInKeplerianElements( inclinationIndex ) = unit_conversions::convertDegreesToRadians( 85.3 );
@@ -147,7 +147,7 @@ int main()
     asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = unit_conversions::convertDegreesToRadians( 139.87 );
 
     double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
-    const Vector6d asterixInitialState = convertKeplerianToCartesianElements(
+    const Eigen::Vector6d asterixInitialState = convertKeplerianToCartesianElements(
                 asterixInitialStateInKeplerianElements, earthGravitationalParameter );
 
 

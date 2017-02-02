@@ -47,7 +47,7 @@ int main()
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
             getDefaultBodySettings( bodiesToCreate );
     bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< ConstantEphemerisSettings >(
-                basic_mathematics::Vector6d::Zero( ) );
+                Eigen::Vector6d::Zero( ) );
 
     // Create Earth object
     NamedBodyMap bodyMap = createBodies( bodySettings );
@@ -91,7 +91,7 @@ int main()
     // elements.
 
     // Set Keplerian elements for Asterix.
-    Vector6d asterixInitialStateInKeplerianElements;
+    Eigen::Vector6d asterixInitialStateInKeplerianElements;
     asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0E3;
     asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
     asterixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 85.3 );

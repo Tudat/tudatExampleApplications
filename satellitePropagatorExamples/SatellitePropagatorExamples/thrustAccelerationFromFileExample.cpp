@@ -14,22 +14,19 @@
 
 std::map< double, Eigen::Vector3d > getThrustData( )
 {
-    // Find filepath of this cpp file
+    // Find filepath and folder of this cpp file
     std::string cppFilePath( __FILE__ );
-
-    // Find folder of this cpp file
     std::string cppFolder = cppFilePath.substr( 0 , cppFilePath.find_last_of("/\\")+1 );
-    Eigen::MatrixXd thrustForceMatrix =
-            tudat::input_output::readMatrixFromFile( cppFolder + "testThrustValues.txt" , " \t", "#" );
 
-    // Make map for thrust data
-    std::map< double, Eigen::Vector3d > thrustData;
+    // Load data into matrix
+    Eigen::MatrixXd thrustForceMatrix =
+            tudat::input_output::readMatrixFromFile( cppFolder + "testThrustValues.txt" , " \t" );
 
     // Fill thrustData map using thrustForceMatrix Eigen matrix
+    std::map< double, Eigen::Vector3d > thrustData;
     for ( int i = 0; i < thrustForceMatrix.rows( ); i++ )
     {
-        Eigen::Vector3d temp = thrustForceMatrix.block( i, 1, 1, 3 ).transpose( );
-        thrustData[ thrustForceMatrix( i, 0 ) ] = temp;
+        thrustData[ thrustForceMatrix( i, 0 ) ] = thrustForceMatrix.block( i, 1, 1, 3 ).transpose( );
     }
     return thrustData;
 }
@@ -67,7 +64,7 @@ int main()
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings;
     bodySettings[ "Earth" ] = boost::make_shared< BodySettings >( );
     bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< ConstantEphemerisSettings >(
-                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
+                Eigen::Vector6d::Zero( ), "SSB", "J2000" );
     bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< GravityFieldSettings >( central_spice );
 
     // Create Earth object
@@ -96,8 +93,7 @@ int main()
 
     // Make interpolator
     boost::shared_ptr< InterpolatorSettings >
-            thrustInterpolatorSettingsPointer = boost::make_shared< InterpolatorSettings >(
-                linear_interpolator );
+            thrustInterpolatorSettingsPointer = boost::make_shared< InterpolatorSettings >( linear_interpolator );
 
     // Creating settings for thrust force
     boost::shared_ptr< OneDimensionalInterpolator< double, Eigen::Vector3d > >
@@ -115,6 +111,7 @@ int main()
                 boost::make_shared< ThrustAccelerationSettings >(
                     thrustInterpolatorPointer,
                     boost::lambda::constant( constantSpecificImpulse ), lvlh_thrust_frame, "Earth" ) );
+
     accelerationMap[ "Vehicle" ] = accelerationsOfVehicle;
     bodiesToPropagate.push_back( "Vehicle" );
     centralBodies.push_back( "Earth" );
@@ -132,7 +129,7 @@ int main()
     // The initial conditions are given in Keplerian elements and later on converted to Cartesian
     // elements.
     // Set Keplerian elements for vehicle.
-    Vector6d vehicleInitialStateInKeplerianElements;
+    Eigen::Vector6d vehicleInitialStateInKeplerianElements;
     vehicleInitialStateInKeplerianElements( semiMajorAxisIndex ) = 72130.0e3;
     vehicleInitialStateInKeplerianElements( eccentricityIndex ) = 0.6;
     vehicleInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 169.0 );

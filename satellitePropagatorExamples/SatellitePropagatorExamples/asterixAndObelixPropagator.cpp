@@ -53,7 +53,7 @@ int main( )
                                     simulationEndEpoch + 10.0 * fixedStepSize );
 
     bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
-                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
+                Eigen::Vector6d::Zero( ), "SSB", "J2000" );
 
     bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
     bodySettings[ "Earth" ]->atmosphereSettings = NULL;
@@ -105,7 +105,7 @@ int main( )
     // Cartesian elements.
 
     // Set Keplerian elements for Asterix.
-    Vector6d asterixInitialStateInKeplerianElements;
+    Eigen::Vector6d asterixInitialStateInKeplerianElements;
     asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0e3;
     asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
     asterixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 85.3 );
@@ -116,7 +116,7 @@ int main( )
     asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 139.87 );
 
     // Set Keplerian elements for Obelix.
-    Vector6d obelixInitialStateInKeplerianElements( 6 );
+    Eigen::Vector6d obelixInitialStateInKeplerianElements( 6 );
     obelixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 12040.6e3;
     obelixInitialStateInKeplerianElements( eccentricityIndex ) = 0.4;
     obelixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( -23.5 );
@@ -131,12 +131,12 @@ int main( )
     double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
 
     // Convert Asterix state from Keplerian elements to Cartesian elements.
-    const Vector6d asterixInitialState = convertKeplerianToCartesianElements(
+    const Eigen::Vector6d asterixInitialState = convertKeplerianToCartesianElements(
                 asterixInitialStateInKeplerianElements,
                 earthGravitationalParameter );
 
     // Convert Obelix state from Keplerian elements to Cartesian elements.
-    const Vector6d obelixInitialState = convertKeplerianToCartesianElements(
+    const Eigen::Vector6d obelixInitialState = convertKeplerianToCartesianElements(
                 obelixInitialStateInKeplerianElements,
                 earthGravitationalParameter );
 
