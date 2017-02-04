@@ -1,4 +1,4 @@
-/*    Copyright (c) 2010-2016, Delft University of Technology
+/*    Copyright (c) 2010-2017, Delft University of Technology
  *    All rigths reserved
  *
  *    This file is part of the Tudat. Redistribution and use in source and
@@ -20,14 +20,14 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     using namespace tudat;
-    using namespace simulation_setup;
-    using namespace propagators;
-    using namespace numerical_integrators;
-    using namespace basic_astrodynamics;
-    using namespace basic_mathematics;
-    using namespace orbital_element_conversions;
-    using namespace unit_conversions;
-    using namespace input_output;
+    using namespace tudat::simulation_setup;
+    using namespace tudat::propagators;
+    using namespace tudat::numerical_integrators;
+    using namespace tudat::basic_astrodynamics;
+    using namespace tudat::basic_mathematics;
+    using namespace tudat::orbital_element_conversions;
+    using namespace tudat::unit_conversions;
+    using namespace tudat::input_output;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////     CREATE ENVIRONMENT AND VEHICLES      //////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ int main( )
                                     simulationEndEpoch + 10.0 * fixedStepSize );
 
     bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
-                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
+                Eigen::Vector6d::Zero( ), "SSB", "J2000" );
 
     bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
     bodySettings[ "Earth" ]->atmosphereSettings = NULL;
@@ -105,7 +105,7 @@ int main( )
     // Cartesian elements.
 
     // Set Keplerian elements for Asterix.
-    Vector6d asterixInitialStateInKeplerianElements;
+    Eigen::Vector6d asterixInitialStateInKeplerianElements;
     asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0e3;
     asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
     asterixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 85.3 );
@@ -116,7 +116,7 @@ int main( )
     asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 139.87 );
 
     // Set Keplerian elements for Obelix.
-    Vector6d obelixInitialStateInKeplerianElements( 6 );
+    Eigen::Vector6d obelixInitialStateInKeplerianElements( 6 );
     obelixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 12040.6e3;
     obelixInitialStateInKeplerianElements( eccentricityIndex ) = 0.4;
     obelixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( -23.5 );
@@ -131,12 +131,12 @@ int main( )
     double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
 
     // Convert Asterix state from Keplerian elements to Cartesian elements.
-    const Vector6d asterixInitialState = convertKeplerianToCartesianElements(
+    const Eigen::Vector6d asterixInitialState = convertKeplerianToCartesianElements(
                 asterixInitialStateInKeplerianElements,
                 earthGravitationalParameter );
 
     // Convert Obelix state from Keplerian elements to Cartesian elements.
-    const Vector6d obelixInitialState = convertKeplerianToCartesianElements(
+    const Eigen::Vector6d obelixInitialState = convertKeplerianToCartesianElements(
                 obelixInitialStateInKeplerianElements,
                 earthGravitationalParameter );
 

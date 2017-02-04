@@ -33,6 +33,13 @@ install_manifest.txt
 # Data files
 *.dat
 
+# Figure files
+*.eps
+*.png
+*.pdf
+*.jpg
+*.jpeg
+
 # Compiled Static libraries
 *.lai
 *.la

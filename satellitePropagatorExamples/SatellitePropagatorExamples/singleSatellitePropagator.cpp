@@ -1,4 +1,4 @@
-/*    Copyright (c) 2010-2016, Delft University of Technology
+/*    Copyright (c) 2010-2017, Delft University of Technology
  *    All rigths reserved
  *
  *    This file is part of the Tudat. Redistribution and use in source and
@@ -16,21 +16,17 @@
 //! Execute propagation of orbit of Asterix around the Earth.
 int main()
 {
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     using namespace tudat;
-    using namespace simulation_setup;
-    using namespace propagators;
-    using namespace numerical_integrators;
-    using namespace orbital_element_conversions;
-    using namespace basic_mathematics;
-    using namespace gravitation;
-    using namespace numerical_integrators;
-    using namespace unit_conversions;
+    using namespace tudat::simulation_setup;
+    using namespace tudat::propagators;
+    using namespace tudat::numerical_integrators;
+    using namespace tudat::orbital_element_conversions;
+    using namespace tudat::basic_mathematics;
+    using namespace tudat::unit_conversions;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////     CREATE ENVIRONMENT AND VEHICLE       //////////////////////////////////////////////////////
@@ -44,15 +40,14 @@ int main()
     // Set simulation end epoch.
     const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
 
-    // Set numerical integration fixed step size.
-    const double fixedStepSize = 60.0;
 
-    // Define body settings for simulation.
-    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings;
-    bodySettings[ "Earth" ] = boost::make_shared< BodySettings >( );
+    // Create body objects.
+    std::vector< std::string > bodiesToCreate;
+    bodiesToCreate.push_back( "Earth" );
+    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
+            getDefaultBodySettings( bodiesToCreate );
     bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< ConstantEphemerisSettings >(
-                basic_mathematics::Vector6d::Zero( ), "SSB", "J2000" );
-    bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< GravityFieldSettings >( central_spice );
+                Eigen::Vector6d::Zero( ) );
 
     // Create Earth object
     NamedBodyMap bodyMap = createBodies( bodySettings );
@@ -60,9 +55,8 @@ int main()
     // Create spacecraft object.
     bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
 
-
     // Finalize body creation.
-    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
+    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ACCELERATIONS          //////////////////////////////////////////////////////
@@ -73,13 +67,14 @@ int main()
     std::vector< std::string > bodiesToPropagate;
     std::vector< std::string > centralBodies;
 
+    bodiesToPropagate.push_back( "Asterix" );
+    centralBodies.push_back( "Earth" );
+
     // Define propagation settings.
     std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
     accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::central_gravity ) );
     accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
-    bodiesToPropagate.push_back( "Asterix" );
-    centralBodies.push_back( "Earth" );
 
     // Create acceleration models and propagation settings.
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
@@ -96,7 +91,7 @@ int main()
     // elements.
 
     // Set Keplerian elements for Asterix.
-    Vector6d asterixInitialStateInKeplerianElements;
+    Eigen::Vector6d asterixInitialStateInKeplerianElements;
     asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0E3;
     asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
     asterixInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 85.3 );
@@ -115,9 +110,14 @@ int main()
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, simulationEndEpoch );
+
+
+    // Create numerical integrator.
+    double simulationStartEpoch = 0.0;
+    const double fixedStepSize = 10.0;
     boost::shared_ptr< IntegratorSettings< > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
-            ( rungeKutta4, 0.0, fixedStepSize );
+            ( rungeKutta4, simulationStartEpoch, fixedStepSize );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
@@ -125,7 +125,7 @@ int main()
 
     // Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< > dynamicsSimulator(
-                bodyMap, integratorSettings, propagatorSettings, true, false, false );
+                bodyMap, integratorSettings, propagatorSettings );
     std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
 

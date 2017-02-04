@@ -1,4 +1,4 @@
-/*    Copyright (c) 2010-2016, Delft University of Technology
+/*    Copyright (c) 2010-2017, Delft University of Technology
  *    All rigths reserved
  *
  *    This file is part of the Tudat. Redistribution and use in source and
@@ -20,15 +20,15 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     using namespace tudat;
-    using namespace ephemerides;
-    using namespace interpolators;
-    using namespace numerical_integrators;
-    using namespace spice_interface;
-    using namespace simulation_setup;
-    using namespace basic_astrodynamics;
-    using namespace basic_mathematics;
-    using namespace orbital_element_conversions;
-    using namespace propagators;
+    using namespace tudat::ephemerides;
+    using namespace tudat::interpolators;
+    using namespace tudat::numerical_integrators;
+    using namespace tudat::spice_interface;
+    using namespace tudat::simulation_setup;
+    using namespace tudat::basic_astrodynamics;
+    using namespace tudat::basic_mathematics;
+    using namespace tudat::orbital_element_conversions;
+    using namespace tudat:: propagators;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
@@ -53,16 +53,9 @@ int main( )
     bodyNames[ 4 ] = "Mercury";
     bodyNames[ 5 ] = "Sun";
 
-
-    // Specify initial time
-    double initialEphemerisTime = 1.0E7;
-    double finalEphemerisTime = 1.0E7 + 5.0 * physical_constants::JULIAN_YEAR;
-    double maximumTimeStep = 3600.0;
-    double buffer = 5.0 * maximumTimeStep;
-
     // Create bodies needed in simulation
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
-            getDefaultBodySettings( bodyNames, initialEphemerisTime - buffer, initialEphemerisTime + buffer );
+            getDefaultBodySettings( bodyNames );
     NamedBodyMap bodyMap = createBodies( bodySettings );
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );
 
@@ -80,6 +73,7 @@ int main( )
             std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > currentAccelerations;
             for( unsigned int j = 0; j < bodyNames.size( ); j++ )
             {
+                // Create central gravity acceleration between each 2 bodies.
                 if( i != j )
                 {
                     currentAccelerations[ bodyNames.at( j ) ].push_back(
@@ -96,6 +90,8 @@ int main( )
         // Define central bodies to use in propagation.
         std::vector< std::string > centralBodies;
         centralBodies.resize( numberOfNumericalBodies );
+
+        // Set central body as Solar System Barycente for each body
         if( centralBodySettings == 0 )
         {
             for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
@@ -107,14 +103,17 @@ int main( )
         {
             for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
             {
+                // Set Earth as central body for Moon
                 if( i == 0 )
                 {
                     centralBodies[ i ] = "Earth";
                 }
+                // Set barycenter as central 'body' for Sun
                 else if( i == 5 )
                 {
                     centralBodies[ i ] = "SSB";
                 }
+                // Set Sun as central body for all planets
                 else
                 {
                     centralBodies[ i ] = "Sun";
@@ -132,6 +131,9 @@ int main( )
         ///////////////////////             CREATE PROPAGATION SETTINGS            ///////////////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        // Specify initial time
+        double initialEphemerisTime = 1.0E7;
+        double finalEphemerisTime = 1.0E7 + 5.0 * physical_constants::JULIAN_YEAR;
 
         // Get initial state vector as input to integration.
         Eigen::VectorXd systemInitialState = getInitialStatesOfBodies(

@@ -1,45 +1,11 @@
- #    Copyright (c) 2010-2013, Delft University of Technology
- #    All rights reserved.
+ #    Copyright (c) 2010-2017, Delft University of Technology
+ #    All rigths reserved
  #
- #    Redistribution and use in source and binary forms, with or without modification, are
- #    permitted provided that the following conditions are met:
- #      - Redistributions of source code must retain the above copyright notice, this list of
- #        conditions and the following disclaimer.
- #      - Redistributions in binary form must reproduce the above copyright notice, this list of
- #        conditions and the following disclaimer in the documentation and/or other materials
- #        provided with the distribution.
- #      - Neither the name of the Delft University of Technology nor the names of its contributors
- #        may be used to endorse or promote products derived from this software without specific
- #        prior written permission.
- #
- #    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
- #    OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- #    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- #    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- #    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- #    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- #    AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- #    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- #    OF THE POSSIBILITY OF SUCH DAMAGE.
- #
- #    Changelog
- #      YYMMDD    Author            Comment
- #      110820    S.M. Persson      File created.
- #	    120202    K. Kumar 	        Adapted to work with Earth orbiting satellite example.
- #	    120427	  A. Ronse	        Added option for using UserSettings.txt.
- #	    120522	  A. Ronse    	    Adapted for automatically finding TudatCoreEnvironment.cmake
- #			                            at standard location relative to project source.
- #      130222    K. Kumar          Updated directory definitions.
- #      130225    K. Kumar          Updated set-function calls to check if variables have been set
- #                                  already.
- #     130326    K. Kumar           Added BUILD_DOCUMENTATION option for Doxygen html output
- #                                  generation; removed -O3 flag since it is set by "Release"
- #                                  build type if selected; updated install steps; re-organized
- #                                  file to isolate user-specified section.
- #
- #    References
- #
- #    Notes
+ #    This file is part of the Tudat. Redistribution and use in source and
+ #    binary forms, with or without modification, are permitted exclusively
+ #    under the terms of the Modified BSD license. You should have received
+ #    a copy of the license with this file. If not, please or visit:
+ #    http://tudat.tudelft.nl/LICENSE.
  #
 
 # Specify minimum CMake version required.
@@ -159,8 +125,8 @@ if(NOT Boost_USE_STATIC_RUNTIME)
 endif()
 
 # Find Boost libraries on local system.
-find_package(Boost 1.45.0 
-            COMPONENTS thread date_time system unit_test_framework filesystem regex REQUIRED)
+find_package(Boost 1.45.0
+             COMPONENTS thread date_time system unit_test_framework filesystem regex REQUIRED)
 
 # Include Boost directories.
 # Set CMake flag to suppress Boost warnings (platform-dependent solution).
@@ -181,32 +147,48 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
 
-# If documentation should be built, find Doxygen package and setup config file.
-if(BUILD_DOCUMENTATION)
-  find_package(Doxygen)
+  # Find CSPICE library on local system.
+  find_package(Spice)
 
-  if(NOT DOXYGEN_FOUND)
-    message(FATAL_ERROR 
-            "Doxygen is needed to build the documentation. Please install it correctly.")
-  endif()
+  # Include CSpice directories.
+  if(NOT APPLE)
+    include_directories(SYSTEM AFTER "${SPICE_INCLUDE_DIR}")
+  else( )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${SPICE_INCLUDE_DIR}\"")
+  endif( )
 
-  # Configure the Template Doxyfile for our specific project.
-  configure_file(${CODEROOT}/Doxyfile.in ${PROJECT_BINARY_DIR}/Doxyfile @ONLY IMMEDIATE)
+option(USE_NRLMSISE00 "build Tudat with NRLMSISE-00 enabled" ON)
+if(NOT USE_NRLMSISE00)
+  message(STATUS "NRLMSISE-00 disabled!")
+  add_definitions(-DUSE_NRLMSISE00=0)
+else()
+  message(STATUS "NRLMSISE-00 enabled!")
+  add_definitions(-DUSE_NRLMSISE00=1)
+  # Find USE_NRLMSISE00 library on local system.
+  find_package(NRLMSISE00)
 
-  # Add a custom target to run Doxygen when ever the project is built.
-  # IF you do NOT want the documentation to be generated EVERY time you build the project
-  # then leave out the 'ALL' keyword from the above command.
-  add_custom_target (docs ALL COMMAND ${DOXYGEN_EXECUTABLE} 
-                     ${PROJECT_BINARY_DIR}/Doxyfile 
-                     SOURCES ${PROJECT_BINARY_DIR}/Doxyfile)
+  # Include NRLMSISE00 directories.
+  if(NOT APPLE)
+    include_directories(SYSTEM AFTER "${NRLMSISE00_INCLUDE_DIR}")
+  else( )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${NRLMSISE00_INCLUDE_DIR}\"")
+  endif( )
+endif( )
 
-  # Install documentation.
-  install(DIRECTORY "${CODEROOT}/Documentation" 
-        DESTINATION "${TEMPLATE_APPLICATION_DISTRIBUTION_PATH}")
+if(USE_CSPICE)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES tudat_spice_interface cspice)
 endif()
+
+if(USE_NRLMSISE00)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
+endif()
+
+list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_propagators
+    tudat_aerodynamics tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
+    tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
+    tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
 # Add helloWorld application.
 add_executable(application_HelloWorld "${SRCROOT}/helloWorld.cpp")
 setup_executable_target(application_HelloWorld "${SRCROOT}")
-target_link_libraries(application_HelloWorld tudat_gravitation 
-                      ${TUDAT_CORE_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(application_HelloWorld tudat_gravitation tudat_basic_astrodynamics ${Boost_LIBRARIES} )

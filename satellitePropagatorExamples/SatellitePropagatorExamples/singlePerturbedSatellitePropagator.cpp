@@ -1,4 +1,4 @@
-/*    Copyright (c) 2010-2016, Delft University of Technology
+/*    Copyright (c) 2010-2017, Delft University of Technology
  *    All rigths reserved
  *
  *    This file is part of the Tudat. Redistribution and use in source and
@@ -20,13 +20,13 @@ int main()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     using namespace tudat;
-    using namespace simulation_setup;
-    using namespace propagators;
-    using namespace numerical_integrators;
-    using namespace orbital_element_conversions;
-    using namespace basic_mathematics;
-    using namespace gravitation;
-    using namespace numerical_integrators;
+    using namespace tudat::simulation_setup;
+    using namespace tudat::propagators;
+    using namespace tudat::numerical_integrators;
+    using namespace tudat::orbital_element_conversions;
+    using namespace tudat::basic_mathematics;
+    using namespace tudat::gravitation;
+    using namespace tudat::numerical_integrators;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,17 +69,27 @@ int main()
     bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
     bodyMap[ "Asterix" ]->setConstantBodyMass( 400.0 );
 
+    // Create aerodynamic coefficient interface settings.
     double referenceArea = 4.0;
     double aerodynamicCoefficient = 1.2;
     boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
             boost::make_shared< ConstantAerodynamicCoefficientSettings >(
                 referenceArea, aerodynamicCoefficient * Eigen::Vector3d::UnitX( ), 1, 1 );
+
+    // Create and set aerodynamic coefficients object
     bodyMap[ "Asterix" ]->setAerodynamicCoefficientInterface(
                 createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "Asterix" ) );
 
+    // Create radiation pressure settings
+    double referenceAreaRadiation = 4.0;
+    double radiationPressureCoefficient = 1.2;
+    std::vector< std::string > occultingBodies;
+    occultingBodies.push_back( "Earth" );
     boost::shared_ptr< RadiationPressureInterfaceSettings > asterixRadiationPressureSettings =
             boost::make_shared< CannonBallRadiationPressureInterfaceSettings >(
-                "Sun", 4.0, 1.2, boost::assign::list_of( "Earth" )( "Moon" ) );
+                "Sun", referenceAreaRadiation, radiationPressureCoefficient, occultingBodies );
+
+    // Create and set radiation pressure settings
     bodyMap[ "Asterix" ]->setRadiationPressureInterface(
                 "Sun", createRadiationPressureInterface(
                     asterixRadiationPressureSettings, "Asterix", bodyMap ) );
@@ -126,7 +136,7 @@ int main()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Set Keplerian elements for Asterix.
-    Vector6d asterixInitialStateInKeplerianElements;
+    Eigen::Vector6d asterixInitialStateInKeplerianElements;
     asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0E3;
     asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
     asterixInitialStateInKeplerianElements( inclinationIndex ) = unit_conversions::convertDegreesToRadians( 85.3 );
@@ -137,7 +147,7 @@ int main()
     asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = unit_conversions::convertDegreesToRadians( 139.87 );
 
     double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
-    const Vector6d asterixInitialState = convertKeplerianToCartesianElements(
+    const Eigen::Vector6d asterixInitialState = convertKeplerianToCartesianElements(
                 asterixInitialStateInKeplerianElements, earthGravitationalParameter );
 
 
@@ -145,7 +155,7 @@ int main()
             boost::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies, accelerationModelMap, bodiesToPropagate, asterixInitialState, simulationEndEpoch );
 
-    const double fixedStepSize = 60.0;
+    const double fixedStepSize = 10.0;
     boost::shared_ptr< IntegratorSettings< > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
             ( rungeKutta4, 0.0, fixedStepSize );
