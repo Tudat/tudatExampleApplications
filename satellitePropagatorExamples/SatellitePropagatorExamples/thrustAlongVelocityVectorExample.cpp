@@ -1,4 +1,3 @@
-
 /*    Copyright (c) 2010-2017, Delft University of Technology
  *    All rigths reserved
  *
@@ -112,17 +111,23 @@ int main( )
             ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, terminationSettings,
               cowell );
 
-    // Crete mass rate models
+    // Create mass rate models
+    boost::shared_ptr< MassRateModelSettings > massRateModelSettings =
+            boost::make_shared< FromThrustMassModelSettings >( true );
     std::map< std::string, boost::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
-    massRateModels[ "Vehicle" ] = createMassRateModel( "Vehicle", boost::make_shared< FromThrustMassModelSettings >( 1 ),
-                                                      bodyMap, accelerationModelMap );
+    massRateModels[ "Vehicle" ] = createMassRateModel(
+                "Vehicle", massRateModelSettings, bodyMap, accelerationModelMap );
 
-    // Create settings for propagating the mass of the vehicle
-    boost::shared_ptr< MassPropagatorSettings< double > > massPropagatorSettings =
+    // Create settings for propagating the mass of the vehicle.
+    std::vector< std::string > bodiesWithMassToPropagate;
+    bodiesWithMassToPropagate.push_back( "Vehicle" );
+
+    Eigen::VectorXd initialBodyMasses = Eigen::VectorXd( 1 );
+    initialBodyMasses( 0 ) = vehicleMass;
+
+    boost::shared_ptr< PropagatorSettings< double > > massPropagatorSettings =
             boost::make_shared< MassPropagatorSettings< double > >(
-                boost::assign::list_of( "Vehicle" ), massRateModels,
-                ( Eigen::Matrix< double, 1, 1 >( ) << vehicleMass ).finished( ),
-                terminationSettings );
+                bodiesWithMassToPropagate, massRateModels, initialBodyMasses, terminationSettings );
 
     // Create list of propagation settings.
     std::vector< boost::shared_ptr< PropagatorSettings< double > > > propagatorSettingsVector;
