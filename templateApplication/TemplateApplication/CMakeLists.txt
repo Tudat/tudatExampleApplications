@@ -107,7 +107,7 @@ find_package(Eigen3 REQUIRED)
 
 # Include Eigen3 directories.
 # Set CMake flag to suppress Eigen warnings (platform-dependent solution).
-if(NOT APPLE)
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
   include_directories(SYSTEM AFTER "${EIGEN3_INCLUDE_DIR}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${EIGEN3_INCLUDE_DIR}\"")
@@ -130,7 +130,7 @@ find_package(Boost 1.45.0
 
 # Include Boost directories.
 # Set CMake flag to suppress Boost warnings (platform-dependent solution).
-if(NOT APPLE)
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
   include_directories(SYSTEM AFTER "${Boost_INCLUDE_DIRS}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${Boost_INCLUDE_DIRS}\"")
@@ -141,7 +141,7 @@ find_package(Tudat 2.0 REQUIRED)
 
 # Include Tudat directories.
 # Set CMake flag to suppress Tudat warnings (platform-dependent solution).
-if(NOT APPLE)
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
   include_directories(SYSTEM AFTER "${TUDAT_INCLUDE_DIR}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
@@ -151,7 +151,7 @@ endif()
   find_package(Spice)
 
   # Include CSpice directories.
-  if(NOT APPLE)
+  if(NOT APPLE OR APPLE_INCLUDE_FORCE)
     include_directories(SYSTEM AFTER "${SPICE_INCLUDE_DIR}")
   else( )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${SPICE_INCLUDE_DIR}\"")
@@ -168,7 +168,7 @@ else()
   find_package(NRLMSISE00)
 
   # Include NRLMSISE00 directories.
-  if(NOT APPLE)
+  if(NOT APPLE OR APPLE_INCLUDE_FORCE)
     include_directories(SYSTEM AFTER "${NRLMSISE00_INCLUDE_DIR}")
   else( )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${NRLMSISE00_INCLUDE_DIR}\"")
