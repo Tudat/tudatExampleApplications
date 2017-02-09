@@ -1,4 +1,4 @@
- #    Copyright (c) 2010-2016, Delft University of Technology
+ #    Copyright (c) 2010-2017, Delft University of Technology
  #    All rigths reserved
  #
  #    This file is part of the Tudat. Redistribution and use in source and
@@ -7,27 +7,22 @@
  #    a copy of the license with this file. If not, please or visit:
  #    http://tudat.tudelft.nl/LICENSE.
  #
+ #    References
+ #      FindEigen3.cmake (2-clause BSD license)
+ #
  #    Notes
- #
- #	This script tries to find the PaGMO library. This module supports requiring a minimum
- #    	version, e.g. you can do version, e.g. you can do find_package(PaGMO 1.1.2) to require
- #    	version 1.1.2 or newer of PaGMO.
- #
- #	Sets the following variables:
+ #	    Sets the following variables:
  #          PAGMO_INCLUDE_DIR    - Source directory to include
  #          PAGMO_LIBRARYDIR     - Path to build static library
  #          PAGMO_VERSION_OK     - True of PaGMO found.
- #
+ #	     
  #   	    PAGMO_VERSION        - PaGMO version found e.g. 1.1.5
  #   	    PAGMO_VERSION_MAJOR  - PaGMO major version found e.g. 1
  #   	    PAGMO_VERSION_MINOR  - PaGMO minor version found e.g. 1
  #   	    PAGMO_VERSION_PATCH  - PaGMO patch version found e.g. 5
- #
- #      Based on FindEigen3.cmake, licensed under the 2-clause BSD.
- #
 
 macro(_pagmo_check_version)
-  message(STATUS "Checking for PaGMO in: " ${PAGMO_BASE_PATH})
+  message(STATUS "Checking for PaGMO in: " ${PAGMO_BASE_PATH})      
   file(READ "${PAGMO_BASE_PATH}/main.cpp" _pagmo_header)
   STRING(REGEX REPLACE "^.*PaGMO ([0-9]+)\\.[0-9]+\\.[0-9]+.*" "\\1" PAGMO_VERSION_MAJOR "${_pagmo_header}")
   STRING(REGEX REPLACE "^.*PaGMO [0-9]+\\.([0-9]+)\\.[0-9]+.*" "\\1" PAGMO_VERSION_MINOR "${_pagmo_header}")
@@ -53,8 +48,8 @@ macro(_pagmo_check_version)
 
   set(PAGMO_LIBRARY "pagmo")
   set(PAGMO_INCLUDE_DIR ${PAGMO_BASE_PATH}/../)
-  set(PAGMO_LIBRARY_DIR ${PAGMO_BASE_PATH}/lib/)
-  link_directories(${PAGMO_LIBRARY_DIR})
+  set(PAGMO_LIBRARYDIR ${PAGMO_BASE_PATH}/build/src/)
+  link_directories(${PAGMO_LIBRARYDIR})
 endmacro(_pagmo_check_version)
 
 if(PAGMO_BASE_PATH)

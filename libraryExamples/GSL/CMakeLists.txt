@@ -1,50 +1,11 @@
- #    Copyright (c) 2010-2013, Delft University of Technology
- #    All rights reserved.
+ #    Copyright (c) 2010-2017, Delft University of Technology
+ #    All rigths reserved
  #
- #    Redistribution and use in source and binary forms, with or without modification, are
- #    permitted provided that the following conditions are met:
- #      - Redistributions of source code must retain the above copyright notice, this list of
- #        conditions and the following disclaimer.
- #      - Redistributions in binary form must reproduce the above copyright notice, this list of
- #        conditions and the following disclaimer in the documentation and/or other materials
- #        provided with the distribution.
- #      - Neither the name of the Delft University of Technology nor the names of its contributors
- #        may be used to endorse or promote products derived from this software without specific
- #        prior written permission.
- #
- #    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
- #    OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- #    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- #    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- #    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- #    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- #    AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- #    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- #    OF THE POSSIBILITY OF SUCH DAMAGE.
- #
- #    Changelog
- #      YYMMDD    Author            Comment
- #      110820    S.M. Persson      File created.
- #      120202    K. Kumar          Adapted to work with Earth orbiting satellite example.
- #      120523    A. Ronse          Updated terminology suiting application. Included script
- #                                  to find+load TudatCoreEnvironment.cmake.
- #      120205    K. Kumar          Removed obsolete TudatCoreEnvironment.cmake call; updated
- #                                  Tudat Core and Tudat minimum requirements; updated license;
- #                                  added static library so body.h shows up in project tree.
- #      130222    K. Kumar          Updated directory definitions; added unit test macro.
- #      130225    K. Kumar          Updated macros; updated set-function calls to check if
- #                                  variables have been set already; updated static library name
- #                                  and naming of applications.
- #     130326    K. Kumar           Added BUILD_DOCUMENTATION option for Doxygen html output
- #                                  generation; removed -O3 flag since it is set by "Release"
- #                                  build type if selected; updated install steps; re-organized
- #                                  file to isolate user-specified section.
- # 	160322   R. Hoogendoorn	    Add GSL Library example
- #
- #    References
- #
- #    Notes
- #
+ #    This file is part of the Tudat. Redistribution and use in source and
+ #    binary forms, with or without modification, are permitted exclusively
+ #    under the terms of the Modified BSD license. You should have received
+ #    a copy of the license with this file. If not, please or visit:
+ #    http://tudat.tudelft.nl/LICENSE.
 
 # Specify minimum CMake version required.
 cmake_minimum_required(VERSION 2.6)
@@ -54,31 +15,33 @@ project(GSL_Example)
 
 # Load UserSettings.txt
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-  message(STATUS "Building ${PROJECT_NAME} standalone.")
+  set(BUILD_STYLE "standalone")
   include("${CMAKE_CURRENT_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
 else()
-  message(STATUS "Building ${PROJECT_NAME} from within ${CMAKE_PROJECT_NAME}.")
+  set(BUILD_STYLE "part of ${CMAKE_PROJECT_NAME}")
   include("${CMAKE_CURRENT_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
   include("${CMAKE_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
   STRING(REGEX REPLACE ${CMAKE_SOURCE_DIR} "" RELATIVE_PROJECT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
   set(RELATIVE_PROJECT_PATH "${RELATIVE_PROJECT_PATH}" CACHE STRING "Relative path wrt to project for function")
-  message(STATUS "Relative path (wrt to project): ${RELATIVE_PROJECT_PATH}")
+  # message(STATUS "Relative path (wrt to project): ${RELATIVE_PROJECT_PATH}")
 endif()
 
 # Set CMake build-type. If it not supplied by the user (either directly as an argument of through
 # the "UserSettings.txt" file, the default built type is "Release".
 if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Release"))
-    message(STATUS "WARNING: building release version!")
-    set(CMAKE_BUILD_TYPE Release)
+  set(CMAKE_BUILD_TYPE Release)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "WARNING: building debug version!")
+  set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-# Set module path to local CMake scripts.
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
+message(STATUS "<< ${PROJECT_NAME} (${CMAKE_BUILD_TYPE} - ${BUILD_STYLE}) >>")
+
+# Add local module path
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
+message(STATUS "CMake Module path(s): ${CMAKE_MODULE_PATH}")
 
 # Set compiler based on preferences (e.g. USE_CLANG) and system.
-include(${CMAKE_MODULE_PATH}/compiler.cmake)
+include(compiler)
 
 # Define the directory with the source code.
 set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
