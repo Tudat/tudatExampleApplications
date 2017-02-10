@@ -15,31 +15,33 @@ project(PaGMOLibraryExamples)
 
 # Load UserSettings.txt
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-  message(STATUS "Building ${PROJECT_NAME} standalone.")
+  set(BUILD_STYLE "standalone")
   include("${CMAKE_CURRENT_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
 else()
-  message(STATUS "Building ${PROJECT_NAME} from within ${CMAKE_PROJECT_NAME}.")
+  set(BUILD_STYLE "part of ${CMAKE_PROJECT_NAME}")
   include("${CMAKE_CURRENT_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
   include("${CMAKE_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
   STRING(REGEX REPLACE ${CMAKE_SOURCE_DIR} "" RELATIVE_PROJECT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
   set(RELATIVE_PROJECT_PATH "${RELATIVE_PROJECT_PATH}" CACHE STRING "Relative path wrt to project for function")
-  message(STATUS "Relative path (wrt to project): ${RELATIVE_PROJECT_PATH}")
+  # message(STATUS "Relative path (wrt to project): ${RELATIVE_PROJECT_PATH}")
 endif()
 
 # Set CMake build-type. If it not supplied by the user (either directly as an argument of through
 # the "UserSettings.txt" file, the default built type is "Release".
 if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Release"))
-    message(STATUS "WARNING: building release version!")
-    set(CMAKE_BUILD_TYPE Release)
+  set(CMAKE_BUILD_TYPE Release)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "WARNING: building debug version!")
+  set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-# Set module path to local CMake scripts.
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
+message(STATUS "<< ${PROJECT_NAME} (${CMAKE_BUILD_TYPE} - ${BUILD_STYLE}) >>")
+
+# Add local module path
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
+message(STATUS "CMake Module path(s): ${CMAKE_MODULE_PATH}")
 
 # Set compiler based on preferences (e.g. USE_CLANG) and system.
-include(${CMAKE_MODULE_PATH}/compiler.cmake)
+include(compiler)
 
 # Define the directory with the source code.
 set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -90,7 +92,7 @@ find_package(Eigen3 REQUIRED)
 
 # Include Eigen3 directories.
 # Set CMake flag to suppress Eigen warnings (platform-dependent solution).
-if(NOT APPLE)
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
   include_directories(SYSTEM AFTER "${EIGEN3_INCLUDE_DIR}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${EIGEN3_INCLUDE_DIR}\"")
@@ -113,7 +115,7 @@ find_package(Boost 1.45.0
 
 # Include Boost directories.
 # Set CMake flag to suppress Boost warnings (platform-dependent solution).
-if(NOT APPLE)
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
   include_directories(SYSTEM AFTER "${Boost_INCLUDE_DIRS}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${Boost_INCLUDE_DIRS}\"")
@@ -124,7 +126,7 @@ find_package(Tudat 2.0 REQUIRED)
 
 # Include Tudat directories.
 # Set CMake flag to suppress Tudat warnings (platform-dependent solution).
-if(NOT APPLE)
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
   include_directories(SYSTEM AFTER "${TUDAT_INCLUDE_DIR}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
@@ -134,7 +136,7 @@ endif()
 find_package(PaGMO)
 
 # Include PaGMO directories.
-if(NOT APPLE)
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
   include_directories(SYSTEM AFTER "${PAGMO_INCLUDE_DIR}")
 else( )
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${PAGMO_INCLUDE_DIR}\"")
