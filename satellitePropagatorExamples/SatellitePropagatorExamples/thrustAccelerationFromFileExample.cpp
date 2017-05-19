@@ -75,6 +75,18 @@ int main()
     bodyMap[ "Vehicle" ] = boost::make_shared< simulation_setup::Body >( );
     bodyMap[ "Vehicle" ]->setConstantBodyMass( vehicleMass );
 
+    // Create aerodynamic coefficient interface settings.
+    double referenceArea = 4.0;
+    double aerodynamicCoefficient = 1.2;
+    boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
+            boost::make_shared< ConstantAerodynamicCoefficientSettings >(
+                referenceArea, aerodynamicCoefficient * Eigen::Vector3d::UnitX( ), 1, 1 );
+
+    // Create and set aerodynamic coefficients object
+    bodyMap[ "Vehicle" ]->setAerodynamicCoefficientInterface(
+                createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "Vehicle" ) );
+
+
     // Finalize body creation.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
 
@@ -107,6 +119,9 @@ int main()
     std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfVehicle;
     accelerationsOfVehicle[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::central_gravity ) );
+    accelerationsOfVehicle[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::aerodynamic ) );
+
     accelerationsOfVehicle[ "Vehicle" ].push_back(
                 boost::make_shared< ThrustAccelerationSettings >(
                     thrustInterpolatorPointer,
@@ -158,7 +173,7 @@ int main()
     // Crete mass rate models
     std::map< std::string, boost::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
     massRateModels[ "Vehicle" ] = createMassRateModel( "Vehicle", boost::make_shared< FromThrustMassModelSettings >( 1 ),
-                                                      bodyMap, accelerationModelMap );
+                                                       bodyMap, accelerationModelMap );
 
     // Create settings for propagating the mass of the vehicle
     boost::shared_ptr< MassPropagatorSettings< double > > massPropagatorSettings =
@@ -168,7 +183,7 @@ int main()
                 terminationSettings );
 
     // Create list of propagation settings.
-    std::vector< boost::shared_ptr< PropagatorSettings< double > > > propagatorSettingsVector;
+    std::vector< boost::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
     propagatorSettingsVector.push_back( translationalPropagatorSettings );
     propagatorSettingsVector.push_back( massPropagatorSettings );
 

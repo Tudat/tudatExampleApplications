@@ -125,12 +125,12 @@ int main( )
     Eigen::VectorXd initialBodyMasses = Eigen::VectorXd( 1 );
     initialBodyMasses( 0 ) = vehicleMass;
 
-    boost::shared_ptr< PropagatorSettings< double > > massPropagatorSettings =
+    boost::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings =
             boost::make_shared< MassPropagatorSettings< double > >(
                 bodiesWithMassToPropagate, massRateModels, initialBodyMasses, terminationSettings );
 
     // Create list of propagation settings.
-    std::vector< boost::shared_ptr< PropagatorSettings< double > > > propagatorSettingsVector;
+    std::vector< boost::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
     propagatorSettingsVector.push_back( translationalPropagatorSettings );
     propagatorSettingsVector.push_back( massPropagatorSettings );
 
