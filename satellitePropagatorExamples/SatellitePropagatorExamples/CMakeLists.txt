@@ -188,6 +188,13 @@ list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat
     tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
     tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
+list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_simulation_setup tudat_ground_stations tudat_observation_models tudat_acceleration_partials
+    tudat_observation_partials tudat_estimatable_parameters tudat_orbit_determination  tudat_propagators
+    tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
+    tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
+    tudat_basic_astrodynamics tudat_statistics tudat_basic_mathematics tudat_propagators tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+
+
 ## Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
 setup_executable_target(application_SingleSatellitePropagator "${SRCROOT}")
@@ -235,4 +242,10 @@ add_executable(application_ThrustFromFile
                "${SRCROOT}/thrustAccelerationFromFileExample.cpp")
 setup_executable_target(application_ThrustFromFile "${SRCROOT}")
 target_link_libraries(application_ThrustFromFile ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+add_executable(application_EarthOrbiterStateEstimation
+               "${SRCROOT}/earthOrbiterStateEstimation.cpp")
+setup_executable_target(application_EarthOrbiterStateEstimation "${SRCROOT}")
+target_link_libraries(application_EarthOrbiterStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+
 
