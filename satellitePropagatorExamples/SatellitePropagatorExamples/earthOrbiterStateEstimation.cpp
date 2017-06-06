@@ -108,16 +108,18 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-    // Creatre ground stations: same position, but different representation
+    // Create ground stations from geodetic positions.
     std::vector< std::string > groundStationNames;
     groundStationNames.push_back( "Station1" );
     groundStationNames.push_back( "Station2" );
     groundStationNames.push_back( "Station3" );
 
-    createGroundStation( bodyMap.at( "Earth" ), "Station1", ( Eigen::Vector3d( ) << 0.0, 0.35, 0.0 ).finished( ), geodetic_position );
-    createGroundStation( bodyMap.at( "Earth" ), "Station2", ( Eigen::Vector3d( ) << 0.0, -0.55, 2.0 ).finished( ), geodetic_position );
-    createGroundStation( bodyMap.at( "Earth" ), "Station3", ( Eigen::Vector3d( ) << 0.0, 0.05, 4.0 ).finished( ), geodetic_position );
+    createGroundStation( bodyMap.at( "Earth" ), "Station1",
+                         ( Eigen::Vector3d( ) << 0.0, 0.35, 0.0 ).finished( ), geodetic_position );
+    createGroundStation( bodyMap.at( "Earth" ), "Station2",
+                         ( Eigen::Vector3d( ) << 0.0, -0.55, 2.0 ).finished( ), geodetic_position );
+    createGroundStation( bodyMap.at( "Earth" ), "Station3",
+                         ( Eigen::Vector3d( ) << 0.0, 0.05, 4.0 ).finished( ), geodetic_position );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ACCELERATIONS          //////////////////////////////////////////////////////
@@ -153,7 +155,6 @@ int main( )
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
     // Set Keplerian elements for Asterix.
     Eigen::Vector6d asterixInitialStateInKeplerianElements;
     asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7200.0E3;
@@ -188,7 +189,7 @@ int main( )
     ///////////////////////             DEFINE LINK ENDS FOR OBSERVATIONS            //////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+    // Create list of link ends in which station is receiver and in which station is transmitter (with spacecraft other link end).
     std::vector< LinkEnds > stationReceiverLinkEnds;
     std::vector< LinkEnds > stationTransmitterLinkEnds;
 
@@ -205,6 +206,7 @@ int main( )
         stationReceiverLinkEnds.push_back( linkEnds );
     }
 
+    // Define (arbitrarily) link ends to be used for 1-way range, 1-way doppler and angular position observables
     std::map< ObservableType, std::vector< LinkEnds > > linkEndsPerObservable;
     linkEndsPerObservable[ one_way_range ].push_back( stationReceiverLinkEnds[ 0 ] );
     linkEndsPerObservable[ one_way_range ].push_back( stationTransmitterLinkEnds[ 0 ] );
@@ -220,12 +222,11 @@ int main( )
     ///////////////////////    DEFINE PARAMETERS THAT ARE TO BE ESTIMATED      ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+    // Define list of parameters to estimate.
     std::vector< boost::shared_ptr< EstimatableParameterSettings > > parameterNames;
     parameterNames.push_back(
                 boost::make_shared< InitialTranslationalStateEstimatableParameterSettings< double > >(
                     "Vehicle", systemInitialState, "Earth" ) );
-
     parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Vehicle", radiation_pressure_coefficient ) );
     parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Vehicle", constant_drag_coefficient ) );
     parameterNames.push_back( boost::make_shared< ConstantObservationBiasEstimatableParameterSettings >(
@@ -234,7 +235,6 @@ int main( )
                                   linkEndsPerObservable.at( one_way_range ).at( 0 ), one_way_range, false ) );
     parameterNames.push_back( boost::make_shared< ConstantObservationBiasEstimatableParameterSettings >(
                                   linkEndsPerObservable.at( one_way_range ).at( 1 ), one_way_range, false ) );
-
     parameterNames.push_back( boost::make_shared< SphericalHarmonicEstimatableParameterSettings >(
                                   2, 0, 2, 2, "Earth", spherical_harmonics_cosine_coefficient_block ) );
     parameterNames.push_back( boost::make_shared< SphericalHarmonicEstimatableParameterSettings >(
@@ -248,6 +248,7 @@ int main( )
     boost::shared_ptr< estimatable_parameters::EstimatableParameterSet< double > > parametersToEstimate =
             createParametersToEstimate( parameterNames, bodyMap );
 
+    // Print identifiers and indices of parameters to terminal.
     printEstimatableParameterEntries( parametersToEstimate );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,13 +261,14 @@ int main( )
     {
         ObservableType currentObservable = linkEndIterator->first;
 
-
         std::vector< LinkEnds > currentLinkEndsList = linkEndIterator->second;
         for( unsigned int i = 0; i < currentLinkEndsList.size( ); i++ )
         {
             boost::shared_ptr< ObservationBiasSettings > biasSettings;
+            // Define biases for 1-way range observables
             if( ( currentObservable == one_way_range ) && ( i == 0 ) )
             {
+                // Absolute and relative bias for 1-way range entry 0 (spacecraft to station 1)
                 std::vector< boost::shared_ptr< ObservationBiasSettings > > biasSettingsList;
 
                 biasSettingsList.push_back( boost::make_shared< ConstantObservationBiasSettings >(
@@ -278,10 +280,12 @@ int main( )
             }
             else if( ( currentObservable == one_way_range ) && ( i == 1 ) )
             {
+                // Only relative bias for 1-way range entry 1 (station 1 to spacecraft)
                 biasSettings = boost::make_shared< ConstantRelativeObservationBiasSettings >(
                             Eigen::Vector1d::Zero( ) );
             }
 
+            // Define settings for observable, no light-time corrections, and biases for selected 1-way range links
             observationSettingsMap.insert(
                         std::make_pair( currentLinkEndsList.at( i ),
                                         boost::make_shared< ObservationSettings >(
@@ -294,8 +298,7 @@ int main( )
     ///////////////////////          INITIALIZE ORBIT DETERMINATION OBJECT     ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-    // Create orbit determination object.
+    // Create orbit determination object (propagate orbit, create observation models)
     OrbitDeterminationManager< double, double > orbitDeterminationManager =
             OrbitDeterminationManager< double, double >(
                 bodyMap, parametersToEstimate, observationSettingsMap,
@@ -305,22 +308,34 @@ int main( )
     ///////////////////////          SIMULATE OBSERVATIONS                     ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::vector< double > baseTimeList;
+
+    // Define time of first observation
     double observationTimeStart = initialEphemerisTime + 1000.0;
+
+    // Define time between two observations
     double  observationInterval = 20.0;
+
+    // Simulate observations for 3 days
+    std::vector< double > baseTimeList;
     for( unsigned int i = 0; i < 3; i++ )
     {
+        // Simulate 500 observations per day (observationInterval apart)
         for( unsigned int j = 0; j < 500; j++ )
         {
             baseTimeList.push_back( observationTimeStart + ( double )i * 86400.0 + ( double ) j * observationInterval );
         }
     }
+
+    // Create measureement simulation input
     std::map< ObservableType, std::map< LinkEnds, std::pair< std::vector< double >, LinkEndType > > > measurementSimulationInput;
     for( std::map< ObservableType, std::vector< LinkEnds > >::iterator linkEndIterator = linkEndsPerObservable.begin( );
          linkEndIterator != linkEndsPerObservable.end( ); linkEndIterator++ )
     {
+        // Define observable type and link ends
         ObservableType currentObservable = linkEndIterator->first;
         std::vector< LinkEnds > currentLinkEndsList = linkEndIterator->second;
+
+        // Define observation times and reference link ends
         for( unsigned int i = 0; i < currentLinkEndsList.size( ); i++ )
         {
             measurementSimulationInput[ currentObservable ][ currentLinkEndsList.at( i ) ] =
@@ -328,7 +343,8 @@ int main( )
         }
     }
 
-
+    // Set typedefs for POD input (observation types, observation link ends, observation values, associated times with reference
+    // link ends.
     typedef Eigen::Matrix< double, Eigen::Dynamic, 1 > ObservationVectorType;
     typedef std::map< LinkEnds, std::pair< ObservationVectorType, std::pair< std::vector< double >, LinkEndType > > >
             SingleObservablePodInputType;
@@ -362,11 +378,11 @@ int main( )
                 Eigen::MatrixXd::Zero( truthParameters.rows( ), truthParameters.rows( ) ),
                 initialParameterEstimate - truthParameters );
 
+    // Define observation weights (constant per observable type)
     std::map< observation_models::ObservableType, double > weightPerObservable;
     weightPerObservable[ one_way_range ] = 1.0 / ( 1.0 * 1.0 );
     weightPerObservable[ angular_position ] = 1.0 / ( 1.0E-5 * 1.0E-5 );
     weightPerObservable[ one_way_doppler ] = 1.0 / ( 1.0E-11 * 1.0E-11 );
-
     podInput->setConstantPerObservableWeightsMatrix( weightPerObservable );
 
     // Perform estimation
@@ -377,7 +393,7 @@ int main( )
     ///////////////////////        PROVIDE OUTPUT TO CONSOLE AND FILES           //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+    // Print true estimation error, limited mostly by numerical error
     Eigen::VectorXd estimationError = podOutput->parameterEstimate_ - truthParameters;
     std::cout<<"Estimation error is: "<<std::endl<<( estimationError ).transpose( )<<std::endl;
 
