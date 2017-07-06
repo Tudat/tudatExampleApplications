@@ -228,10 +228,9 @@ setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROO
 target_link_libraries(application_SinglePerturbedSatellitePropagator
 		      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
-add_executable(application_SinglePerturbedSatellitePropagatorJSON "${SRCROOT}/singlePerturbedSatellitePropagatorJSON.cpp")
-setup_executable_target(application_SinglePerturbedSatellitePropagatorJSON "${SRCROOT}")
-target_link_libraries(application_SinglePerturbedSatellitePropagatorJSON
-  ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+add_executable(spsp "${SRCROOT}/singlePerturbedSatellitePropagatorJSON.cpp")
+setup_executable_target(spsp "${SRCROOT}")
+target_link_libraries(spsp ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 
 # Add Asterix and Obelix (satellites) propagator application.
