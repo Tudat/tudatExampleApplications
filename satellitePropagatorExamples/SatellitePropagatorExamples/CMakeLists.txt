@@ -175,8 +175,31 @@ else()
   endif( )
 endif( )
 
+option(USE_JSON "build Tudat with JOSN enabled" ON)
+if(NOT USE_JSON)
+  message(STATUS "JSON disabled!")
+  add_definitions(-DUSE_JSON=0)
+else()
+  message(STATUS "JSON enabled!")
+  add_definitions(-DUSE_JSON=1)
+  # Find USE_JSON library on local system.
+  find_package(nlohmann_json)
+
+  # Include JSON directories.
+  if(NOT APPLE OR APPLE_INCLUDE_FORCE)
+    include_directories(SYSTEM AFTER "${JSON_INCLUDE_DIR}")
+  else( )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${JSON_INCLUDE_DIR}\"")
+  endif( )
+endif( )
+
+
 if(USE_CSPICE)
   list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES tudat_spice_interface cspice)
+endif()
+
+if(USE_JSON)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES tudat_json_interface nlohmann_json)
 endif()
 
 if(USE_NRLMSISE00)
@@ -203,7 +226,13 @@ target_link_libraries(application_SingleSatellitePropagator ${TUDAT_APPLICATION_
 add_executable(application_SinglePerturbedSatellitePropagator "${SRCROOT}/singlePerturbedSatellitePropagator.cpp")
 setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROOT}")
 target_link_libraries(application_SinglePerturbedSatellitePropagator
-                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+		      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+add_executable(application_SinglePerturbedSatellitePropagatorJSON "${SRCROOT}/singlePerturbedSatellitePropagatorJSON.cpp")
+setup_executable_target(application_SinglePerturbedSatellitePropagatorJSON "${SRCROOT}")
+target_link_libraries(application_SinglePerturbedSatellitePropagatorJSON
+  ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
 
 # Add Asterix and Obelix (satellites) propagator application.
 add_executable(application_AsterixAndObelixPropagator "${SRCROOT}/asterixAndObelixPropagator.cpp")
