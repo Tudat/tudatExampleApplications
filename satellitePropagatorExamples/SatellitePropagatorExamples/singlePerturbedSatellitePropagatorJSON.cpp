@@ -27,7 +27,6 @@ int main( int argc, char* argv[] )
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         using namespace tudat;
-        using namespace tudat::spice_interface;
         using namespace tudat::json_interface;
         using namespace tudat::simulation_setup;
         using namespace tudat::propagators;
@@ -38,25 +37,24 @@ int main( int argc, char* argv[] )
         using namespace tudat::numerical_integrators;
 
 
-        // Parse input file contents
-
+        // Get input file path
         std::string inputFilePath = argv[1];
-        json settings = parseInputFile( inputFilePath );
-        std::cout << settings << std::endl;
+
+        // Set up and run the simulation
+        Simulation simulation( inputFilePath );
+        simulation.run( );
+
+        // Export the results
+        simulation.exportResults( );
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////     CREATE ENVIRONMENT AND VEHICLE       //////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-        // Load Spice kernels.
-        loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
-        loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
-        loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
-
         // Set simulation time settings.
-        const double simulationStartEpoch = 0.0;
-        const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
+        const double simulationStartEpoch = settings.getSimulationStartEpoch();
+        const double simulationEndEpoch = settings.getSimulationEndEpoch();
 
         // Define body settings for simulation.
         std::vector< std::string > bodiesToCreate;
