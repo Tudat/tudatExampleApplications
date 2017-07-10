@@ -352,7 +352,7 @@ int main( )
 
     // Simulate observations
     PodInputDataType observationsAndTimes = simulateObservations< double, double >(
-                measurementSimulationInput, orbitDeterminationManager.getObservationManagers( ) );
+                measurementSimulationInput, orbitDeterminationManager.getObservationSimulators( ) );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////    PERTURB PARAMETER VECTOR AND ESTIMATE PARAMETERS     ////////////////////////////////////////////
@@ -387,7 +387,7 @@ int main( )
 
     // Perform estimation
     boost::shared_ptr< PodOutput< double > > podOutput = orbitDeterminationManager.estimateParameters(
-                podInput, boost::make_shared< EstimationConvergenceChecker >( 1 ), true, true, false, true );
+                podInput, boost::make_shared< EstimationConvergenceChecker >( 3 ), true, true, false, true );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PROVIDE OUTPUT TO CONSOLE AND FILES           //////////////////////////////////////////
