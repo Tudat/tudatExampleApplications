@@ -218,6 +218,11 @@ list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_simulation_setup tudat_
     tudat_basic_astrodynamics tudat_statistics tudat_basic_mathematics tudat_propagators tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
 
+# Add JSON simulation
+add_executable(jsonSimulation "${SRCROOT}/jsonSimulation.cpp")
+setup_executable_target(jsonSimulation "${SRCROOT}")
+target_link_libraries(jsonSimulation ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
 ## Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
 setup_executable_target(application_SingleSatellitePropagator "${SRCROOT}")
@@ -227,11 +232,6 @@ add_executable(application_SinglePerturbedSatellitePropagator "${SRCROOT}/single
 setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROOT}")
 target_link_libraries(application_SinglePerturbedSatellitePropagator
 		      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
-
-add_executable(spsp "${SRCROOT}/singlePerturbedSatellitePropagatorJSON.cpp")
-setup_executable_target(spsp "${SRCROOT}")
-target_link_libraries(spsp ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
-
 
 # Add Asterix and Obelix (satellites) propagator application.
 add_executable(application_AsterixAndObelixPropagator "${SRCROOT}/asterixAndObelixPropagator.cpp")
