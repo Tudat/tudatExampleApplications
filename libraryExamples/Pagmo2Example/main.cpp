@@ -17,11 +17,9 @@
 
 #include <Eigen/Core>
 */
+#include <pagmo/pagmo.hpp>
 
-#include<algorithm>
-//#include <pagmo/pagmo.hpp>
-
-#include "PaGMOEx/Problems/earthMarsTransfer.hpp"
+#include "PaGMOEx/Problems/earthMarsTransfer.h"
 
 using namespace pagmo;
 
@@ -51,7 +49,8 @@ int main( )
     // One generation per evolution step.
     algorithm algo{sade(1)};
 
-    // Create an archipelago with 1 island and 8 individuals
+
+    // Create an archipelago with 1 island with 8 individuals
     archipelago archi{1, algo, prob, 8};
 
     // For 25 generation optimise the population in the island

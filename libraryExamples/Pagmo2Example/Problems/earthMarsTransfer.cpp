@@ -8,7 +8,15 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#include "PaGMOEx/Problems/earthMarsTransfer.hpp"
+#include <limits>
+
+#include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/convertMeanToEccentricAnomalies.h>
+#include <Tudat/Astrodynamics/MissionSegments/multiRevolutionLambertTargeterIzzo.h>
+
+#include "PaGMOEx/Problems/earthMarsTransfer.h"
+
+using namespace pagmo;
 
 EarthMarsTransfer::EarthMarsTransfer(
     const std::vector< std::vector< double > > problemBounds ) :
@@ -21,16 +29,16 @@ std::string EarthMarsTransfer::get_name() const {
 }
 
 //! Get bounds
-std::pair<std::vector<double>, std::vector<double>> EarthMarsTransfer::get_bounds() const {
+std::pair<vector_double, vector_double> EarthMarsTransfer::get_bounds() const {
     return {problemBounds_[0], problemBounds_[1]};
 }
 
 //! Implementation of the fitness function (return delta-v)
-std::vector<double> EarthMarsTransfer::fitness( const std::vector<double> &xv ) const{
+vector_double EarthMarsTransfer::fitness( const vector_double &xv ) const{
 
     using tudat::mission_segments::MultiRevolutionLambertTargeterIzzo;
 
-    std::vector<double> f;
+    vector_double f;
 
     // Gravitational parameter of the Sun
     double mu = 1.32712440018e+20;
@@ -62,7 +70,6 @@ std::vector<double> EarthMarsTransfer::fitness( const std::vector<double> &xv ) 
 //! Function to obtain position of Earth and Mars
 StateType EarthMarsTransfer::getPlanetPosition( const double date,
                                                 const std::string planetName ) const {
-
     using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
     using tudat::orbital_element_conversions::convertMeanAnomalyToEccentricAnomaly;
     using tudat::orbital_element_conversions::convertEccentricAnomalyToTrueAnomaly;

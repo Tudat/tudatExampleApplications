@@ -14,7 +14,7 @@ set(MY_PAGMO_PROBLEMS_SOURCES
 
 # Set the header files.
 set(MY_PAGMO_PROBLEMS_HEADERS
-  "${CMAKE_CURRENT_SOURCE_DIR}/earthMarsTransfer.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/earthMarsTransfer.h"
 )
 
 # Add static libraries, can be used later on outside this application.

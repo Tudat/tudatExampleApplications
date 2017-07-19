@@ -106,7 +106,6 @@ if(PAGMO_BASE_PATH_INIT AND PAGMO_BUILD_PATH_INIT)
     set(FOUND_PAGMO ${PAGMO_VERSION_OK})
 endif()
 
-
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(PaGMO DEFAULT_MSG PAGMO_INCLUDE_DIR  PAGMO_VERSION_OK)
 
