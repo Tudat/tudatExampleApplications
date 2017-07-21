@@ -149,7 +149,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Problems")
 # Add application.
 add_executable(example_library_pagmo "${SRCROOT}/main.cpp")
 setup_executable_target(example_library_pagmo "${SRCROOT}")
-target_link_libraries(example_library_pagmo pagmo my_pagmo_problems
-                      tudat_basic_astrodynamics tudat_mission_segments ${Boost_LIBRARIES})
+target_link_libraries(example_library_pagmo my_pagmo_problems
+                      tudat_basic_astrodynamics tudat_mission_segments ${Boost_LIBRARIES} pthread)
 
 
