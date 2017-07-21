@@ -18,8 +18,7 @@
 #include <Eigen/Core>
 */
 #include <pagmo/pagmo.hpp>
-
-#include "PaGMOEx/Problems/earthMarsTransfer.h"
+#include "Pagmo2Example/Problems/earthMarsTransfer.h"
 
 using namespace pagmo;
 

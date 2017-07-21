@@ -14,7 +14,7 @@
 #include <Tudat/Astrodynamics/BasicAstrodynamics/convertMeanToEccentricAnomalies.h>
 #include <Tudat/Astrodynamics/MissionSegments/multiRevolutionLambertTargeterIzzo.h>
 
-#include "PaGMOEx/Problems/earthMarsTransfer.h"
+#include "Pagmo2Example/Problems/earthMarsTransfer.h"
 
 using namespace pagmo;
 
