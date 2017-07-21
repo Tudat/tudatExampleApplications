@@ -135,7 +135,7 @@ else()
 endif()
 
 # Find PaGMO library on local system.
-find_package(PaGMO)
+find_package(PaGMO2)
 
 # Include PaGMO directories.
 if(NOT APPLE)

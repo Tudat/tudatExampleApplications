@@ -24,7 +24,7 @@ macro(_pagmo_check_version)
   message(STATUS "Checking for PaGMO in: ${PAGMO_BASE_PATH} and ${PAGMO_BUILD_PATH}" )
 
   # Reads the version from a file in the build folder
-  file(READ "${PAGMO_BUILD_PATH}/" _pagmo_header)
+  file(READ "${PAGMO_BUILD_PATH}/include/pagmo/config.hpp" _pagmo_header)
 
   STRING(REGEX REPLACE "^.*define PAGMO_VERSION_MAJOR ([0-9]+).*" "\\1" PAGMO_VERSION_MAJOR "${_pagmo_header}")
   STRING(REGEX REPLACE "^.*define PAGMO_VERSION_MINOR ([0-9]+).*" "\\1" PAGMO_VERSION_MINOR "${_pagmo_header}")
