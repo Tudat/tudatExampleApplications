@@ -88,6 +88,11 @@ else (PAGMO_BUILD_PATH)
       ${CMAKE_BINARY_DIR}/../../../pagmo2
       ${CMAKE_BINARY_DIR}/../../../../pagmo2
       ${CMAKE_BINARY_DIR}/../../../../../pagmo2
+      ${PROJECT_SOURCE_DIR}/pagmo2/build
+      ${PROJECT_SOURCE_DIR}/../pagmo2/build
+      ${PROJECT_SOURCE_DIR}/../../../pagmo2/build
+      ${PROJECT_SOURCE_DIR}/../../../../pagmo2/build
+      ${PROJECT_SOURCE_DIR}/../../../../../pagmo2/build
     )
 
     if(PAGMO_BUILD_PATH)

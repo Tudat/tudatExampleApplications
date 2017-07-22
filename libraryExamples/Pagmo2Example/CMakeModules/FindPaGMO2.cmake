@@ -88,6 +88,11 @@ else (PAGMO_BUILD_PATH)
       ${CMAKE_BINARY_DIR}/../../../pagmo2
       ${CMAKE_BINARY_DIR}/../../../../pagmo2
       ${CMAKE_BINARY_DIR}/../../../../../pagmo2
+      ${PROJECT_SOURCE_DIR}/pagmo2/build
+      ${PROJECT_SOURCE_DIR}/../pagmo2/build
+      ${PROJECT_SOURCE_DIR}/../../../pagmo2/build
+      ${PROJECT_SOURCE_DIR}/../../../../pagmo2/build
+      ${PROJECT_SOURCE_DIR}/../../../../../pagmo2/build
     )
 
     if(PAGMO_BUILD_PATH)
@@ -105,6 +110,7 @@ if(PAGMO_BASE_PATH_INIT AND PAGMO_BUILD_PATH_INIT)
     _pagmo_check_version()
     set(FOUND_PAGMO ${PAGMO_VERSION_OK})
 endif()
+
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(PaGMO DEFAULT_MSG PAGMO_INCLUDE_DIR  PAGMO_VERSION_OK)

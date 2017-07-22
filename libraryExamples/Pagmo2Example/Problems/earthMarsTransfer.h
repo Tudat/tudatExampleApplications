@@ -29,7 +29,7 @@ using namespace pagmo;
 struct EarthMarsTransfer
 {
 
-    EarthMarsTransfer( const std::vector< std::vector< double > > problemBounds );
+    //EarthMarsTransfer( const std::vector< std::vector< double > > problemBounds );
 
     // Calculates the fitness
     vector_double fitness( const vector_double &x ) const;
@@ -40,7 +40,7 @@ struct EarthMarsTransfer
 
 private:
 
-    const std::vector< std::vector< double > > problemBounds_;
+//    const std::vector< std::vector< double > > problemBounds_;
 
     StateType getPlanetPosition( const double date, const std::string planetName ) const;
 };
