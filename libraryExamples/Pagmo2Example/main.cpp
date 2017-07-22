@@ -1,4 +1,4 @@
-/*    Copyright (c) 2010-2017, Delft University of Technology
+ /*    Copyright (c) 2010-2017, Delft University of Technology
  *    All rigths reserved
  *
  *    This file is part of the Tudat. Redistribution and use in source and
@@ -17,9 +17,8 @@
 
 #include <Eigen/Core>
 */
-#include <pagmo/pagmo.hpp>
-
-#include "PaGMOEx/Problems/earthMarsTransfer.h"
+//#include <pagmo/pagmo.hpp>
+#include "Pagmo2Example/Problems/earthMarsTransfer.h"
 
 using namespace pagmo;
 
@@ -43,7 +42,7 @@ int main( )
     bounds[ 1 ][ 1 ] = 1000;
 
     // Define the problem
-    problem prob(EarthMarsTransfer(bounds));
+    problem prob{EarthMarsTransfer()};
 
     // Select the self-adaptive differential evolution algorithm.
     // One generation per evolution step.

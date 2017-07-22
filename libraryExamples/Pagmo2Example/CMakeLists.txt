@@ -60,7 +60,7 @@ endif()
 
 # Set the global macros for setting up targets.
 macro(setup_executable_target target_name CUSTOM_OUTPUT_PATH)
-  target_compile_options(${target_name} PRIVATE "$<$<CONFIG:DEBUG>:${PAGMO_CXX_FLAGS_DEBUG}>" "$<$<CONFIG:RELEASE>:${PAGMO_CXX_FLAGS_RELEASE}>"
+  target_compile_options(${target_name} PRIVATE "$<$<CONFIG:DEBUG>:${PAGMO_CXX_FLAGS_DEBUG}>" "$<$<CONFIG:RELEASE>:${PAGMO_CXX_FLAGS_RELEASE}>")
   set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/applications")
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD 11)
   set_property(TARGET ${target_name} PROPERTY CXX_STANDARD_REQUIRED YES)
@@ -135,7 +135,7 @@ else()
 endif()
 
 # Find PaGMO library on local system.
-find_package(PaGMO)
+find_package(PaGMO2)
 
 # Include PaGMO directories.
 if(NOT APPLE)
@@ -149,7 +149,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Problems")
 # Add application.
 add_executable(example_library_pagmo "${SRCROOT}/main.cpp")
 setup_executable_target(example_library_pagmo "${SRCROOT}")
-target_link_libraries(example_library_pagmo pagmo my_pagmo_problems
-                      tudat_basic_astrodynamics tudat_mission_segments ${Boost_LIBRARIES})
+target_link_libraries(example_library_pagmo my_pagmo_problems
+                      tudat_basic_astrodynamics tudat_mission_segments ${Boost_LIBRARIES} pthread)
 
 

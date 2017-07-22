@@ -183,7 +183,7 @@ if(USE_NRLMSISE00)
   list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
 endif()
 
-find_package(PaGMO)
+find_package(PaGMO2)
 include_directories(SYSTEM AFTER ${PAGMO_INCLUDE_DIR})
 if(NOT APPLE)
    include_directories(SYSTEM AFTER "${PAGMO_INCLUDE_DIR}")

@@ -14,14 +14,14 @@
 #include <Tudat/Astrodynamics/BasicAstrodynamics/convertMeanToEccentricAnomalies.h>
 #include <Tudat/Astrodynamics/MissionSegments/multiRevolutionLambertTargeterIzzo.h>
 
-#include "PaGMOEx/Problems/earthMarsTransfer.h"
+#include "Pagmo2Example/Problems/earthMarsTransfer.h"
 
 using namespace pagmo;
 
-EarthMarsTransfer::EarthMarsTransfer(
-    const std::vector< std::vector< double > > problemBounds ) :
-    problemBounds_( problemBounds )
-{ }
+//EarthMarsTransfer::EarthMarsTransfer(
+//    const std::vector< std::vector< double > > problemBounds ) :
+//    problemBounds_( problemBounds )
+//{ }
 
 //! Descriptive name of the problem
 std::string EarthMarsTransfer::get_name() const {
@@ -30,7 +30,17 @@ std::string EarthMarsTransfer::get_name() const {
 
 //! Get bounds
 std::pair<vector_double, vector_double> EarthMarsTransfer::get_bounds() const {
-    return {problemBounds_[0], problemBounds_[1]};
+   std::vector< std::vector< double > > bounds( 2, std::vector< double >( 2, 0.0 ) );
+
+    // Search between 2020 and 2025 for flight duration between 200
+    // and 1000 days.
+    bounds[ 0 ][ 0 ] = 2458849.5;
+    bounds[ 1 ][ 0 ] = 2460676.5;
+    bounds[ 0 ][ 1 ] = 200;
+    bounds[ 1 ][ 1 ] = 1000;
+
+//    return {problemBounds_[0], problemBounds_[1]};
+    return {bounds[0], bounds[1]};
 }
 
 //! Implementation of the fitness function (return delta-v)
