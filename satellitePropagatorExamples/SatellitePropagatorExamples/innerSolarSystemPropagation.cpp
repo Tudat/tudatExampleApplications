@@ -176,6 +176,7 @@ int main( )
         ///////////////////////        PROVIDE OUTPUT TO FILES           ////////////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        std::string outputSubFolder = "InnerSolarSystemPropagationExample/";
 
         for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
         {
@@ -184,7 +185,7 @@ int main( )
                         allBodiesPropagationHistory[ i ],
                         "innerSolarSystemPropagationHistory" + bodyNames.at( i ) +
                         boost::lexical_cast< std::string >( centralBodySettings ) + ".dat",
-                        tudat_applications::getOutputPath( ),
+                        tudat_applications::getOutputPath( ) + outputSubFolder,
                         "",
                         std::numeric_limits< double >::digits10,
                         std::numeric_limits< double >::digits10,

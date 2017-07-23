@@ -157,10 +157,12 @@ int main( )
     std::map< double, Eigen::Matrix< double, Eigen::Dynamic, 1 > > numericalSolution =
             dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
+    std::string outputSubFolder = "ThrustAlongVelocityExample/";
+
     // Write satellite propagation history to file.
     input_output::writeDataMapToTextFile( numericalSolution,
                                           "velocityVectorThrustExample.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,

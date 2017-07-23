@@ -177,11 +177,12 @@ int main( )
     ///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    std::string outputSubFolder = "TwoSatelliteExample/";
 
     // Write Asterix propagation history to file.
     writeDataMapToTextFile( asterixPropagationHistory,
                             "asterixPropagationHistory.dat",
-                            tudat_applications::getOutputPath( ),
+                            tudat_applications::getOutputPath( ) + outputSubFolder,
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
@@ -190,7 +191,7 @@ int main( )
     // Write obelix propagation history to file.
     writeDataMapToTextFile( obelixPropagationHistory,
                             "obelixPropagationHistory.dat",
-                            tudat_applications::getOutputPath( ),
+                            tudat_applications::getOutputPath( ) + outputSubFolder,
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
