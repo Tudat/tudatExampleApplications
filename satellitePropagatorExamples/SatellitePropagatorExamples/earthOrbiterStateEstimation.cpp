@@ -387,7 +387,11 @@ int main( )
 
     // Perform estimation
     boost::shared_ptr< PodOutput< double > > podOutput = orbitDeterminationManager.estimateParameters(
+<<<<<<< HEAD
                 podInput, boost::make_shared< EstimationConvergenceChecker >( 4 ), true, true, false, true );
+=======
+                podInput, boost::make_shared< EstimationConvergenceChecker >( 3 ), true, true, false, true );
+>>>>>>> origin/development
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PROVIDE OUTPUT TO CONSOLE AND FILES           //////////////////////////////////////////
