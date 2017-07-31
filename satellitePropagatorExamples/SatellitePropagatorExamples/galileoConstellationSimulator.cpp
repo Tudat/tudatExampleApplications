@@ -179,7 +179,7 @@ int main( )
     {
         currentSatelliteName =  "Satellite" + boost::lexical_cast< std::string >( i );
 
-        std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfCurrentSatellite;
+        SingleSelectedAccelerationMap accelerationsOfCurrentSatellite;
         accelerationsOfCurrentSatellite[ "Earth" ].push_back(
                     boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
         accelerationMap[ currentSatelliteName ] = accelerationsOfCurrentSatellite;
