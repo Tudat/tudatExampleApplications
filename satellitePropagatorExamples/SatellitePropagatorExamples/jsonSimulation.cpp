@@ -26,10 +26,7 @@ int main( int argc, char* argv[] )
 
         // simulation.integratorSettings->integratorType_ = tudat::numerical_integrators::rungeKuttaVariableStepSize;
 
-        // std::cout << simulation.bodyMap.at( "satellite" )->getBodyMass( ) << std::endl;
-        // std::cout << simulation.integratorSettings->initialTime_ << std::endl;
-        // std::cout << simulation.integratorSettings->initialTimeStep_ << std::endl;
-        std::cout << json( simulation ).dump( 2 ) << std::endl;
+        simulation.exportAsJSON( );
 
         // simulation.run( );
 
