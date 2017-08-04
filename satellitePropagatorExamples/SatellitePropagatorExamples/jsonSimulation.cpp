@@ -28,7 +28,8 @@ int main( int argc, char* argv[] )
 
         simulation.exportAsJSON( );
 
-        // simulation.run( );
+        simulation.run( );
+        simulation.exportResults( );
 
         return EXIT_SUCCESS;
     }
