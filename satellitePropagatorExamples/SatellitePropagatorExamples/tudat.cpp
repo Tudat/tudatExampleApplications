@@ -15,7 +15,7 @@ int main( int argc, char* argv[] )
 {
     if ( argc != 2 )
     {
-        std::cerr << "Usage: jsonSimulation \"relative or absolute path to a JSON input file\"" << std::endl;
+        std::cerr << "Usage: tudat \"relative or absolute path to a JSON input file\"" << std::endl;
         return EXIT_FAILURE;
     }
     else
