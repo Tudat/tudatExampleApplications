@@ -60,7 +60,6 @@ int main( int argumentCount, char* arguments[ ] )
     const std::string inputPath = nonOptionArgumentCount == 1 ? arguments[ argumentCount - 1 ] : "";
 
     tudat::json_interface::Simulation< > simulation( inputPath );
-    simulation.exportAsJSON( );
     simulation.run( );
     simulation.exportResults( );
 
