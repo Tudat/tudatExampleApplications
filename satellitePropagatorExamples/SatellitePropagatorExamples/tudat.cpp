@@ -59,6 +59,11 @@ int main( int argumentCount, char* arguments[ ] )
     }
     const std::string inputPath = nonOptionArgumentCount == 1 ? arguments[ argumentCount - 1 ] : "";
 
+    // FIXME: Get binary path (not working on Mac OS)
+    // boost::filesystem::path full_path( boost::filesystem::initial_path< boost::filesystem::path >( ) );
+    // full_path = boost::filesystem::system_complete( boost::filesystem::path( arguments[ 0 ] ) );
+    // std::cout << full_path << std::endl;
+
     tudat::json_interface::Simulation< > simulation( inputPath );
     simulation.run( );
     simulation.exportResults( );
