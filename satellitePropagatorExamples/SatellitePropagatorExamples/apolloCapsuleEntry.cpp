@@ -185,16 +185,18 @@ int main( )
 
 
     // Write Apollo propagation history to file.
+    std::string outputSubFolder = "ApolloCapsuleExample/";
+
     writeDataMapToTextFile( dynamicsSimulator.getEquationsOfMotionNumericalSolution( ),
                             "apolloPropagationHistory.dat",
-                            tudat_applications::getOutputPath( ),
+                            tudat_applications::getOutputPath( ) + outputSubFolder,
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
                             "," );
     writeDataMapToTextFile( dynamicsSimulator.getDependentVariableHistory( ),
                             "apolloDependentVariableHistory.dat",
-                            tudat_applications::getOutputPath( ),
+                            tudat_applications::getOutputPath( ) + outputSubFolder,
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,

@@ -365,10 +365,10 @@ int main( )
     Eigen::Matrix< double, Eigen::Dynamic, 1 > truthParameters = initialParameterEstimate;
     Eigen::Matrix< double, Eigen::Dynamic, 1 > parameterPerturbation =
             Eigen::Matrix< double, Eigen::Dynamic, 1 >::Zero( truthParameters.rows( ) );
-    parameterPerturbation.segment( 0, 3 ) = Eigen::Vector3d::Constant( 1.0 );
-    parameterPerturbation.segment( 3, 3 ) = Eigen::Vector3d::Constant( 1.E-3 );
-    parameterPerturbation( 6 ) = 0.05;
-    parameterPerturbation( 7 ) = 0.05;
+    parameterPerturbation.segment( 0, 3 ) = Eigen::Vector3d::Constant( 10.0 );
+    parameterPerturbation.segment( 3, 3 ) = Eigen::Vector3d::Constant( 1.0E-2 );
+    parameterPerturbation( 6 ) = 0.01;
+    parameterPerturbation( 7 ) = 0.01;
     initialParameterEstimate += parameterPerturbation;
 
     // Define estimation input
@@ -387,24 +387,35 @@ int main( )
 
     // Perform estimation
     boost::shared_ptr< PodOutput< double > > podOutput = orbitDeterminationManager.estimateParameters(
+<<<<<<< HEAD
+                podInput, boost::make_shared< EstimationConvergenceChecker >( 4 ), true, true, false, true );
+=======
                 podInput, boost::make_shared< EstimationConvergenceChecker >( 3 ), true, true, false, true );
+>>>>>>> origin/development
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PROVIDE OUTPUT TO CONSOLE AND FILES           //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    std::string outputSubFolder = "EarthOrbiterStateEstimationExample/";
+
 
     // Print true estimation error, limited mostly by numerical error
     Eigen::VectorXd estimationError = podOutput->parameterEstimate_ - truthParameters;
     std::cout<<"Estimation error is: "<<std::endl<<( estimationError ).transpose( )<<std::endl;
 
     input_output::writeMatrixToFile( podOutput->normalizedInformationMatrix_,
-                                     "earthOrbitEstimationInformationMatrix.dat" );
+                                     "earthOrbitEstimationInformationMatrix.dat", 16,
+                                     tudat_applications::getOutputPath( ) + outputSubFolder );
     input_output::writeMatrixToFile( podOutput->informationMatrixTransformationDiagonal_,
-                                     "earthOrbitEstimationInformationMatrixNormalization.dat" );
+                                     "earthOrbitEstimationInformationMatrixNormalization.dat", 16,
+                                     tudat_applications::getOutputPath( ) + outputSubFolder );
     input_output::writeMatrixToFile( podOutput->weightsMatrixDiagonal_,
-                                     "earthOrbitEstimationWeightsDiagonal.dat" );
+                                     "earthOrbitEstimationWeightsDiagonal.dat", 16,
+                                     tudat_applications::getOutputPath( ) + outputSubFolder );
     input_output::writeMatrixToFile( podOutput->residuals_,
-                                     "earthOrbitEstimationResiduals.dat" );
+                                     "earthOrbitEstimationResiduals.dat", 16,
+                                     tudat_applications::getOutputPath( ) + outputSubFolder );
 
     return EXIT_SUCCESS;
 }

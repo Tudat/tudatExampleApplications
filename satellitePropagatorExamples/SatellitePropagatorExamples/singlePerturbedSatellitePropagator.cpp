@@ -175,7 +175,7 @@ int main()
     ///////////////////////        PROVIDE OUTPUT TO CONSOLE AND FILES           //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+    std::string outputSubFolder = "PerturbedSatelliteExample/";
 
     Eigen::VectorXd finalIntegratedState = (--integrationResult.end( ) )->second;
     // Print the position (in km) and the velocity (in km/s) at t = 0.
@@ -195,11 +195,13 @@ int main()
     // Write perturbed satellite propagation history to file.
     input_output::writeDataMapToTextFile( integrationResult,
                                           "singlePerturbedSatellitePropagationHistory.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
                                           "," );
+
+
     // Final statement.
     // The exit code EXIT_SUCCESS indicates that the program was successfully executed.
     return EXIT_SUCCESS;

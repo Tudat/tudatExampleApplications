@@ -102,9 +102,6 @@ int main()
     SingleSelectedAccelerationMap accelerationsOfVehicle;
     accelerationsOfVehicle[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::central_gravity ) );
-    accelerationsOfVehicle[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
-                                                     basic_astrodynamics::aerodynamic ) );
-
     accelerationsOfVehicle[ "Vehicle" ].push_back(
                 boost::make_shared< ThrustAccelerationSettings >(
                     thrustDataInterpolatorSettings, constantSpecificImpulse, lvlh_thrust_frame, "Earth" ) );
@@ -218,10 +215,12 @@ int main()
         dependentVariableResult[ outputIterator->first ] = newOutput;
     }
 
+    std::string outputSubFolder = "ThrustFromFileExample/";
+
     // Write propagation history to file.
     input_output::writeDataMapToTextFile( integrationResult,
                                           "thrustExampleFromFilePropagationHistory.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
@@ -230,7 +229,7 @@ int main()
     // Write dependent variable history to file.
     input_output::writeDataMapToTextFile( dependentVariableResult,
                                           "thrustExampleFromFileDependentVariableHistory.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,

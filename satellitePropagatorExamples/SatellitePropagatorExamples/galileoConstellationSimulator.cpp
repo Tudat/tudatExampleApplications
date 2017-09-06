@@ -230,6 +230,8 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+    std::string outputSubFolder = "GalileoConstellationExample/";
+
     // Loop over all satellites.
     for ( unsigned int i = 0; i < numberOfSatellites; i++ )
     {
@@ -240,7 +242,7 @@ int main( )
         // Write propagation history to file.
         writeDataMapToTextFile( allSatellitesPropagationHistory.at( i ),
                                 outputFilename.str( ),
-                                tudat_applications::getOutputPath( ),
+                                tudat_applications::getOutputPath( ) + outputSubFolder,
                                 "",
                                 std::numeric_limits< double >::digits10,
                                 std::numeric_limits< double >::digits10,

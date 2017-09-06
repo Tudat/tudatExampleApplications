@@ -271,9 +271,8 @@ add_executable(application_ThrustFromFile
 setup_executable_target(application_ThrustFromFile "${SRCROOT}")
 target_link_libraries(application_ThrustFromFile ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+# Add simulated Earth orbiter simulated POD example
 add_executable(application_EarthOrbiterStateEstimation
                "${SRCROOT}/earthOrbiterStateEstimation.cpp")
 setup_executable_target(application_EarthOrbiterStateEstimation "${SRCROOT}")
 target_link_libraries(application_EarthOrbiterStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
-
-
