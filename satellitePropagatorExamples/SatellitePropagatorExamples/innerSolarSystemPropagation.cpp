@@ -37,10 +37,7 @@ int main( )
 
     //Load spice kernels.
     std::string kernelsPath = input_output::getSpiceKernelPath( );
-    spice_interface::loadSpiceKernelInTudat( kernelsPath + "pck00009.tpc");
-    spice_interface::loadSpiceKernelInTudat( kernelsPath + "de-403-masses.tpc");
-    spice_interface::loadSpiceKernelInTudat( kernelsPath + "de421.bsp");
-    spice_interface::loadSpiceKernelInTudat( kernelsPath + "naif0009.tls");
+    spice_interface::loadStandardSpiceKernels( );
 
     // Define bodies in simulation.
     unsigned int totalNumberOfBodies = 6;
