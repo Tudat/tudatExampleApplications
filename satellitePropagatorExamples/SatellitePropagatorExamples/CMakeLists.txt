@@ -276,3 +276,8 @@ add_executable(application_EarthOrbiterStateEstimation
                "${SRCROOT}/earthOrbiterStateEstimation.cpp")
 setup_executable_target(application_EarthOrbiterStateEstimation "${SRCROOT}")
 target_link_libraries(application_EarthOrbiterStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+add_executable(application_EarthOrbiterBasicStateEstimation
+               "${SRCROOT}/earthOrbiterBasicStateEstimation.cpp")
+setup_executable_target(application_EarthOrbiterBasicStateEstimation "${SRCROOT}")
+target_link_libraries(application_EarthOrbiterBasicStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
