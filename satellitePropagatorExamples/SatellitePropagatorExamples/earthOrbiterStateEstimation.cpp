@@ -64,7 +64,7 @@ int main( )
                 spice_interface::computeRotationQuaternionBetweenFrames(
                     "ECLIPJ2000", "IAU_Earth", initialEphemerisTime ),
                 initialEphemerisTime, 2.0 * mathematical_constants::PI /
-                ( physical_constants::JULIAN_DAY + 40.0 * 60.0 ) );
+                ( physical_constants::JULIAN_DAY ) );
 
     NamedBodyMap bodyMap = createBodies( bodySettings );
     bodyMap[ "Vehicle" ] = boost::make_shared< Body >( );
@@ -188,7 +188,6 @@ int main( )
                     ( centralBodies, accelerationModelMap, bodiesToIntegrate, currentArcInitialState,
                       currentTime + arcDuration + arcOverlap, cowell ) );
         currentTime += arcDuration;
-
     }
 
     // Create propagator settings
@@ -242,6 +241,7 @@ int main( )
     // Define list of parameters to estimate.
     std::vector< boost::shared_ptr< EstimatableParameterSettings > > parameterNames;
 
+    // Create concatenated list of arc initial states
     Eigen::VectorXd systemInitialState = Eigen::VectorXd( 6 * arcStartTimes.size( ) );
     for( unsigned int i = 0; i < arcStartTimes.size( ); i++ )
     {
@@ -257,23 +257,21 @@ int main( )
     parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Earth", rotation_pole_position ) );
     parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Earth", ground_station_position, "Station1" ) );
     parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Earth", ground_station_position, "Station2" ) );
-
     parameterNames.push_back( boost::make_shared< ConstantObservationBiasEstimatableParameterSettings >(
                                   linkEndsPerObservable.at( one_way_range ).at( 0 ), one_way_range, true ) );
     parameterNames.push_back( boost::make_shared< ConstantObservationBiasEstimatableParameterSettings >(
                                   linkEndsPerObservable.at( one_way_range ).at( 1 ), one_way_range, true ) );
-
     parameterNames.push_back( boost::make_shared< SphericalHarmonicEstimatableParameterSettings >(
                                   2, 0, 8, 8, "Earth", spherical_harmonics_cosine_coefficient_block ) );
     parameterNames.push_back( boost::make_shared< SphericalHarmonicEstimatableParameterSettings >(
                                   2, 1, 8, 8, "Earth", spherical_harmonics_sine_coefficient_block ) );
 
+    // Define required settings for arc-wise empirical accelerations
     std::map< EmpiricalAccelerationComponents, std::vector< EmpiricalAccelerationFunctionalShapes > > empiricalAccelerationComponents;
     empiricalAccelerationComponents[ across_track_empirical_acceleration_component ].push_back( cosine_empirical );
     empiricalAccelerationComponents[ across_track_empirical_acceleration_component ].push_back( sine_empirical );
     empiricalAccelerationComponents[ along_track_empirical_acceleration_component ].push_back( cosine_empirical );
     empiricalAccelerationComponents[ along_track_empirical_acceleration_component ].push_back( sine_empirical );
-
     std::vector< double > empiricalAccelerationArcTimes;
     empiricalAccelerationArcTimes.push_back( initialEphemerisTime );
     empiricalAccelerationArcTimes.push_back( initialEphemerisTime + ( finalEphemerisTime - initialEphemerisTime ) / 2.0 );
@@ -292,7 +290,7 @@ int main( )
     ///////////////////////             CREATE OBSERVATION SETTINGS            ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Iterare over all observable types and associated link ends, and creatin settings for observation
+    // Iterate over all observable types and associated link ends, and creatin settings for observation
     observation_models::ObservationSettingsMap observationSettingsMap;
     for( std::map< ObservableType, std::vector< LinkEnds > >::iterator linkEndIterator = linkEndsPerObservable.begin( );
          linkEndIterator != linkEndsPerObservable.end( ); linkEndIterator++ )
