@@ -123,7 +123,7 @@ int main( )
 
     // Set accelerations on Vehicle that are to be taken into account.
     SelectedAccelerationMap accelerationMap;
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfVehicle;
+    SingleSelectedAccelerationMap accelerationsOfVehicle;
     accelerationsOfVehicle[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 8, 8 ) );
     accelerationsOfVehicle[ "Sun" ].push_back( boost::make_shared< AccelerationSettings >(
                                                    basic_astrodynamics::central_gravity ) );

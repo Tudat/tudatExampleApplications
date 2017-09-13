@@ -199,7 +199,7 @@ if(USE_CSPICE)
 endif()
 
 if(USE_JSON)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES tudat_json_interface nlohmann_json)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nlohmann_json)
 endif()
 
 if(USE_NRLMSISE00)
@@ -217,11 +217,6 @@ list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_simulation_setup tudat_
     tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
     tudat_basic_astrodynamics tudat_statistics tudat_basic_mathematics tudat_propagators tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
-
-# Add JSON-based application.
-add_executable(tudat "${SRCROOT}/tudat.cpp")
-setup_executable_target(tudat "${SRCROOT}")
-target_link_libraries(tudat ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 ## Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
