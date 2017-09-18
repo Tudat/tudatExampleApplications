@@ -71,3 +71,4 @@ sandbox/
 *.autosave
 *.~?~
 *.save
+.DS_Store
