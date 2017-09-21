@@ -1,0 +1,101 @@
+{
+  "initialEpoch": 0,
+  "globalFrameOrientation": "J2000",
+  "spice": {
+    "preloadEphemeris": false,
+    "useStandardKernels": true
+  },
+  "bodies": {
+    "Earth": {
+      "useDefaultSettings": true,
+      "ephemeris": {
+        "constantState": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "type": "constant",
+        "frameOrientation": "J2000"
+      }
+    },
+    "Apollo": {
+      "mass": 5000
+    }
+  },
+  "propagator": {
+    "centralBodies": [
+      "Earth"
+    ],
+    "accelerations": {
+      "Apollo": {
+        "Earth": [
+          {
+            "maximumDegree": 4,
+            "maximumOrder": 0,
+            "type": "sphericalHarmonicGravity"
+          },
+          {
+            "type": "aerodynamic"
+          }
+        ]
+      }
+    },
+    "integratedStateType": "translational",
+    "bodiesToPropagate": [
+      "Apollo"
+    ],
+    "initialStates": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "termination": {
+    "variable": {
+      "body": "Apollo",
+      "dependentVariableType": "altitude",
+      "relativeToBody": "Earth"
+    },
+    "lowerLimit": 25000
+  },
+  "integrator": {
+    "type": "rungeKutta4",
+    "stepSize": 1
+  },
+  "export": [
+    {
+      "file": "@path(SimulationOutput/ApolloCapsuleExampleJSON/apolloPropagationHistory.dat)",
+      "variables": [
+        {
+          "type": "state"
+        }
+      ]
+    },
+    {
+      "file": "@path(SimulationOutput/ApolloCapsuleExampleJSON/apolloDependentVariableHistory.dat)",
+      "variables": [
+        {
+          "body": "Apollo",
+          "dependentVariableType": "machNumber"
+        },
+        "${termination.variable}",
+        {
+          "body": "Apollo",
+          "dependentVariableType": "accelerationNorm",
+          "accelerationType": "aerodynamic",
+          "bodyExertingAcceleration": "Earth"
+        },
+        {
+          "body": "Apollo",
+          "dependentVariableType": "aerodynamicForceCoefficients"
+        }
+      ]
+    }
+  ]
+}
