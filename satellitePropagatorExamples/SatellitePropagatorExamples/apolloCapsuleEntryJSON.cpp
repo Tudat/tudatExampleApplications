@@ -8,19 +8,13 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#include <Tudat/InputOutput/JsonInterface/simulation.h>
+#include <Tudat/JsonInterface/jsonInterface.h>
 
 #include <Tudat/Astrodynamics/Aerodynamics/UnitTests/testApolloCapsuleCoefficients.h>
 
 #include <SatellitePropagatorExamples/applicationOutput.h>
 
-namespace tudat
-{
-
-namespace json_interface
-{
-
-class ApolloJsonSimulationManager : public JsonSimulationManager< >
+class ApolloJsonSimulationManager : public tudat::json_interface::JsonSimulationManager< >
 {
 public:
     // Inherit constructor.
@@ -71,16 +65,9 @@ protected:
     }
 };
 
-}  // namespace json_interface
-
-}  // namespace tudat
-
-
 //! Execute propagation of orbits of Apollo during entry using the JSON Interface.
 int main( )
 {
-    using namespace tudat::json_interface;
-
     const std::string cppFilePath( __FILE__ );
     const std::string cppFolder = cppFilePath.substr( 0, cppFilePath.find_last_of("/\\") + 1 );
 
