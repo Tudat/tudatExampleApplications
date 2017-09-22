@@ -25,37 +25,39 @@
       "mass": 5000
     }
   },
-  "propagator": {
-    "centralBodies": [
-      "Earth"
-    ],
-    "accelerations": {
-      "Apollo": {
-        "Earth": [
-          {
-            "maximumDegree": 4,
-            "maximumOrder": 0,
-            "type": "sphericalHarmonicGravity"
-          },
-          {
-            "type": "aerodynamic"
-          }
-        ]
-      }
-    },
-    "integratedStateType": "translational",
-    "bodiesToPropagate": [
-      "Apollo"
-    ],
-    "initialStates": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
+  "propagators": [
+    {
+      "centralBodies": [
+        "Earth"
+      ],
+      "accelerations": {
+        "Apollo": {
+          "Earth": [
+            {
+              "maximumDegree": 4,
+              "maximumOrder": 0,
+              "type": "sphericalHarmonicGravity"
+            },
+            {
+              "type": "aerodynamic"
+            }
+          ]
+        }
+      },
+      "integratedStateType": "translational",
+      "bodiesToPropagate": [
+        "Apollo"
+      ],
+      "initialStates": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
   "termination": {
     "variable": {
       "body": "Apollo",
