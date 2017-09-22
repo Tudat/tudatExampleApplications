@@ -28,7 +28,7 @@ protected:
         JsonSimulationManager::resetBodies( );
 
         // Then, create vehicle's aerodynamic coefficients interface
-        getBody( "Apollo" )->setAerodynamicCoefficientInterface( unit_tests::getApolloCoefficientInterface( ) );
+        getBody( "Apollo" )->setAerodynamicCoefficientInterface( tudat::unit_tests::getApolloCoefficientInterface( ) );
     }
 
     // Override resetPropagatorSettings method
@@ -40,24 +40,24 @@ protected:
         using namespace tudat::orbital_element_conversions;
 
         // Define constant 30 degree angle of attack
-        double constantAngleOfAttack = 30.0 * mathematical_constants::PI / 180.0;
+        double constantAngleOfAttack = 30.0 * tudat::mathematical_constants::PI / 180.0;
         getBody( "Apollo" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->
                 setOrientationAngleFunctions( boost::lambda::constant( constantAngleOfAttack ) );
 
         // Set spherical elements for Apollo.
         Eigen::Vector6d apolloSphericalEntryState;
         apolloSphericalEntryState( SphericalOrbitalStateElementIndices::radiusIndex ) =
-                spice_interface::getAverageRadius( "Earth" ) + 120.0E3;
+                tudat::spice_interface::getAverageRadius( "Earth" ) + 120.0E3;
         apolloSphericalEntryState( SphericalOrbitalStateElementIndices::latitudeIndex ) = 0.0;
         apolloSphericalEntryState( SphericalOrbitalStateElementIndices::longitudeIndex ) = 1.2;
         apolloSphericalEntryState( SphericalOrbitalStateElementIndices::speedIndex ) = 7.7E3;
         apolloSphericalEntryState( SphericalOrbitalStateElementIndices::flightPathIndex ) =
-                -0.9 * mathematical_constants::PI / 180.0;
+                -0.9 * tudat::mathematical_constants::PI / 180.0;
         apolloSphericalEntryState( SphericalOrbitalStateElementIndices::headingAngleIndex ) = 0.6;
 
         // Convert apollo state from spherical elements to Cartesian elements.
         Eigen::Vector6d systemInitialState = convertSphericalOrbitalToCartesianState( apolloSphericalEntryState );
-        systemInitialState = ephemerides::transformStateToGlobalFrame(
+        systemInitialState = tudat::ephemerides::transformStateToGlobalFrame(
                     systemInitialState, getStartEpoch( ), getBody( "Earth" )->getRotationalEphemeris( ) );
 
         // Reset initial states (zero placeholder vector had been specified in the JSON file)
