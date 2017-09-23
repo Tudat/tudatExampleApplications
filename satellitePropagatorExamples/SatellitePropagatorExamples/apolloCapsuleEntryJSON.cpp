@@ -11,7 +11,6 @@
 #include <Tudat/JsonInterface/jsonInterface.h>
 
 #include <Tudat/Astrodynamics/Aerodynamics/UnitTests/testApolloCapsuleCoefficients.h>
-
 #include <SatellitePropagatorExamples/applicationOutput.h>
 
 class ApolloJsonSimulationManager : public tudat::json_interface::JsonSimulationManager< >
@@ -31,13 +30,23 @@ protected:
         getBody( "Apollo" )->setAerodynamicCoefficientInterface( tudat::unit_tests::getApolloCoefficientInterface( ) );
     }
 
+    // Override resetExportSettings method
+    virtual void resetExportSettings( )
+    {
+        // First, call the original resetExportSettings, which uses the information in the JSON file
+        JsonSimulationManager::resetExportSettings( );
+
+        // Then, replace the output file paths (empty strings placeholders had been specified in the JSON file)
+        const std::string outputDirectory = tudat_applications::getOutputPath( ) + "ApolloCapsuleExampleJSON/";
+        getExportSettings( 0 )->setOutputFile( outputDirectory + "apolloPropagationHistory.dat" );
+        getExportSettings( 1 )->setOutputFile( outputDirectory + "apolloDependentVariableHistory.dat" );
+    }
+
     // Override resetPropagatorSettings method
     virtual void resetPropagatorSettings( )
     {
         // First, call the original resetPropagatorSettings, which uses the information in the JSON file
         JsonSimulationManager::resetPropagatorSettings( );
-
-        using namespace tudat::orbital_element_conversions;
 
         // Define constant 30 degree angle of attack
         double constantAngleOfAttack = 30.0 * tudat::mathematical_constants::PI / 180.0;
@@ -45,9 +54,10 @@ protected:
                 setOrientationAngleFunctions( boost::lambda::constant( constantAngleOfAttack ) );
 
         // Set spherical elements for Apollo.
+        using namespace tudat::orbital_element_conversions;
         Eigen::Vector6d apolloSphericalEntryState;
         apolloSphericalEntryState( SphericalOrbitalStateElementIndices::radiusIndex ) =
-                tudat::spice_interface::getAverageRadius( "Earth" ) + 120.0E3;
+                getBody( "Earth" )->getShapeModel( )->getAverageRadius( ) + 120.0E3;
         apolloSphericalEntryState( SphericalOrbitalStateElementIndices::latitudeIndex ) = 0.0;
         apolloSphericalEntryState( SphericalOrbitalStateElementIndices::longitudeIndex ) = 1.2;
         apolloSphericalEntryState( SphericalOrbitalStateElementIndices::speedIndex ) = 7.7E3;

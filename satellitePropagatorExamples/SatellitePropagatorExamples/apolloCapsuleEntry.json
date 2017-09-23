@@ -2,22 +2,15 @@
   "initialEpoch": 0,
   "globalFrameOrientation": "J2000",
   "spice": {
-    "preloadEphemeris": false,
-    "useStandardKernels": true
+    "useStandardKernels": true,
+    "preloadEphemeris": false
   },
   "bodies": {
     "Earth": {
       "useDefaultSettings": true,
       "ephemeris": {
-        "constantState": [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
         "type": "constant",
+        "constantState": [0, 0, 0, 0, 0, 0],
         "frameOrientation": "J2000"
       }
     },
@@ -27,35 +20,24 @@
   },
   "propagators": [
     {
-      "centralBodies": [
-        "Earth"
-      ],
+      "integratedStateType": "translational",
+      "bodiesToPropagate": [ "Apollo" ],
+      "centralBodies": [ "Earth" ],
+      "initialStates": [0, 0, 0, 0, 0, 0],
       "accelerations": {
         "Apollo": {
           "Earth": [
             {
+              "type": "sphericalHarmonicGravity",
               "maximumDegree": 4,
-              "maximumOrder": 0,
-              "type": "sphericalHarmonicGravity"
+              "maximumOrder": 0
             },
             {
               "type": "aerodynamic"
             }
           ]
         }
-      },
-      "integratedStateType": "translational",
-      "bodiesToPropagate": [
-        "Apollo"
-      ],
-      "initialStates": [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ]
+      }
     }
   ],
   "termination": {
@@ -72,7 +54,7 @@
   },
   "export": [
     {
-      "file": "@path(SimulationOutput/ApolloCapsuleExampleJSON/apolloPropagationHistory.dat)",
+      "file": "",
       "variables": [
         {
           "type": "state"
@@ -80,7 +62,7 @@
       ]
     },
     {
-      "file": "@path(SimulationOutput/ApolloCapsuleExampleJSON/apolloDependentVariableHistory.dat)",
+      "file": "",
       "variables": [
         {
           "body": "Apollo",
