@@ -97,7 +97,7 @@ int main()
     double constantSpecificImpulse = 3000.0;
 
     // Define propagation settings.
-    SingleSelectedAccelerationMap accelerationsOfVehicle;
+    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfVehicle;
     accelerationsOfVehicle[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::central_gravity ) );
     accelerationsOfVehicle[ "Vehicle" ].push_back(

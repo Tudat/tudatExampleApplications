@@ -69,7 +69,7 @@ int main()
     centralBodies.push_back( "Earth" );
 
     // Define propagation settings.
-    SingleSelectedAccelerationMap accelerationsOfAsterix;
+    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
     accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::central_gravity ) );
     accelerationMap[  "Asterix" ] = accelerationsOfAsterix;

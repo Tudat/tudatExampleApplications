@@ -77,13 +77,13 @@ int main( )
     std::vector< std::string > centralBodies;
 
     // Define acceleration model settings.
-    SingleSelectedAccelerationMap accelerationsOfAsterix;
+    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
     accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
     accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
     bodiesToPropagate.push_back( "Asterix" );
     centralBodies.push_back( "Earth" );
 
-    SingleSelectedAccelerationMap accelerationsOfObelix;
+    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfObelix;
     accelerationsOfObelix[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
     accelerationMap[  "Obelix" ] = accelerationsOfObelix;
     bodiesToPropagate.push_back( "Obelix" );
