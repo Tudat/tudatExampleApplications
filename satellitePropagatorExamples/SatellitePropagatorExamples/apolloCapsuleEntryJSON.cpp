@@ -81,11 +81,9 @@ int main( )
     const std::string cppFilePath( __FILE__ );
     const std::string cppFolder = cppFilePath.substr( 0, cppFilePath.find_last_of("/\\") + 1 );
 
-    using namespace tudat::json_interface;
-
     ApolloJsonSimulationManager jsonSimulationManager( cppFolder + "apolloCapsuleEntry.json" );
-    jsonSimulationManager.updateSettingsFromJsonObject( );
-    jsonSimulationManager.run( );
+    jsonSimulationManager.updateSettings( );
+    jsonSimulationManager.runPropagation( );
     jsonSimulationManager.exportResults( );
 
     return EXIT_SUCCESS;

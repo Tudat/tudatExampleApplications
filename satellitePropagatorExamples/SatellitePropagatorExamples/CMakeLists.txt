@@ -257,6 +257,12 @@ add_executable(application_ApolloEntryJSON
 setup_executable_target(application_ApolloEntryJSON "${SRCROOT}")
 target_link_libraries(application_ApolloEntryJSON json_interface_library ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+# Add lifetime maximisation propagation
+add_executable(application_LifetimeMaximisation
+	       "${SRCROOT}/lifetimeMaximisation.cpp")
+setup_executable_target(application_LifetimeMaximisation "${SRCROOT}")
+target_link_libraries(application_LifetimeMaximisation json_interface_library ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
 # Add Thrust example 1
 add_executable(application_ThrustAlongVelocityVector
                "${SRCROOT}/thrustAlongVelocityVectorExample.cpp")
