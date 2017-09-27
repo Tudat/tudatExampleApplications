@@ -79,9 +79,6 @@ int main( )
                 unit_tests::getApolloCoefficientInterface( ) );
     bodyMap[ "Apollo" ]->setConstantBodyMass( 5.0E3 );
 
-    std::cout << bodyMap.at( "Apollo" )->getAerodynamicCoefficientInterface( )->getReferenceArea( ) << std::endl;
-    std::cout << bodyMap.at( "Apollo" )->getAerodynamicCoefficientInterface( )->getCurrentAerodynamicCoefficients( ) << std::endl;
-
     // Finalize body creation.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
 
@@ -184,9 +181,6 @@ int main( )
     ///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-    std::cout << dynamicsSimulator.getNamedBodyMap( ).at( "Apollo" )->getAerodynamicCoefficientInterface( )->getReferenceArea( ) << std::endl;
-    std::cout << dynamicsSimulator.getNamedBodyMap( ).at( "Apollo" )->getAerodynamicCoefficientInterface( )->getCurrentAerodynamicCoefficients( ) << std::endl;
 
     // Write Apollo propagation history to file.
     std::string outputSubFolder = "ApolloCapsuleExample/";
