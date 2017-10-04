@@ -52,26 +52,6 @@ protected:
         double constantAngleOfAttack = 30.0 * tudat::mathematical_constants::PI / 180.0;
         getBody( "Apollo" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->
                 setOrientationAngleFunctions( boost::lambda::constant( constantAngleOfAttack ) );
-
-        // Set spherical elements for Apollo.
-        using namespace tudat::orbital_element_conversions;
-        Eigen::Vector6d apolloSphericalEntryState;
-        apolloSphericalEntryState( SphericalOrbitalStateElementIndices::radiusIndex ) =
-                getBody( "Earth" )->getShapeModel( )->getAverageRadius( ) + 120.0E3;
-        apolloSphericalEntryState( SphericalOrbitalStateElementIndices::latitudeIndex ) = 0.0;
-        apolloSphericalEntryState( SphericalOrbitalStateElementIndices::longitudeIndex ) = 1.2;
-        apolloSphericalEntryState( SphericalOrbitalStateElementIndices::speedIndex ) = 7.7E3;
-        apolloSphericalEntryState( SphericalOrbitalStateElementIndices::flightPathIndex ) =
-                -0.9 * tudat::mathematical_constants::PI / 180.0;
-        apolloSphericalEntryState( SphericalOrbitalStateElementIndices::headingAngleIndex ) = 0.6;
-
-        // Convert apollo state from spherical elements to Cartesian elements.
-        Eigen::Vector6d systemInitialState = convertSphericalOrbitalToCartesianState( apolloSphericalEntryState );
-        systemInitialState = tudat::ephemerides::transformStateToGlobalFrame(
-                    systemInitialState, getStartEpoch( ), getBody( "Earth" )->getRotationalEphemeris( ) );
-
-        // Reset initial states (zero placeholder vector had been specified in the JSON file)
-        getPropagatorSettings( )->resetInitialStates( systemInitialState );
     }
 };
 

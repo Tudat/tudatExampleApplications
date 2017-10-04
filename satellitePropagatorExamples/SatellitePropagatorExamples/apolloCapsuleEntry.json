@@ -15,6 +15,15 @@
       }
     },
     "Apollo": {
+      "initialState": {
+        "type": "spherical",
+        "altitude": 120000,
+        "latitude": 0,
+        "longitude": 1.2,
+        "speed": 7700,
+        "flightPathAngle": -0.015707963267948967,
+        "headingAngle": 0.6
+      },
       "mass": 5000
     }
   },
@@ -23,7 +32,6 @@
       "integratedStateType": "translational",
       "bodiesToPropagate": [ "Apollo" ],
       "centralBodies": [ "Earth" ],
-      "initialStates": [0, 0, 0, 0, 0, 0],
       "accelerations": {
         "Apollo": {
           "Earth": [
