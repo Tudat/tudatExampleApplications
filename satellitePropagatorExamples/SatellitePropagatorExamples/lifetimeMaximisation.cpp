@@ -33,7 +33,7 @@ int main( )
         jsonSimulationManager[ "finalEpoch" ] = initialEpoch + tudat::physical_constants::JULIAN_YEAR;
 
         // Define the output file
-        jsonSimulationManager[ "export" ][ 0 ][ "file" ] = outputDirectory + "day" + std::to_string( i + 1 ) + ".txt";
+        jsonSimulationManager[ "export" ][ 0 ][ "file" ] = outputDirectory + "day" + std::to_string( i + 1 ) + ".dat";
 
         // Create settings objects
         jsonSimulationManager.updateSettings( );
