@@ -84,12 +84,11 @@ else (TUDAT_INCLUDE_DIR)
   find_path(TUDAT_BASE_PATH NAMES tudatVersion.h
       PATHS
       ${PROJECT_SOURCE_DIR}/External
-      ${PROJECT_SOURCE_DIR}/../../tudat/trunk
       ${PROJECT_SOURCE_DIR}/../../../tudat/trunk
       ${PROJECT_SOURCE_DIR}/../../../../tudat/trunk
+      ${PROJECT_SOURCE_DIR}/../../tudat/trunk
       ${PROJECT_SOURCE_DIR}/../../tudat
       ${PROJECT_SOURCE_DIR}/../../../tudat
-      ${PROJECT_SOURCE_DIR}/../../../../tudat
       ${CMAKE_INSTALL_PREFIX}/include
       PATH_SUFFIXES Tudat
     )
@@ -104,11 +103,5 @@ else (TUDAT_INCLUDE_DIR)
   find_package_handle_standard_args(Tudat DEFAULT_MSG TUDAT_INCLUDE_DIR TUDAT_VERSION_OK)
 
   mark_as_advanced(TUDAT_INCLUDE_DIR)
-
-  if(NOT ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-    STRING(REGEX REPLACE ${CMAKE_SOURCE_DIR} "" TUDAT_RELATIVE_PROJECT_PATH ${TUDAT_BASE_PATH})
-    message(STATUS "Relative path to Tudat found: ${TUDAT_RELATIVE_PROJECT_PATH}")
-    add_definitions(-DTUDAT_RELATIVE_PROJECT_PATH="${TUDAT_RELATIVE_PROJECT_PATH}")
-  endif()
 
 endif(TUDAT_INCLUDE_DIR)

@@ -124,7 +124,7 @@ if(NOT Boost_USE_STATIC_RUNTIME)
 endif()
 
 # Find Boost libraries on local system.
-find_package(Boost 1.45.0 
+find_package(Boost 1.55.0
              COMPONENTS thread date_time system unit_test_framework filesystem regex REQUIRED)
 
 # Include Boost directories.
@@ -182,10 +182,28 @@ if(USE_NRLMSISE00)
   list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
 endif()
 
+
+# Find PaGMO library on local system.
+if( USE_PAGMO )
+  find_package(PaGMO2)
+
+  # Include PaGMO directories.
+  if(NOT APPLE)
+    include_directories(SYSTEM AFTER "${PAGMO_INCLUDE_DIR}")
+  else( )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${PAGMO_INCLUDE_DIR}\"")
+  endif( )
+
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES pthread)
+
+endif( )
+
+
 list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_propagators
     tudat_aerodynamics tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
     tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
-    tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+    tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_basics
+    tudat_optimization ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
 ## Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
@@ -234,4 +252,10 @@ add_executable(application_ThrustFromFile
                "${SRCROOT}/thrustAccelerationFromFileExample.cpp")
 setup_executable_target(application_ThrustFromFile "${SRCROOT}")
 target_link_libraries(application_ThrustFromFile ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+# Add Satellite rendez-vous example 1
+add_executable(application_SatelliteRendezVous
+               "${SRCROOT}/satelliteRendezVousExample.cpp")
+setup_executable_target(application_SatelliteRendezVous "${SRCROOT}")
+target_link_libraries(application_SatelliteRendezVous ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 

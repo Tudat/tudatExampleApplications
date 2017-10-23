@@ -15,8 +15,13 @@ A fixed target is set on the same plane at an altitude of 35000 km, fixed latitu
 What is the value of the RAAN for which the satellite achieves a minimum
 approach distance from the target?*/
 
-#include <pagmo/pagmo.hpp>
-#include "Pagmo2/Problems/easy_problem.hpp"
+#include <pagmo/problem.hpp>
+#include <pagmo/algorithms/sade.hpp>
+#include <pagmo/io.hpp>
+#include <pagmo/archipelago.hpp>
+#include "Problems/propagationTargeting.h"
+#include "Tudat/External/SpiceInterface/spiceInterface.h"
+#include "Tudat/InputOutput/basicInputOutput.h"
 
 using namespace pagmo;
 
@@ -33,18 +38,17 @@ int main()
 
     // 1 - Instantiate a pagmo problem constructing it from a UDP
     // (user defined problem).
-    problem prob{easy_problem()};
+    problem prob{PropagationTargetingProblem( 180000.0, 40000000.0,
+                                              35000000.0, 30.0 ) };
 
     // 2 - Instantiate a pagmo algorithm
-    algorithm algo{sade(10)};
+    algorithm algo{sade(1)};
 
     // 3 - Instantiate an archipelago with 16 islands having each 20 individuals
     archipelago archi{1, algo, prob, 16};
 
     // 4 - Run the evolution in parallel on the 16 separate islands 10 times.
-    archi.evolve(20);
-
-    // 5 - Wait for the evolutions to be finished
+    archi.evolve(30);
     archi.wait();
 
     // 6 - Print the decision and the fitness of the best solution in each island

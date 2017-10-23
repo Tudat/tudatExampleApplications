@@ -8,12 +8,11 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#include "PaGMOEx/Problems/earthMarsTransfer.hpp"
+#include"earthMarsTransfer.h"
 
-EarthMarsTransfer::EarthMarsTransfer(
-    const std::vector< std::vector< double > > problemBounds ) :
-    problemBounds_( problemBounds )
-{ }
+EarthMarsTransfer::EarthMarsTransfer( std::vector< std::vector< double > > &bounds ) :
+    problemBounds_( bounds ) { }
+
 
 //! Descriptive name of the problem
 std::string EarthMarsTransfer::get_name() const {
@@ -22,7 +21,8 @@ std::string EarthMarsTransfer::get_name() const {
 
 //! Get bounds
 std::pair<std::vector<double>, std::vector<double>> EarthMarsTransfer::get_bounds() const {
-    return {problemBounds_[0], problemBounds_[1]};
+
+    return { problemBounds_[0], problemBounds_[1] };
 }
 
 //! Implementation of the fitness function (return delta-v)
@@ -37,12 +37,16 @@ std::vector<double> EarthMarsTransfer::fitness( const std::vector<double> &xv ) 
 
     // Set initial and final position as those of Earth and Mars at
     // departure and arrival respectively.
+
     StateType initialState = getPlanetPosition( xv[0], "Earth");
+
     StateType finalState   = getPlanetPosition( xv[0] + xv[1], "Mars" );
 
     MultiRevolutionLambertTargeterIzzo lambertTargeter( initialState.segment(0,3),
         finalState.segment(0,3), xv[1]*86400, mu );
+
     double deltaV = std::numeric_limits<double>::infinity();
+
     unsigned int maxrev = lambertTargeter.getMaximumNumberOfRevolutions( );
 
     // Go through all multi-revolution solutions and select the one
@@ -54,7 +58,8 @@ std::vector<double> EarthMarsTransfer::fitness( const std::vector<double> &xv ) 
 	    + ( finalState.segment(3,3)
 		- lambertTargeter.getInertialVelocityAtArrival( )).norm());
     }
-    f[0] = deltaV;
+
+    f.push_back(deltaV);
 
     return f;
 }
@@ -87,4 +92,8 @@ StateType EarthMarsTransfer::getPlanetPosition( const double date,
     stateKepl( 5 ) = convertEccentricAnomalyToTrueAnomaly( stateKepl( 5 ), stateKepl( 1 ) );
     stateCart = convertKeplerianToCartesianElements( stateKepl , mu );
     return stateCart;
+
+
 }
+
+

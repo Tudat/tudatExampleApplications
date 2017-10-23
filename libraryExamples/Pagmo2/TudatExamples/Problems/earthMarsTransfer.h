@@ -1,4 +1,4 @@
-/*    Copyright (c) 2010-2016, Delft University of Technology
+/*    Copyright (c) 2010-2017, Delft University of Technology
  *    All rigths reserved
  *
  *    This file is part of the Tudat. Redistribution and use in source and
@@ -15,27 +15,43 @@
 #include <utility>
 #include <limits>
 
-#include <pagmo/pagmo.hpp>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/convertMeanToEccentricAnomalies.h>
 #include <Tudat/Astrodynamics/MissionSegments/multiRevolutionLambertTargeterIzzo.h>
+
+#include "pagmo/algorithms/de1220.hpp"
+#include "pagmo/island.hpp"
+//#include "pagmo/external/cereal/cereal.hpp"
+#include "pagmo/io.hpp"
+#include "pagmo/serialization.hpp"
+#include "pagmo/problem.hpp"
 
 #include <Eigen/Core>
 
 typedef Eigen::Matrix< double, 6, 1 > StateType;
 
+using namespace pagmo;
+
 //! Test function for a new interplanetary trajectory class in Tudat
 struct EarthMarsTransfer
 {
 
-    EarthMarsTransfer( const std::vector< std::vector< double > > problemBounds );
+    EarthMarsTransfer( ){ }
+
+    EarthMarsTransfer( std::vector< std::vector< double > > &bounds );
 
     // Calculates the fitness
-    std::vector<double> fitness( const std::vector<double> &x ) const;
+    std::vector< double > fitness( const std::vector< double > &x ) const;
 
-    std::pair<std::vector<double>, std::vector<double>> get_bounds() const;
+    std::pair< std::vector< double >, std::vector< double > > get_bounds() const;
 
     std::string get_name( ) const;
+
+    template <typename Archive>
+    void serialize(Archive &ar)
+    {
+        ar(problemBounds_);
+    }
 
 private:
 
@@ -43,7 +59,5 @@ private:
 
     StateType getPlanetPosition( const double date, const std::string planetName ) const;
 };
-
-PAGMO_REGISTER_PROBLEM(EarthMarsTransfer)
 
 #endif // TUDAT_EXAMPLE_PAGMO_PROBLEM_EARTH_MARS_TRANSFER_H
