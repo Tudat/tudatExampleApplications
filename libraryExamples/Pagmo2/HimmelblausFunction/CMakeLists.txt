@@ -50,18 +50,23 @@ else()
 endif()
 
 # Find PaGMO library on local system.
-if( USE_PAGMO )
-  find_package(PaGMO2)
+find_package(PaGMO2)
 
-  # Include PaGMO directories.
-  if(NOT APPLE)
-    include_directories(SYSTEM AFTER "${PAGMO_INCLUDE_DIR}")
-  else( )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${PAGMO_INCLUDE_DIR}\"")
-  endif( )
+# Include PaGMO directories.
+if(NOT APPLE)
+  include_directories(SYSTEM AFTER "${PAGMO_INCLUDE_DIR}")
+else( )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${PAGMO_INCLUDE_DIR}\"")
 endif( )
 
-add_library(pagmo2_library_example STATIC "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/himmelblaus.hpp")
+set( PAGMO_HIMMELBLAUS_FUNCTION_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/himmelblaus.hpp")
+
+add_library(pagmo2_himmelblau_example_library "${PAGMO_HIMMELBLAUS_FUNCTION_HEADER}" "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
+target_compile_options(pagmo2_himmelblau_example_library PRIVATE "$<$<CONFIG:DEBUG>:${PAGMO_CXX_FLAGS_DEBUG}>" "$<$<CONFIG:RELEASE>:${PAGMO_CXX_FLAGS_RELEASE}>")
+set_property(TARGET pagmo2_himmelblau_example_library PROPERTY CXX_STANDARD 11)
+set_property(TARGET pagmo2_himmelblau_example_library PROPERTY CXX_STANDARD_REQUIRED YES)
+set_property(TARGET pagmo2_himmelblau_example_library PROPERTY CXX_EXTENSIONS NO)
+install(TARGETS pagmo2_himmelblau_example_library DESTINATION "${BINROOT}/lib")
 
 # Add application.
 add_executable(application_PagmoHimmelblausExample "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")

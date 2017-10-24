@@ -184,7 +184,7 @@ endif()
 
 
 # Find PaGMO library on local system.
-if( USE_PAGMO )
+if( USE_OPTIMIZATION_PACKAGE )
   find_package(PaGMO2)
 
   # Include PaGMO directories.
@@ -204,6 +204,10 @@ list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat
     tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
     tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_basics
     tudat_optimization ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+
+if(USE_OPTIMIZATION_PACKAGE)
+ list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_optimization )
+endif( )
 
 ## Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
@@ -254,8 +258,9 @@ setup_executable_target(application_ThrustFromFile "${SRCROOT}")
 target_link_libraries(application_ThrustFromFile ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Satellite rendez-vous example 1
-add_executable(application_SatelliteRendezVous
-               "${SRCROOT}/satelliteRendezVousExample.cpp")
-setup_executable_target(application_SatelliteRendezVous "${SRCROOT}")
-target_link_libraries(application_SatelliteRendezVous ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
-
+if(USE_OPTIMIZATION_PACKAGE)
+  add_executable(application_SatelliteRendezVous
+                 "${SRCROOT}/satelliteRendezVousExample.cpp")
+  setup_executable_target(application_SatelliteRendezVous "${SRCROOT}")
+  target_link_libraries(application_SatelliteRendezVous ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+endif( )
