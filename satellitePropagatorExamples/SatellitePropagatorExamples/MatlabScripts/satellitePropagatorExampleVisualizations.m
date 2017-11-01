@@ -104,7 +104,7 @@ centralBodies{5} = 'Sun';
 centralBodies{6} = 'Barycenter';
 
 for i=1:6
-    barycentricSolarSystemOrbits{i} = load(strcat('innerSolarSystemPropagationHistory',propagatedBodies{i},'0.dat'));
+    barycentricSolarSystemOrbits{i} = load(strcat(dataDirectory,'InnerSolarSystemPropagationExample/innerSolarSystemPropagationHistory',propagatedBodies{i},'0.dat'));
     figure(4)
     scatter3(barycentricSolarSystemOrbits{i}(:,2),barycentricSolarSystemOrbits{i}(:,3),barycentricSolarSystemOrbits{i}(:,4))
     hold on
@@ -114,7 +114,7 @@ for i=1:6
     scatter3(barycentricSolarSystemOrbits{i}(:,2),barycentricSolarSystemOrbits{i}(:,3),barycentricSolarSystemOrbits{i}(:,4))
     title(strcat('Barycentric orbit of ',propagatedBodies{i}));
     
-    localBarycentricSolarSystemOrbits{i} = load(strcat('innerSolarSystemPropagationHistory',propagatedBodies{i},'1.dat'));
+    localBarycentricSolarSystemOrbits{i} = load(strcat(dataDirectory,'InnerSolarSystemPropagationExample/innerSolarSystemPropagationHistory',propagatedBodies{i},'1.dat'));
     figure(6)
     subplot(3,2,i)
     scatter3( localBarycentricSolarSystemOrbits{i}(:,2), localBarycentricSolarSystemOrbits{i}(:,3), localBarycentricSolarSystemOrbits{i}(:,4))
@@ -153,8 +153,8 @@ end
 %%%%% PLOT ORBIT OF (UN)PERTURBED EARTH ORBITER, AND DIFFERENCE BETWEEN THE TWO
 
 figure(7)
-perturbedSatellite = load('singlePerturbedSatellitePropagationHistory.dat');
-unperturbedSatellite = load('singleSatellitePropagationHistory.dat');
+perturbedSatellite = load(strcat(dataDirectory,'PerturbedSatelliteExample/singlePerturbedSatellitePropagationHistory.dat'));
+unperturbedSatellite = load(strcat(dataDirectory,'UnperturbedSatelliteExample/singleSatellitePropagationHistory.dat'));
 
 for i=1:3
     
@@ -201,7 +201,7 @@ end
 %%%%% PLOT RESULTS OF THRUST EXAMPLE (THRUST ALONG VELOCITY VECTOR)
 
 figure(8)
-load('velocityVectorThrustExample.dat');
+load(strcat(dataDirectory,'ThrustAlongVelocityExample/velocityVectorThrustExample.dat'));
 
 subplot(1,2,1)
 plot(velocityVectorThrustExample(:,2),velocityVectorThrustExample(:,3))
@@ -222,7 +222,7 @@ xlim([0 14*86400])
 %%%%% PLOT RESULTS OF THRUST EXAMPLE (THRUST FROM FILE)
 
 figure(9)
-load('thrustExampleFromFilePropagationHistory.dat');
+load(strcat(dataDirectory,'ThrustFromFileExample/thrustExampleFromFilePropagationHistory.dat'));
 
 plot3(thrustExampleFromFilePropagationHistory(:,2),thrustExampleFromFilePropagationHistory(:,3),thrustExampleFromFilePropagationHistory(:,4))
 axis equal
