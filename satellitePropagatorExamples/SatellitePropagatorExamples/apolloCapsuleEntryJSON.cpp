@@ -62,10 +62,10 @@ int main( )
     const std::string cppFolder = cppFilePath.substr( 0, cppFilePath.find_last_of("/\\") + 1 );
 
     ApolloJsonSimulationManager jsonSimulationManager( cppFolder + "apolloCapsuleEntry.json" );
+
     jsonSimulationManager.updateSettings( );
     jsonSimulationManager.runPropagation( );
     jsonSimulationManager.exportResults( );
 
     return EXIT_SUCCESS;
 }
-

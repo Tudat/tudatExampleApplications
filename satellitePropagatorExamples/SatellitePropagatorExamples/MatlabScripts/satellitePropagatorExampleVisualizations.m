@@ -2,13 +2,16 @@ clc
 close all
 clear all
 
-folder = '';
+% Define folder in which the data files can be found
+dataDirectory = '../SimulationOutput/';
+
 %%
+%%%%% PLOT TWO-SATELLITE PROPAGATION 
 
 figure(1)
 
-load(strcat(folder,'asterixPropagationHistory.dat'));
-load(strcat(folder,'obelixPropagationHistory.dat'));
+load(strcat(dataDirectory,'TwoSatelliteExample/asterixPropagationHistory.dat'));
+load(strcat(dataDirectory,'TwoSatelliteExample/obelixPropagationHistory.dat'));
 scatter3(asterixPropagationHistory(:,2),asterixPropagationHistory(:,3),asterixPropagationHistory(:,4))
 hold on
 scatter3(obelixPropagationHistory(:,2),obelixPropagationHistory(:,3),obelixPropagationHistory(:,4))
@@ -20,10 +23,12 @@ xlabel('x_{J2000} [m]')
 ylabel('y_{J2000} [m]')
 zlabel('z_{J2000} [m]')
 %%
+%%%%% PLOT GALILEO CONSTELLATION PROPAGATION
+
 figure(2)
 
 for i=1:30
-    currentGalileo = load(strcat(folder,'galileoSatellite',num2str(i),'.dat'));
+    currentGalileo = load(strcat(dataDirectory,'GalileoConstellationExample/galileoSatellite',num2str(i),'.dat'));
     scatter3(currentGalileo(:,2),currentGalileo(:,3),currentGalileo(:,4))
     hold on
     axis equal
@@ -33,10 +38,11 @@ ylabel('y_{J2000} [m]')
 zlabel('z_{J2000} [m]')
 
 %%
+%%%%% PLOT APOLLO CAPSULE ENTRY BEHAVIOUR
 figure(3)
 
-load(strcat(folder,'apolloPropagationHistory.dat'));
-load(strcat(folder,'apolloDependentVariableHistory.dat'));
+load(strcat(dataDirectory,'ApolloCapsuleExample/apolloPropagationHistory.dat'));
+load(strcat(dataDirectory,'ApolloCapsuleExample/apolloDependentVariableHistory.dat'));
 
 
 subplot(2,3,1)
@@ -79,6 +85,7 @@ ylabel('Lift coefficient [-]')
 
 
 %%
+%%%% PLOT SOLAR SYSTEM DYNAMICS SIMULATION
 
 propagatedBodies = cell(6,1);
 
@@ -143,6 +150,8 @@ for i=1:6
 end
 
 %%
+%%%%% PLOT ORBIT OF (UN)PERTURBED EARTH ORBITER, AND DIFFERENCE BETWEEN THE TWO
+
 figure(7)
 perturbedSatellite = load('singlePerturbedSatellitePropagationHistory.dat');
 unperturbedSatellite = load('singleSatellitePropagationHistory.dat');
@@ -189,6 +198,8 @@ for i=1:3
     
 end
 %%
+%%%%% PLOT RESULTS OF THRUST EXAMPLE (THRUST ALONG VELOCITY VECTOR)
+
 figure(8)
 load('velocityVectorThrustExample.dat');
 
@@ -208,6 +219,8 @@ ylabel('Vehicle mass [kg]')
 xlim([0 14*86400])
 
 %%
+%%%%% PLOT RESULTS OF THRUST EXAMPLE (THRUST FROM FILE)
+
 figure(9)
 load('thrustExampleFromFilePropagationHistory.dat');
 
@@ -251,6 +264,7 @@ legend('x-component','y-component','z-component','Location','NorthWest')
 
 
 %%
+%%%% SAVE ALL FIGURES TO FILES
 
 for j=1:10
     set( figure(j), 'Units', 'normalized', 'Position', [0,0,1,1]);

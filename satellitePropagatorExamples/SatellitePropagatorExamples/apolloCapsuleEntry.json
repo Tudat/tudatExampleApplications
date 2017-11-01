@@ -76,7 +76,7 @@
           "body": "Apollo",
           "dependentVariableType": "machNumber"
         },
-        "${termination.variable}",
+	"${termination.variable}",
         {
           "body": "Apollo",
           "dependentVariableType": "accelerationNorm",
