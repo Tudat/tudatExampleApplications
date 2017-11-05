@@ -52,7 +52,7 @@ int main( )
     bodyNames.push_back( "Mars" );
 
     // Specify initial and final time
-    double initialEphemerisTime = double( 1.0E7 );
+    double initialEphemerisTime = 1.0E7;
     int numberOfSimulationDays = 30.0;
     double finalEphemerisTime = initialEphemerisTime + numberOfSimulationDays * 86400.0;
 
@@ -345,7 +345,7 @@ int main( )
         // Simulate 480 observations per day (observationInterval apart)
         for( unsigned int j = 0; j < 480; j++ )
         {
-            baseTimeList.push_back( observationTimeStart + ( double )i * 86400.0 + ( double ) j * observationInterval );
+            baseTimeList.push_back( observationTimeStart + static_cast< double >( i ) * 86400.0 + static_cast< double >( j  ) * observationInterval );
         }
     }
 

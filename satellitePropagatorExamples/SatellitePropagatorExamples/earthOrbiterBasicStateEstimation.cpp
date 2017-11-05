@@ -287,7 +287,7 @@ int main( )
         // Simulate 500 observations per day (observationInterval apart)
         for( unsigned int j = 0; j < 500; j++ )
         {
-            baseTimeList.push_back( observationTimeStart + ( double )i * 86400.0 + ( double ) j * observationInterval );
+            baseTimeList.push_back( observationTimeStart + static_cast< double >( i ) * 86400.0 + static_cast< double >( j ) * observationInterval );
         }
     }
 
