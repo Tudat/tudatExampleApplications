@@ -8,7 +8,7 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
+#include <Tudat/SimulationSetup/tudatEstimationHeader.h>
 
 #include "SatellitePropagatorExamples/applicationOutput.h"
 
@@ -27,6 +27,8 @@ int main()
     using namespace tudat::basic_mathematics;
     using namespace tudat::gravitation;
     using namespace tudat::numerical_integrators;
+    using namespace tudat::estimatable_parameters;
+    using namespace tudat::ephemerides;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,6 +68,10 @@ int main()
     // Create spacecraft object.
     bodyMap[ "Asterix" ] = boost::make_shared< simulation_setup::Body >( );
     bodyMap[ "Asterix" ]->setConstantBodyMass( 400.0 );
+
+    bodyMap[ "Asterix" ]->setEphemeris( boost::make_shared< TabulatedCartesianEphemeris< > >(
+                                            boost::shared_ptr< interpolators::OneDimensionalInterpolator
+                                            < double, Eigen::Vector6d > >( ), "Earth", "J2000" ) );
 
     // Create aerodynamic coefficient interface settings.
     double referenceArea = 4.0;
@@ -158,41 +164,72 @@ int main()
             boost::make_shared< IntegratorSettings< > >
             ( rungeKutta4, 0.0, fixedStepSize );
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
+    ///////////////////////    DEFINE PARAMETERS FOR WHICH SENSITIVITY IS TO BE COMPUTED   ////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Define list of parameters to estimate.
+    std::vector< boost::shared_ptr< EstimatableParameterSettings > > parameterNames;
+    parameterNames.push_back(
+                boost::make_shared< InitialTranslationalStateEstimatableParameterSettings< double > >(
+                    "Asterix", asterixInitialState, "Earth" ) );
+    parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Asterix", radiation_pressure_coefficient ) );
+    parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Asterix", constant_drag_coefficient ) );
+    parameterNames.push_back( boost::make_shared< SphericalHarmonicEstimatableParameterSettings >(
+                                  2, 0, 2, 2, "Earth", spherical_harmonics_cosine_coefficient_block ) );
+    parameterNames.push_back( boost::make_shared< SphericalHarmonicEstimatableParameterSettings >(
+                                  2, 1, 2, 2, "Earth", spherical_harmonics_sine_coefficient_block ) );
+
+    // Create parameters
+    boost::shared_ptr< estimatable_parameters::EstimatableParameterSet< double > > parametersToEstimate =
+            createParametersToEstimate( parameterNames, bodyMap );
+
+    // Print identifiers and indices of parameters to terminal.
+    printEstimatableParameterEntries( parametersToEstimate );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             PROPAGATE ORBIT AND VARIATIONAL EQUATIONS         /////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     // Create simulation object and propagate dynamics.
-    SingleArcDynamicsSimulator< > dynamicsSimulator(
-                bodyMap, integratorSettings, propagatorSettings, true, false, false );
-    std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
+    SingleArcVariationalEquationsSolver< > variationalEquationsSimulator(
+                bodyMap, integratorSettings, propagatorSettings, parametersToEstimate, true,
+                boost::shared_ptr< numerical_integrators::IntegratorSettings< double > >( ), false, true );
 
+    std::map< double, Eigen::MatrixXd > stateTransitionResult =
+            variationalEquationsSimulator.getNumericalVariationalEquationsSolution( ).at( 0 );
+    std::map< double, Eigen::MatrixXd > sensitivityResult =
+            variationalEquationsSimulator.getNumericalVariationalEquationsSolution( ).at( 1 );
+    std::map< double, Eigen::VectorXd > integrationResult =
+            variationalEquationsSimulator.getDynamicsSimulator( )->getEquationsOfMotionNumericalSolution( );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PROVIDE OUTPUT TO CONSOLE AND FILES           //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::string outputSubFolder = "PerturbedSatelliteExample/";
-
-    Eigen::VectorXd finalIntegratedState = (--integrationResult.end( ) )->second;
-    // Print the position (in km) and the velocity (in km/s) at t = 0.
-    std::cout << "Single Earth-Orbiting Satellite Example." << std::endl <<
-                 "The initial position vector of Asterix is [km]:" << std::endl <<
-                 asterixInitialState.segment( 0, 3 ) / 1E3 << std::endl <<
-                 "The initial velocity vector of Asterix is [km/s]:" << std::endl <<
-                 asterixInitialState.segment( 3, 3 ) / 1E3 << std::endl;
-
-    // Print the position (in km) and the velocity (in km/s) at t = 86400.
-    std::cout << "After " << simulationEndEpoch <<
-                 " seconds, the position vector of Asterix is [km]:" << std::endl <<
-                 finalIntegratedState.segment( 0, 3 ) / 1E3 << std::endl <<
-                 "And the velocity vector of Asterix is [km/s]:" << std::endl <<
-                 finalIntegratedState.segment( 3, 3 ) / 1E3 << std::endl;
+    std::string outputSubFolder = "PerturbedSatelliteVariationalExample/";
 
     // Write perturbed satellite propagation history to file.
     input_output::writeDataMapToTextFile( integrationResult,
                                           "singlePerturbedSatellitePropagationHistory.dat",
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
+                                          "",
+                                          std::numeric_limits< double >::digits10,
+                                          std::numeric_limits< double >::digits10,
+                                          "," );
+
+    input_output::writeDataMapToTextFile( stateTransitionResult,
+                                          "singlePerturbedSatelliteStateTransitionHistory.dat",
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
+                                          "",
+                                          std::numeric_limits< double >::digits10,
+                                          std::numeric_limits< double >::digits10,
+                                          "," );
+
+    input_output::writeDataMapToTextFile( sensitivityResult,
+                                          "singlePerturbedSatelliteSensitivityHistory.dat",
                                           tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,

@@ -37,10 +37,7 @@ int main( )
 
     //Load spice kernels.
     std::string kernelsPath = input_output::getSpiceKernelPath( );
-    spice_interface::loadSpiceKernelInTudat( kernelsPath + "pck00009.tpc");
-    spice_interface::loadSpiceKernelInTudat( kernelsPath + "de-403-masses.tpc");
-    spice_interface::loadSpiceKernelInTudat( kernelsPath + "de421.bsp");
-    spice_interface::loadSpiceKernelInTudat( kernelsPath + "naif0009.tls");
+    spice_interface::loadStandardSpiceKernels( );
 
     // Define bodies in simulation.
     unsigned int totalNumberOfBodies = 6;
@@ -176,6 +173,7 @@ int main( )
         ///////////////////////        PROVIDE OUTPUT TO FILES           ////////////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        std::string outputSubFolder = "InnerSolarSystemPropagationExample/";
 
         for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
         {
@@ -184,7 +182,7 @@ int main( )
                         allBodiesPropagationHistory[ i ],
                         "innerSolarSystemPropagationHistory" + bodyNames.at( i ) +
                         boost::lexical_cast< std::string >( centralBodySettings ) + ".dat",
-                        tudat_applications::getOutputPath( ),
+                        tudat_applications::getOutputPath( ) + outputSubFolder,
                         "",
                         std::numeric_limits< double >::digits10,
                         std::numeric_limits< double >::digits10,

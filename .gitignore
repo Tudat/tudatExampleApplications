@@ -60,6 +60,7 @@ doc/doxygen/latex/
 build*/
 bin/
 lib/
+sandbox/
 
 #
 # Editor related
@@ -70,3 +71,4 @@ lib/
 *.autosave
 *.~?~
 *.save
+.DS_Store

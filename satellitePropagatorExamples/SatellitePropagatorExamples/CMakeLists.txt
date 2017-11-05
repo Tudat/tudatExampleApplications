@@ -175,18 +175,45 @@ else()
   endif( )
 endif( )
 
+list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES "")
+list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES "")
+list(APPEND TUDAT_APPLICATION_ITRS_LIBRARIES "")
+
+
+if(USE_SOFA)
+ list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES sofa)
+ list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES tudat_sofa_interface )
+ list(APPEND TUDAT_APPLICATION_ITRS_LIBRARIES tudat_earth_orientation )
+endif()
+
 if(USE_CSPICE)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES tudat_spice_interface cspice)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES cspice)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES tudat_spice_interface )
+endif()
+
+if(USE_JSON)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nlohmann_json)
 endif()
 
 if(USE_NRLMSISE00)
   list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
 endif()
 
-list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_propagators
-    tudat_aerodynamics tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
-    tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
-    tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+
+list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_ground_stations tudat_propagators
+    tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
+    tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
+     tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_basic_mathematics
+     tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+
+list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_simulation_setup tudat_observation_models tudat_ground_stations tudat_acceleration_partials
+    tudat_observation_partials tudat_estimatable_parameters tudat_orbit_determination  tudat_propagators
+    tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
+    tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
+    tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_basic_mathematics
+    tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+
+
 
 ## Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
@@ -196,7 +223,12 @@ target_link_libraries(application_SingleSatellitePropagator ${TUDAT_APPLICATION_
 add_executable(application_SinglePerturbedSatellitePropagator "${SRCROOT}/singlePerturbedSatellitePropagator.cpp")
 setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROOT}")
 target_link_libraries(application_SinglePerturbedSatellitePropagator
-                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+		      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+add_executable(application_SinglePerturbedSatelliteVariationalEquationsPropagator "${SRCROOT}/singlePerturbedSatelliteVariationalEquationsPropagator.cpp")
+setup_executable_target(application_SinglePerturbedSatelliteVariationalEquationsPropagator "${SRCROOT}")
+target_link_libraries(application_SinglePerturbedSatelliteVariationalEquationsPropagator
+                      ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Asterix and Obelix (satellites) propagator application.
 add_executable(application_AsterixAndObelixPropagator "${SRCROOT}/asterixAndObelixPropagator.cpp")
@@ -224,6 +256,18 @@ add_executable(application_ApolloEntry
 setup_executable_target(application_ApolloEntry "${SRCROOT}")
 target_link_libraries(application_ApolloEntry ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+# Add JSON-based Apollo propagation
+add_executable(application_ApolloEntryJSON
+	       "${SRCROOT}/apolloCapsuleEntryJSON.cpp")
+setup_executable_target(application_ApolloEntryJSON "${SRCROOT}")
+target_link_libraries(application_ApolloEntryJSON json_interface_library ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+# Add lifetime maximisation propagation
+add_executable(application_LifetimeMaximisation
+	       "${SRCROOT}/lifetimeMaximisation.cpp")
+setup_executable_target(application_LifetimeMaximisation "${SRCROOT}")
+target_link_libraries(application_LifetimeMaximisation json_interface_library ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
 # Add Thrust example 1
 add_executable(application_ThrustAlongVelocityVector
                "${SRCROOT}/thrustAlongVelocityVectorExample.cpp")
@@ -236,3 +280,13 @@ add_executable(application_ThrustFromFile
 setup_executable_target(application_ThrustFromFile "${SRCROOT}")
 target_link_libraries(application_ThrustFromFile ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+# Add simulated Earth orbiter simulated POD example
+add_executable(application_EarthOrbiterStateEstimation
+               "${SRCROOT}/earthOrbiterStateEstimation.cpp")
+setup_executable_target(application_EarthOrbiterStateEstimation "${SRCROOT}")
+target_link_libraries(application_EarthOrbiterStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+add_executable(application_EarthOrbiterBasicStateEstimation
+               "${SRCROOT}/earthOrbiterBasicStateEstimation.cpp")
+setup_executable_target(application_EarthOrbiterBasicStateEstimation "${SRCROOT}")
+target_link_libraries(application_EarthOrbiterBasicStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )

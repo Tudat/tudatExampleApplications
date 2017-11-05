@@ -34,9 +34,7 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Load Spice kernels.
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
+    spice_interface::loadStandardSpiceKernels( );
 
     // Set simulation start epoch.
     const double simulationStartEpoch = 0.0;
@@ -177,11 +175,12 @@ int main( )
     ///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    std::string outputSubFolder = "TwoSatelliteExample/";
 
     // Write Asterix propagation history to file.
     writeDataMapToTextFile( asterixPropagationHistory,
                             "asterixPropagationHistory.dat",
-                            tudat_applications::getOutputPath( ),
+                            tudat_applications::getOutputPath( ) + outputSubFolder,
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
@@ -190,7 +189,7 @@ int main( )
     // Write obelix propagation history to file.
     writeDataMapToTextFile( obelixPropagationHistory,
                             "obelixPropagationHistory.dat",
-                            tudat_applications::getOutputPath( ),
+                            tudat_applications::getOutputPath( ) + outputSubFolder,
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
