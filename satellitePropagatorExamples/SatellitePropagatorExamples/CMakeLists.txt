@@ -225,9 +225,9 @@ setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROO
 target_link_libraries(application_SinglePerturbedSatellitePropagator
 		      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
-add_executable(application_SinglePerturbedSatelliteVariationalEquationsPropagator "${SRCROOT}/singlePerturbedSatelliteVariationalEquationsPropagator.cpp")
-setup_executable_target(application_SinglePerturbedSatelliteVariationalEquationsPropagator "${SRCROOT}")
-target_link_libraries(application_SinglePerturbedSatelliteVariationalEquationsPropagator
+add_executable(application_VariationalEquationsPropagator "${SRCROOT}/variationalEquationsPropagatorExample.cpp")
+setup_executable_target(application_VariationalEquationsPropagator "${SRCROOT}")
+target_link_libraries(application_VariationalEquationsPropagator
                       ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Asterix and Obelix (satellites) propagator application.
