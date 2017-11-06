@@ -37,7 +37,7 @@ title('Correlation matrix')
 
 %%%% VISUALIZE WEIGHTED PARTIALS MATRIX: THE HIGHER THE VALUE, THE GREATER THE CONTRUBUTION OF A SINGLE TERM TO THE ESTIMATION
 figure(2)
-imagesc( weightedPartialsMatrix );
+imagesc( log10(weightedPartialsMatrix ));
 xlabel('Parameter index [-]')
 ylabel('Observation index [-]')
 title('log_{10} of (partial derivative matrix scaled by sqrt(weight))')
@@ -51,6 +51,9 @@ for i=1:4
     xlabel('Observation time [days]')
     ylabel('Observation residual, scaled by sqrt(weight) [-]' )
     title(strcat('Iteration ',num2str(i)))
+    if( i == 2 )
+        legend('Range','Angular position','Doppler','Location','NorthWest')
+    end
 end
 suptitle('Observation residual as a function of time, scaled by sqrt(weight), colored by link ends')
 
@@ -63,6 +66,9 @@ for i=1:4
     xlabel('Observation time [days]')
     ylabel('Observation residual, scaled by sqrt(weight) [-]' )
     title(strcat('Iteration ',num2str(i)))
+    if( i == 2 )
+        legend('Link Ends Set 1','Link Ends Set 2','Link Ends Set 3','Location','NorthWest')
+    end
 end
 suptitle('Observation residual as a function of time, scaled by sqrt(weight), colored by observable type')
 
@@ -86,14 +92,34 @@ subplot(1,2,1)
 scatter(1:size(trueError,1),trueError./formalError)
 xlabel('Parameter index [-]')
 ylabel('True-to-formal error ratio')
+grid on
 
 subplot(1,2,2)
 hist(trueError./formalError)
 ylabel('Number of occurences [-]')
 xlabel('True-to-formal error ratio [-]')
+grid on
 
-for j=6
+for j=1:6
     set( figure(j), 'Units', 'normalized', 'Position', [0,0,1,1]);
     set( figure(j),'PaperUnits','centimeters','PaperPosition',[0 0 60 40]);
 end
-    
+
+sleep(2.0)
+
+for j=1:6
+    figure(j)
+    if(j==1)
+        saveas(gcf,strcat('correlations'),'png');
+    elseif(j==2)
+        saveas(gcf,strcat('weightedPartials'),'png');
+    elseif(j==3)
+        saveas(gcf,strcat('residualsPerIterationPerLinkEnd'),'png');
+    elseif(j==4)
+        saveas(gcf,strcat('residualsPerIterationPerObservable'),'png');
+    elseif(j==5)
+        saveas(gcf,strcat('residualsPerIterationHistogram'),'png');
+    elseif(j==6)
+        saveas(gcf,strcat('formalErrorRatios'),'png');
+    end
+end
