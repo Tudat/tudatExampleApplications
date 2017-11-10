@@ -227,12 +227,12 @@ load(strcat(dataDirectory,'ThrustFromFileExample/thrustExampleFromFilePropagatio
 plot3(thrustExampleFromFilePropagationHistory(:,2),thrustExampleFromFilePropagationHistory(:,3),thrustExampleFromFilePropagationHistory(:,4))
 axis equal
 grid on
-title('Cartesian position w.r.t. Earth')
+title('Cartesian position w.r.t. Earth')    
 xlabel('x-component [m]')
 ylabel('y-component [m]')
 zlabel('z-component [m]')
 
-load('thrustExampleFromFileDependentVariableHistory.dat');
+load(strcat(dataDirectory,'ThrustFromFileExample/thrustExampleFromFileDependentVariableHistory.dat'));
 
 colors=cell(3,1);
 colors{1}='r';

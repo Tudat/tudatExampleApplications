@@ -105,7 +105,7 @@ for j=1:6
     set( figure(j),'PaperUnits','centimeters','PaperPosition',[0 0 60 40]);
 end
 
-sleep(2.0)
+pause(2.0)
 
 for j=1:6
     figure(j)
