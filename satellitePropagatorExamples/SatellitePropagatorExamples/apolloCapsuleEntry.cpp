@@ -40,9 +40,7 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Load Spice kernels.
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
+    spice_interface::loadStandardSpiceKernels( );
 
     // Set simulation start epoch.
     const double simulationStartEpoch = 0.0;
@@ -185,16 +183,18 @@ int main( )
 
 
     // Write Apollo propagation history to file.
+    std::string outputSubFolder = "ApolloCapsuleExample/";
+
     writeDataMapToTextFile( dynamicsSimulator.getEquationsOfMotionNumericalSolution( ),
                             "apolloPropagationHistory.dat",
-                            tudat_applications::getOutputPath( ),
+                            tudat_applications::getOutputPath( ) + outputSubFolder,
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
                             "," );
     writeDataMapToTextFile( dynamicsSimulator.getDependentVariableHistory( ),
                             "apolloDependentVariableHistory.dat",
-                            tudat_applications::getOutputPath( ),
+                            tudat_applications::getOutputPath( ) + outputSubFolder,
                             "",
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,

@@ -33,9 +33,7 @@ int main()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Load Spice kernels.
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
+    spice_interface::loadStandardSpiceKernels( );
 
     // Set simulation end epoch.
     const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
@@ -133,6 +131,7 @@ int main()
     ///////////////////////        PROVIDE OUTPUT TO CONSOLE AND FILES           //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    std::string outputSubFolder = "UnperturbedSatelliteExample/";
 
     Eigen::VectorXd finalIntegratedState = (--integrationResult.end( ) )->second;
     // Print the position (in km) and the velocity (in km/s) at t = 0.
@@ -152,7 +151,7 @@ int main()
     // Write satellite propagation history to file.
     input_output::writeDataMapToTextFile( integrationResult,
                                           "singleSatellitePropagationHistory.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,

@@ -12,26 +12,6 @@
 #include <tudatExampleApplications/satellitePropagatorExamples/SatellitePropagatorExamples/applicationOutput.h>
 
 
-std::map< double, Eigen::Vector3d > getThrustData( )
-{
-    // Find filepath and folder of this cpp file
-    std::string cppFilePath( __FILE__ );
-    std::string cppFolder = cppFilePath.substr( 0 , cppFilePath.find_last_of("/\\")+1 );
-
-    // Load data into matrix
-    Eigen::MatrixXd thrustForceMatrix =
-            tudat::input_output::readMatrixFromFile( cppFolder + "testThrustValues.txt" , " \t" );
-
-    // Fill thrustData map using thrustForceMatrix Eigen matrix
-    std::map< double, Eigen::Vector3d > thrustData;
-    for ( int i = 0; i < thrustForceMatrix.rows( ); i++ )
-    {
-        thrustData[ thrustForceMatrix( i, 0 ) ] = thrustForceMatrix.block( i, 1, 1, 3 ).transpose( );
-    }
-    return thrustData;
-}
-
-
 //! Execute propagation of orbit of vehicle around the Earth. The vehicle is subject to a thrustforce, which is specified in
 //! the nonconstantThrust.txt file. In that file, the first column is time in seconds, the last three columns give the x, y
 //! and z components of the thrust force in the J2000 (?) frame.
@@ -56,9 +36,7 @@ int main()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Load Spice kernels.
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
+    spice_interface::loadStandardSpiceKernels( );
 
     // Define body settings for simulation.
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings;
@@ -75,6 +53,18 @@ int main()
     bodyMap[ "Vehicle" ] = boost::make_shared< simulation_setup::Body >( );
     bodyMap[ "Vehicle" ]->setConstantBodyMass( vehicleMass );
 
+    // Create aerodynamic coefficient interface settings.
+    double referenceArea = 4.0;
+    double aerodynamicCoefficient = 1.2;
+    boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
+            boost::make_shared< ConstantAerodynamicCoefficientSettings >(
+                referenceArea, aerodynamicCoefficient * Eigen::Vector3d::UnitX( ), 1, 1 );
+
+    // Create and set aerodynamic coefficients object
+    bodyMap[ "Vehicle" ]->setAerodynamicCoefficientInterface(
+                createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "Vehicle" ) );
+
+
     // Finalize body creation.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
 
@@ -88,17 +78,20 @@ int main()
     std::vector< std::string > bodiesToPropagate;
     std::vector< std::string > centralBodies;
 
-    // Retrieve thrust data as function of time.
-    std::map< double, Eigen::Vector3d > thrustData = getThrustData( );
+    // Define data to be used for thrust as a function of time.
+    const std::string cppFilePath( __FILE__ );
+    const std::string cppFolder = cppFilePath.substr( 0 , cppFilePath.find_last_of("/\\")+1 );
+    boost::shared_ptr< FromFileDataMapSettings< Eigen::Vector3d > > thrustDataSettings =
+            boost::make_shared< FromFileDataMapSettings< Eigen::Vector3d > >( cppFolder + "testThrustValues.txt" );
 
-    // Make interpolator
+    // Define interpolator settings.
     boost::shared_ptr< InterpolatorSettings >
-            thrustInterpolatorSettingsPointer = boost::make_shared< InterpolatorSettings >( linear_interpolator );
+            thrustInterpolatorSettings = boost::make_shared< InterpolatorSettings >( linear_interpolator );
 
-    // Creating settings for thrust force
-    boost::shared_ptr< OneDimensionalInterpolator< double, Eigen::Vector3d > >
-            thrustInterpolatorPointer = createOneDimensionalInterpolator< double, Eigen::Vector3d >(
-                thrustData, thrustInterpolatorSettingsPointer );
+    // Create data interpolation settings
+    boost::shared_ptr< DataInterpolationSettings< double, Eigen::Vector3d > > thrustDataInterpolatorSettings =
+            boost::make_shared< DataInterpolationSettings< double, Eigen::Vector3d > >(
+                thrustDataSettings, thrustInterpolatorSettings );
 
     // Define specific impulse
     double constantSpecificImpulse = 3000.0;
@@ -109,8 +102,7 @@ int main()
                                                      basic_astrodynamics::central_gravity ) );
     accelerationsOfVehicle[ "Vehicle" ].push_back(
                 boost::make_shared< ThrustAccelerationSettings >(
-                    thrustInterpolatorPointer,
-                    boost::lambda::constant( constantSpecificImpulse ), lvlh_thrust_frame, "Earth" ) );
+                    thrustDataInterpolatorSettings, constantSpecificImpulse, lvlh_thrust_frame, "Earth" ) );
 
     accelerationMap[ "Vehicle" ] = accelerationsOfVehicle;
     bodiesToPropagate.push_back( "Vehicle" );
@@ -158,7 +150,7 @@ int main()
     // Crete mass rate models
     std::map< std::string, boost::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
     massRateModels[ "Vehicle" ] = createMassRateModel( "Vehicle", boost::make_shared< FromThrustMassModelSettings >( 1 ),
-                                                      bodyMap, accelerationModelMap );
+                                                       bodyMap, accelerationModelMap );
 
     // Create settings for propagating the mass of the vehicle
     boost::shared_ptr< MassPropagatorSettings< double > > massPropagatorSettings =
@@ -168,7 +160,7 @@ int main()
                 terminationSettings );
 
     // Create list of propagation settings.
-    std::vector< boost::shared_ptr< PropagatorSettings< double > > > propagatorSettingsVector;
+    std::vector< boost::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
     propagatorSettingsVector.push_back( translationalPropagatorSettings );
     propagatorSettingsVector.push_back( massPropagatorSettings );
 
@@ -221,10 +213,12 @@ int main()
         dependentVariableResult[ outputIterator->first ] = newOutput;
     }
 
+    std::string outputSubFolder = "ThrustFromFileExample/";
+
     // Write propagation history to file.
     input_output::writeDataMapToTextFile( integrationResult,
                                           "thrustExampleFromFilePropagationHistory.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
@@ -233,7 +227,7 @@ int main()
     // Write dependent variable history to file.
     input_output::writeDataMapToTextFile( dependentVariableResult,
                                           "thrustExampleFromFileDependentVariableHistory.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,

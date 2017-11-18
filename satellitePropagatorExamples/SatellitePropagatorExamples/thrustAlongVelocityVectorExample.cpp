@@ -32,9 +32,7 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //Load spice kernels.
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
+    spice_interface::loadStandardSpiceKernels( );
 
     // Create Earth object
     // Define body settings for simulation.
@@ -125,12 +123,12 @@ int main( )
     Eigen::VectorXd initialBodyMasses = Eigen::VectorXd( 1 );
     initialBodyMasses( 0 ) = vehicleMass;
 
-    boost::shared_ptr< PropagatorSettings< double > > massPropagatorSettings =
+    boost::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings =
             boost::make_shared< MassPropagatorSettings< double > >(
                 bodiesWithMassToPropagate, massRateModels, initialBodyMasses, terminationSettings );
 
     // Create list of propagation settings.
-    std::vector< boost::shared_ptr< PropagatorSettings< double > > > propagatorSettingsVector;
+    std::vector< boost::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
     propagatorSettingsVector.push_back( translationalPropagatorSettings );
     propagatorSettingsVector.push_back( massPropagatorSettings );
 
@@ -157,10 +155,12 @@ int main( )
     std::map< double, Eigen::Matrix< double, Eigen::Dynamic, 1 > > numericalSolution =
             dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
+    std::string outputSubFolder = "ThrustAlongVelocityExample/";
+
     // Write satellite propagation history to file.
     input_output::writeDataMapToTextFile( numericalSolution,
                                           "velocityVectorThrustExample.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,

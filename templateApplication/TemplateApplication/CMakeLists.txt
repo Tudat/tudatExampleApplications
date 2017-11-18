@@ -6,7 +6,6 @@
  #    under the terms of the Modified BSD license. You should have received
  #    a copy of the license with this file. If not, please or visit:
  #    http://tudat.tudelft.nl/LICENSE.
- #
 
 # Specify minimum CMake version required.
 cmake_minimum_required(VERSION 2.6)
@@ -16,32 +15,33 @@ project(TemplateApplication)
 
 # Load UserSettings.txt
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-  message(STATUS "Building ${PROJECT_NAME} standalone.")
+  set(BUILD_STYLE "standalone")
   include("${CMAKE_CURRENT_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
 else()
-  message(STATUS "Building ${PROJECT_NAME} from within ${CMAKE_PROJECT_NAME}.")
+  set(BUILD_STYLE "part of ${CMAKE_PROJECT_NAME}")
   include("${CMAKE_CURRENT_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
   include("${CMAKE_SOURCE_DIR}/UserSettings.txt" OPTIONAL)
   STRING(REGEX REPLACE ${CMAKE_SOURCE_DIR} "" RELATIVE_PROJECT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
   set(RELATIVE_PROJECT_PATH "${RELATIVE_PROJECT_PATH}" CACHE STRING "Relative path wrt to project for function")
-  message(STATUS "Relative path (wrt to project): ${RELATIVE_PROJECT_PATH}")
+  # message(STATUS "Relative path (wrt to project): ${RELATIVE_PROJECT_PATH}")
 endif()
 
 # Set CMake build-type. If it not supplied by the user (either directly as an argument of through
 # the "UserSettings.txt" file, the default built type is "Release".
 if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Release"))
-  message(STATUS "WARNING: building release version!")
   set(CMAKE_BUILD_TYPE Release)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  message(STATUS "WARNING: building debug version!")
   set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-# Set module path to local CMake scripts.
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
+message(STATUS "<< ${PROJECT_NAME} (${CMAKE_BUILD_TYPE} - ${BUILD_STYLE}) >>")
+
+# Add local module path
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
+message(STATUS "CMake Module path(s): ${CMAKE_MODULE_PATH}")
 
 # Set compiler based on preferences (e.g. USE_CLANG) and system.
-include(${CMAKE_MODULE_PATH}/compiler.cmake)
+include(compiler)
 
 # Define the directory with the source code.
 set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -107,7 +107,7 @@ find_package(Eigen3 REQUIRED)
 
 # Include Eigen3 directories.
 # Set CMake flag to suppress Eigen warnings (platform-dependent solution).
-if(NOT APPLE)
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
   include_directories(SYSTEM AFTER "${EIGEN3_INCLUDE_DIR}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${EIGEN3_INCLUDE_DIR}\"")
@@ -130,7 +130,7 @@ find_package(Boost 1.45.0
 
 # Include Boost directories.
 # Set CMake flag to suppress Boost warnings (platform-dependent solution).
-if(NOT APPLE)
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
   include_directories(SYSTEM AFTER "${Boost_INCLUDE_DIRS}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${Boost_INCLUDE_DIRS}\"")
@@ -141,21 +141,21 @@ find_package(Tudat 2.0 REQUIRED)
 
 # Include Tudat directories.
 # Set CMake flag to suppress Tudat warnings (platform-dependent solution).
-if(NOT APPLE)
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
   include_directories(SYSTEM AFTER "${TUDAT_INCLUDE_DIR}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
 
-  # Find CSPICE library on local system.
-  find_package(Spice)
+# Find CSPICE library on local system.
+find_package(Spice)
 
-  # Include CSpice directories.
-  if(NOT APPLE)
-    include_directories(SYSTEM AFTER "${SPICE_INCLUDE_DIR}")
-  else( )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${SPICE_INCLUDE_DIR}\"")
-  endif( )
+# Include CSpice directories.
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
+  include_directories(SYSTEM AFTER "${SPICE_INCLUDE_DIR}")
+else( )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${SPICE_INCLUDE_DIR}\"")
+endif( )
 
 option(USE_NRLMSISE00 "build Tudat with NRLMSISE-00 enabled" ON)
 if(NOT USE_NRLMSISE00)
@@ -168,7 +168,7 @@ else()
   find_package(NRLMSISE00)
 
   # Include NRLMSISE00 directories.
-  if(NOT APPLE)
+  if(NOT APPLE OR APPLE_INCLUDE_FORCE)
     include_directories(SYSTEM AFTER "${NRLMSISE00_INCLUDE_DIR}")
   else( )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${NRLMSISE00_INCLUDE_DIR}\"")
@@ -183,10 +183,43 @@ if(USE_NRLMSISE00)
   list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
 endif()
 
-list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_propagators
-    tudat_aerodynamics tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
-    tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
-    tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES "")
+list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES "")
+list(APPEND TUDAT_APPLICATION_ITRS_LIBRARIES "")
+
+
+if(USE_SOFA)
+ list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES sofa)
+ list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES tudat_sofa_interface )
+ list(APPEND TUDAT_APPLICATION_ITRS_LIBRARIES tudat_earth_orientation )
+endif()
+
+if(USE_CSPICE)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES cspice)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES tudat_spice_interface )
+endif()
+
+if(USE_JSON)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nlohmann_json)
+endif()
+
+if(USE_NRLMSISE00)
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
+endif()
+
+
+list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_ground_stations tudat_propagators
+    tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
+    tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
+     tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_basic_mathematics
+     tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+
+list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_simulation_setup tudat_observation_models tudat_ground_stations tudat_acceleration_partials
+    tudat_observation_partials tudat_estimatable_parameters tudat_orbit_determination  tudat_propagators
+    tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
+    tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
+    tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_basic_mathematics
+    tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
 # Add helloWorld application.
 add_executable(application_HelloWorld "${SRCROOT}/helloWorld.cpp")
