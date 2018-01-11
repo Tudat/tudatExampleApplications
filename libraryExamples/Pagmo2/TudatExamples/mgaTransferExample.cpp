@@ -14,10 +14,10 @@
 #include <boost/filesystem.hpp>
 
 #include "pagmo/algorithms/de1220.hpp"
-#include "pagmo/algorithms/simulated_annealing.hpp"
 #include "pagmo/algorithms/sade.hpp"
 #include "pagmo/algorithms/cmaes.hpp"
 
+#include "Problems/multipleGravityAssist.h"
 #include "Problems/earthMarsTransfer.h"
 
 
@@ -102,7 +102,7 @@ void createGridSearch(
         }
     }
 
-    writeMatrixToFile( gridSearch, "porkchopPlot.dat" );
+    writeMatrixToFile( gridSearch, "porkchopPlotMga.dat" );
 
 }
 
@@ -115,6 +115,7 @@ int main( )
 
     // We have two decision variables each with a lower and upper
     // bound, create a vector of vectors that will contain these.
+    int numberOfParameters = 2;
     std::vector< std::vector< double > > bounds( 2, std::vector< double >( 2, 0.0 ) );
 
     // Search between 2020 and 2025 for flight duration between 200
@@ -125,15 +126,20 @@ int main( )
     bounds[ 1 ][ 1 ] = 1000;
 
     // Define the problem
-    problem prob{EarthMarsTransfer( bounds )};
+    std::vector< int > flybySequence;
+    flybySequence.push_back( 3 );
+    flybySequence.push_back( 4 );
+
+    // Define the problem
+    problem prob{ MultipleGravityAssist( bounds ) };
 
     //createGridSearch( prob, bounds, { 100, 100 } );
     // Select the self-adaptive differential evolution algorithm.
     // One generation per evolution step.
-    algorithm algo{simulated_annealing( )};
+    algorithm algo{de1220( )};
 
     // Create an island with 8 individuals
-    island isl{algo, prob, 256};
+    island isl{algo, prob, 16};
     int i = 0;
     // For 30 generations optimise the population in the island
     for(  ; i < 100; i++ )
@@ -141,11 +147,14 @@ int main( )
         isl.evolve();
         while( isl.status()!=pagmo::evolve_status::idle )
             isl.wait();
-        int c = isl.get_population().best_idx();
-        vector_double cx = isl.get_population().champion_x();
-        vector_double cf = isl.get_population().champion_f();
-        print("GEN=", i, " ID=", c, " DV=", cf[ 0 ], "m/s DEP=", cx[ 0 ],
-                "JD TOF=", cx[ 1 ], "d\n" );
+//        for( unsigned int ii = 0; ii < 4; ii++ )
+//        {
+            int c = isl.get_population().best_idx();
+            vector_double cx = isl.get_population().champion_x();
+            vector_double cf = isl.get_population().champion_f();
+            print("GEN=", i, " ID=", c, " DV=", cf[ 0 ], "m/s DEP=", cx[ 0 ],
+                    "JD TOF=", cx[ 1 ], "d\n" );
+//        }
     }
 
     return 0;

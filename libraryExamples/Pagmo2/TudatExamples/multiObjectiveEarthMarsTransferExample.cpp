@@ -14,10 +14,11 @@
 #include <boost/filesystem.hpp>
 
 #include "pagmo/algorithms/de1220.hpp"
-#include "pagmo/algorithms/simulated_annealing.hpp"
 #include "pagmo/algorithms/sade.hpp"
 #include "pagmo/algorithms/cmaes.hpp"
-
+#include "pagmo/algorithms/moead.hpp"
+#include "pagmo/algorithms/nsga2.hpp"
+#include "pagmo/algorithms/ihs.hpp"
 #include "Problems/earthMarsTransfer.h"
 
 
@@ -106,6 +107,29 @@ void createGridSearch(
 
 }
 
+void printPopulationToFile( const int iterationIndex,
+                            const std::vector< pagmo::vector_double >& population,
+                            const bool isFitness )
+{
+    Eigen::MatrixXd matrixToPrint( population.size( ), population.at( 0 ).size( ) );
+    for( unsigned int i = 0; i < population.size( ); i++ )
+    {
+        for( unsigned int j = 0; j < population.at( 0 ).size( ); j++ )
+        {
+            matrixToPrint( i, j ) = population.at( i ).at( j );
+        }
+    }
+
+    if( !isFitness )
+    {
+        writeMatrixToFile( matrixToPrint, "population_lambert_mo_" + std::to_string( iterationIndex ) + ".dat" );
+    }
+    else
+    {
+        writeMatrixToFile( matrixToPrint, "fitness_lambert_mo_" + std::to_string( iterationIndex ) + ".dat" );
+    }
+}
+
 //! Execute  main
 int main( )
 {
@@ -119,33 +143,37 @@ int main( )
 
     // Search between 2020 and 2025 for flight duration between 200
     // and 1000 days.
-    bounds[ 0 ][ 0 ] = 2458849.5;
-    bounds[ 1 ][ 0 ] = 2460676.5;
-    bounds[ 0 ][ 1 ] = 200;
-    bounds[ 1 ][ 1 ] = 1000;
+    bounds[ 0 ][ 0 ] = 2451545.0 - 10.0 * 365.0;
+    bounds[ 1 ][ 0 ] = 2451545.0 + 10.0 * 365.0;
+    bounds[ 0 ][ 1 ] = 100;
+    bounds[ 1 ][ 1 ] = 2000;
 
     // Define the problem
-    problem prob{EarthMarsTransfer( bounds )};
+    problem prob{EarthMarsTransfer( bounds, true )};
 
-    //createGridSearch( prob, bounds, { 100, 100 } );
+    //createGridSearch( prob, bounds, { 1000, 1000 } );
     // Select the self-adaptive differential evolution algorithm.
     // One generation per evolution step.
-    algorithm algo{simulated_annealing( )};
+    algorithm algo{nsga2( )};
 
     // Create an island with 8 individuals
-    island isl{algo, prob, 256};
+    //island isl{algo, prob, 16};
+    island isl{algo, prob, 128};
     int i = 0;
     // For 30 generations optimise the population in the island
     for(  ; i < 100; i++ )
     {
         isl.evolve();
+
+        printPopulationToFile( i, isl.get_population( ).get_x( ), false );
+        printPopulationToFile( i, isl.get_population( ).get_f( ), true );
+
+        //std::cout << "Best x: " << isl.get_population().champion_x()[0] << std::endl;
+        //std::cout << "Best y: " << isl.get_population().champion_x()[1] << std::endl;
         while( isl.status()!=pagmo::evolve_status::idle )
             isl.wait();
-        int c = isl.get_population().best_idx();
-        vector_double cx = isl.get_population().champion_x();
-        vector_double cf = isl.get_population().champion_f();
-        print("GEN=", i, " ID=", c, " DV=", cf[ 0 ], "m/s DEP=", cx[ 0 ],
-                "JD TOF=", cx[ 1 ], "d\n" );
+
+
     }
 
     return 0;

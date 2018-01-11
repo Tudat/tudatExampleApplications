@@ -8,8 +8,10 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#include"propagationTargeting.h"
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
+#include <Tudat/Mathematics/RootFinders/secantRootFinder.h>
+
+#include "propagationTargeting.h"
 
 
 PropagationTargetingProblem::PropagationTargetingProblem( const double altitudeOfPerigee,
@@ -41,7 +43,7 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
     const double simulationStartEpoch = 0.0;
     const double simulationEndEpoch = mathematical_constants::PI *
             sqrt(pow(semiMajorAxis,3)/earthGravitationalParameter);
-    const double fixedStepSize = 30;
+    const double fixedStepSize = 5.0;
 
     // Create the body Earth from Spice interface
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
@@ -106,9 +108,14 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
             dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
     //Find minimum distance from target
+
+
     Eigen::Vector3d separationFromTarget = integrationResult.begin( )->second.segment( 0, 3 ) - target;
+
     double bestDistanceFromTarget = sqrt(pow(separationFromTarget[0],2) + pow(separationFromTarget[1],2) +
             + pow(separationFromTarget[3],2));
+    double timeForBestDistanceFromTarget = integrationResult.begin( )->first;
+
     for( std::map< double, Eigen::VectorXd >::const_iterator stateIterator = integrationResult.begin( );
          stateIterator != integrationResult.end( ); stateIterator++ )
     {
@@ -118,9 +125,42 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
         if( distanceFromTarget < bestDistanceFromTarget )
         {
             bestDistanceFromTarget = distanceFromTarget;
+            timeForBestDistanceFromTarget = stateIterator->first;
         }
 
     }
+
+//    std::map< double, double > distancesFromTarget;
+//    for( std::map< double, Eigen::VectorXd >::const_iterator stateIterator = integrationResult.begin( );
+//         stateIterator != integrationResult.end( ); stateIterator++ )
+//    {
+//        distancesFromTarget[ stateIterator->first ] = ( integrationResult.begin( )->second.segment( 0, 3 ) - target ).norm( );
+//    }
+//    boost::shared_ptr< interpolators::OneDimensionalInterpolator< double, double > > distanceInterpolator =
+//            interpolators::createOneDimensionalInterpolator(
+//                distancesFromTarget, boost::make_shared< interpolators::InterpolatorSettings >( interpolators::cubic_spline_interpolator ) );
+
+
+//    boost::shared_ptr< root_finders::RootFinderCore< double > > rootFinder =
+//            boost::make_shared< root_finders::BisectionCore< double > >(
+//                boost::bind(
+//                    &root_finders::termination_conditions::RootAbsoluteToleranceTerminationCondition< double >::
+//                    checkTerminationCondition,
+//                    boost::make_shared< root_finders::termination_conditions::RootAbsoluteToleranceTerminationCondition
+//                    < double > >( 1.0E-2, 1000 ), _1, _2, _3, _4, _5 ) );
+
+//    boost::function< double( double ) > rootFunction =
+//            boost::bind( &interpolators::OneDimensionalInterpolator< double, double >::interpolateNonConst,
+//                 distanceInterpolator, _1 );
+//    boost::shared_ptr< basic_mathematics::Function< double, double > > rootFunctionProxy =
+//            boost::make_shared< basic_mathematics::FunctionProxy< double, double > >( rootFunction );
+
+//    double rootFinderResult = rootFinder->execute(
+//                rootFunctionProxy, timeForBestDistanceFromTarget );
+
+//    std::cout<<"Distances "<<bestDistanceFromTarget<<" "<<rootFinderResult<<std::endl;
+
+
     std::vector< double > output = {bestDistanceFromTarget} ;
     return output;
 

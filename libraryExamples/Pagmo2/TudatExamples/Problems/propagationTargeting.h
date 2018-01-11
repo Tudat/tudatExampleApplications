@@ -12,8 +12,8 @@
 #ifndef TUDAT_EXAMPLE_PAGMO_PROBLEM_PROPAGATION_TARGETING_HPP
 #define TUDAT_EXAMPLE_PAGMO_PROBLEM_PROPAGATION_TARGETING_HPP
 
-#include<utility>
-#include<vector>
+#include <utility>
+#include <vector>
 
 
 // Define the problem PaGMO-style
@@ -23,7 +23,7 @@ struct PropagationTargetingProblem {
     PropagationTargetingProblem( ){ }
 
     PropagationTargetingProblem( const double altitudeOfPerigee, const double altitudeOfApogee,
-                        const double altitudeOfTarget, const double longitudeOfTarget );
+                                 const double altitudeOfTarget, const double longitudeOfTarget );
 
     // Fitness: takes the value of the RAAN and returns the value of the closest distance from target
     std::vector<double> fitness(const std::vector<double> &x) const;

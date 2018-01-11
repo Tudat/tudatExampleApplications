@@ -22,8 +22,8 @@ struct my_problem {
 
         std::vector< double > return_value;
 
-        return_value.push_back( pow( x[0]*x[0] + x[1] - 11, 2)
-                + pow( x[0] + x[1]*x[1] - 7, 2 ) );
+        return_value.push_back( pow( x[0]*x[0] + x[1] - 11.0, 2.0 )
+                + pow( x[0] + x[1]*x[1] - 7.0, 2.0 ) );
 
         return return_value;
 

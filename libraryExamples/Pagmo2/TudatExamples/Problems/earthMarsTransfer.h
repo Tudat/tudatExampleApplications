@@ -19,7 +19,6 @@
 #include <Tudat/Astrodynamics/BasicAstrodynamics/convertMeanToEccentricAnomalies.h>
 #include <Tudat/Astrodynamics/MissionSegments/multiRevolutionLambertTargeterIzzo.h>
 
-#include "pagmo/algorithms/de1220.hpp"
 #include "pagmo/island.hpp"
 //#include "pagmo/external/cereal/cereal.hpp"
 #include "pagmo/io.hpp"
@@ -36,9 +35,9 @@ using namespace pagmo;
 struct EarthMarsTransfer
 {
 
-    EarthMarsTransfer( ){ }
+    EarthMarsTransfer( const bool useTripTime = false ): useTripTime_( useTripTime ){ }
 
-    EarthMarsTransfer( std::vector< std::vector< double > > &bounds );
+    EarthMarsTransfer( std::vector< std::vector< double > > &bounds, const bool useTripTime = false );
 
     // Calculates the fitness
     std::vector< double > fitness( const std::vector< double > &x ) const;
@@ -53,11 +52,26 @@ struct EarthMarsTransfer
         ar(problemBounds_);
     }
 
+    vector_double::size_type get_nobj() const
+    {
+        if(useTripTime_ )
+        {
+            return 2u;
+        }
+        else
+        {
+            return 1u;
+        }
+
+    }
+
 private:
 
     const std::vector< std::vector< double > > problemBounds_;
 
     StateType getPlanetPosition( const double date, const std::string planetName ) const;
+
+    bool useTripTime_;
 };
 
 #endif // TUDAT_EXAMPLE_PAGMO_PROBLEM_EARTH_MARS_TRANSFER_H
