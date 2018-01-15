@@ -15,7 +15,7 @@ MultipleGravityAssist::MultipleGravityAssist( std::vector< std::vector< double >
                                               const bool useTripTime ) :
     problemBounds_( bounds ), useTripTime_( useTripTime ) {
 
-    mgaObject_.type = total_DV_rndv;
+    mgaObject_.type = total_DV_orbit_insertion;
     mgaObject_.sequence = flybySequence;
     mgaObject_.rev_flag.resize( flybySequence.size( ) );
 
@@ -27,6 +27,9 @@ MultipleGravityAssist::MultipleGravityAssist( std::vector< std::vector< double >
     mgaObject_.Isp = 300.0;
     mgaObject_.mass = 8000.0;
     mgaObject_.DVlaunch = 0.0;
+
+    mgaObject_.rp = 76.0E3;
+    mgaObject_.e = 0.9;
 }
 
 
@@ -44,24 +47,24 @@ std::pair<std::vector<double>, std::vector<double> > MultipleGravityAssist::get_
 //! Implementation of the fitness function (return delta-v)
 std::vector<double> MultipleGravityAssist::fitness( const std::vector<double> &xv ) const{
 
-            std::vector<double> rp;
-            std::vector<double> DV;
-            double obj_funct;
-            int result = MGA( xv, mgaObject_, rp, DV, obj_funct );
-            if( !useTripTime_ )
-            {
-                return { obj_funct };
-            }
-            else
-            {
-                double tof = 0.0;
-                for( unsigned int i = 1; i < problemBounds_.at( 0 ).size( ); i++ )
-                {
-                    tof += xv[ i ];
-                }
-                return { obj_funct, tof };
+    std::vector<double> rp;
+    std::vector<double> DV;
+    double obj_funct;
+    int result = MGA( xv, mgaObject_, rp, DV, obj_funct );
+    if( !useTripTime_ )
+    {
+        return { obj_funct };
+    }
+    else
+    {
+        double tof = 0.0;
+        for( unsigned int i = 1; i < problemBounds_.at( 0 ).size( ); i++ )
+        {
+            tof += xv[ i ];
+        }
+        return { obj_funct, tof };
 
-            }
+    }
 }
 
 

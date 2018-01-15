@@ -254,7 +254,7 @@ int MGA(vector<double> t,	// it is the vector which provides time in modified ju
 
     if (problem.type == total_DV_orbit_insertion || problem.type == total_DV_rndv )
     {
-        //DVtot += DVarr;
+        DVtot += DVarr;
     }
     //std::cout<<"PROBLEM TYPE "<<problem.type<<" "<<DVarr<<" "<<DVtot<<std::endl;
 
@@ -267,7 +267,7 @@ int MGA(vector<double> t,	// it is the vector which provides time in modified ju
 
     // Launcher Constraint
     if (DV[0] > DVlaunch)
-        //DVtot += (DV[0] - DVlaunch);
+        DVtot += (DV[0] - DVlaunch);
     //std::cout<<"PROBLEM TYPE "<<problem.type<<" "<<DVarr<<" "<<DV[0]<<std::endl;
 
     // std::cout<<"PROBLEM TYPE "<<problem.type<<" "<<DVlaunch<<" "<<DV[ 0 ]<<" "<<DVtot<<std::endl;

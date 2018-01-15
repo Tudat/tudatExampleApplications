@@ -121,7 +121,9 @@ struct MultipleGravityAssist
 
     MultipleGravityAssist( const bool useTripTime = false ): useTripTime_( useTripTime ){ }
 
-    MultipleGravityAssist( std::vector< std::vector< double > > &bounds, const bool useTripTime = false );
+    MultipleGravityAssist( std::vector< std::vector< double > > &bounds,
+                           std::vector< int > flybySequence,
+                           const bool useTripTime = false );
 
     // Calculates the fitness
     std::vector< double > fitness( const std::vector< double > &x ) const;

@@ -15,7 +15,9 @@
 
 #include "pagmo/algorithms/de1220.hpp"
 #include "pagmo/algorithms/sade.hpp"
+#include "pagmo/algorithms/simulated_annealing.hpp"
 #include "pagmo/algorithms/cmaes.hpp"
+#include "pagmo/algorithms/de.hpp"
 
 #include "Problems/multipleGravityAssist.h"
 #include "Problems/earthMarsTransfer.h"
@@ -116,44 +118,56 @@ int main( )
     // We have two decision variables each with a lower and upper
     // bound, create a vector of vectors that will contain these.
     int numberOfParameters = 2;
-    std::vector< std::vector< double > > bounds( 2, std::vector< double >( 2, 0.0 ) );
+    std::vector< std::vector< double > > bounds( 2, std::vector< double >( 5, 0.0 ) );
 
     // Search between 2020 and 2025 for flight duration between 200
     // and 1000 days.
     bounds[ 0 ][ 0 ] = 2458849.5;
-    bounds[ 1 ][ 0 ] = 2460676.5;
-    bounds[ 0 ][ 1 ] = 200;
-    bounds[ 1 ][ 1 ] = 1000;
+    bounds[ 1 ][ 0 ] = 2458849.5 + 20 * 365;
+    bounds[ 0 ][ 1 ] = 100;
+    bounds[ 1 ][ 1 ] = 500;
+    bounds[ 0 ][ 2 ] = 100;
+    bounds[ 1 ][ 2 ] = 500;
+    bounds[ 0 ][ 3 ] = 100;
+    bounds[ 1 ][ 3 ] = 800;
+    bounds[ 0 ][ 4 ] = 1500;
+    bounds[ 1 ][ 4 ] = 3000;
 
     // Define the problem
     std::vector< int > flybySequence;
     flybySequence.push_back( 3 );
-    flybySequence.push_back( 4 );
+    flybySequence.push_back( 2 );
+    flybySequence.push_back( 3 );
+    flybySequence.push_back( 3 );
+    flybySequence.push_back( 5 );
 
     // Define the problem
-    problem prob{ MultipleGravityAssist( bounds ) };
+    problem prob{ MultipleGravityAssist( bounds, flybySequence ) };
 
     //createGridSearch( prob, bounds, { 100, 100 } );
     // Select the self-adaptive differential evolution algorithm.
     // One generation per evolution step.
-    algorithm algo{de1220( )};
+    algorithm algo{de( )};
 
     // Create an island with 8 individuals
-    island isl{algo, prob, 16};
+    island isl{algo, prob, 100000};
     int i = 0;
     // For 30 generations optimise the population in the island
-    for(  ; i < 100; i++ )
+    for(  ; i < 1000; i++ )
     {
         isl.evolve();
         while( isl.status()!=pagmo::evolve_status::idle )
             isl.wait();
 //        for( unsigned int ii = 0; ii < 4; ii++ )
 //        {
+        //if( i % 10 == 0 )
+        {
             int c = isl.get_population().best_idx();
             vector_double cx = isl.get_population().champion_x();
             vector_double cf = isl.get_population().champion_f();
-            print("GEN=", i, " ID=", c, " DV=", cf[ 0 ], "m/s DEP=", cx[ 0 ],
-                    "JD TOF=", cx[ 1 ], "d\n" );
+            print("GEN=", i, " ID=", c, " DV=", cf[ 0 ], "m/s DEP=", cx[ 0 ] - bounds[ 0 ][ 0 ],
+                    "JD TOF=", cx[ 1 ]+cx[ 2 ]+cx[ 3 ], "d\n" );
+        }
 //        }
     }
 
