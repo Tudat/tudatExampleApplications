@@ -59,7 +59,7 @@ int main( )
     const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
 
     // Set numerical integration fixed step size for the first simulation.
-    double fixedStepSize = 0.01;
+    double fixedStepSize = 0.1;
 
     // Define simulation body settings.
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
@@ -181,7 +181,7 @@ int main( )
     std::cout << "Estimated burn time = " << estimatedBurnTime << "s\n\n";
 
     // Clohessy Wiltshire solution for estimated time to rendez-vous
-    double estimatedRendezVousTime = 2*mathematical_constants::PI/meanOrbitalMotion;
+    double estimatedRendezVousTime = 2.0 *mathematical_constants::PI/meanOrbitalMotion;
 
     // Set initial state for first simulation
     Eigen::VectorXd systemInitialState = Eigen::VectorXd( 12 );
@@ -216,7 +216,7 @@ int main( )
                     bodiesWithMassToPropagate, massRateModels, initialBodyMasses, timeTerminationSettings_1 );
 
     // Create multi-type propagator settings (state + chaser mass propagator)
-    std::vector< boost::shared_ptr< PropagatorSettings< double > > > propagatorSettingsVector;
+    std::vector< boost::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
                     propagatorSettingsVector.push_back( translationalPropagatorSettings);
                     propagatorSettingsVector.push_back( massPropagatorSettings );
 
@@ -236,14 +236,34 @@ int main( )
 
     // Set the simulation time as decision variable, with boundaries +-5 seconds from
     // the estimated burn time.
-    boost::shared_ptr< optimization::SingleDecisionVariableSettings > decisionVariable_1 =
-            boost::make_shared< optimization::SingleDecisionVariableSettings >(
+    std::vector< boost::shared_ptr< optimization::SingleDecisionVariableSettings > > decisionVariableList;
+    decisionVariableList.push_back( boost::make_shared< optimization::SingleDecisionVariableSettings >(
                     optimization::simulation_time_decision_variable,
-                            estimatedBurnTime - 5.0, estimatedBurnTime + 5.0 );
+                            estimatedBurnTime - 10.0, estimatedBurnTime + 10.0 ) );
+    decisionVariableList.push_back(
+                boost::make_shared< optimization::SingleCartesianComponentDecisionVariableSettings >(
+                    orbital_elements::xCartesianVelocity,
+                            chaserInitialState( 3 ) - 10.0, chaserInitialState( 3 ) + 10.0, "Chaser" ) );
+    decisionVariableList.push_back(
+                boost::make_shared< optimization::SingleCartesianComponentDecisionVariableSettings >(
+                    orbital_elements::yCartesianVelocity,
+                    chaserInitialState( 4 ) - 10.0, chaserInitialState( 4 ) + 10.0, "Chaser" ) );
+    decisionVariableList.push_back(
+                boost::make_shared< optimization::SingleCartesianComponentDecisionVariableSettings >(
+                    orbital_elements::zCartesianVelocity,
+                    chaserInitialState( 5 ) - 10.0, chaserInitialState( 5 ) + 10.0, "Chaser" ) );
+
+    std::cout<<"Boundaries 0 "<<estimatedBurnTime - 10.0<<" "<<estimatedBurnTime + 10.0<<std::endl;
+    std::cout<<"Boundaries 1 "<<chaserInitialState( 3 ) - 10.<<" "<<chaserInitialState( 3 ) + 10.<<std::endl;
+    std::cout<<"Boundaries 2 "<<chaserInitialState( 4 ) - 10.<<" "<<chaserInitialState( 4 ) + 10.<<std::endl;
+    std::cout<<"Boundaries 3 "<<chaserInitialState( 5 ) - 10.<<" "<<chaserInitialState( 5 ) + 10.<<std::endl;
+
+    boost::shared_ptr< optimization::DecisionVariableSettings > decisionVariableSettings = boost::make_shared<
+            optimization::DecisionVariableSettings >( decisionVariableList );
 
     // Create first mission segment with the dynamics simulator and the decision variable
     boost::shared_ptr< optimization::MissionSegmentSettings > missionSegment_1 =
-            boost::make_shared< optimization::MissionSegmentSettings >( dynamicsSimulator_1, decisionVariable_1 );
+            boost::make_shared< optimization::MissionSegmentSettings >( dynamicsSimulator_1, decisionVariableSettings );
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,7 +319,7 @@ int main( )
     std::vector< boost::shared_ptr< propagators::PropagationTerminationSettings > > multiTerminationSettings;
 
     multiTerminationSettings.push_back( boost::make_shared< propagators::PropagationTimeTerminationSettings >(
-                                            estimatedBurnTime + estimatedRendezVousTime + 10*fixedStepSize) );
+                                            estimatedBurnTime + estimatedRendezVousTime + 10.0 * fixedStepSize ) );
 
     multiTerminationSettings.push_back( boost::make_shared<
             propagators::PropagationDependentVariableTerminationSettings >(
@@ -325,7 +345,7 @@ int main( )
 
     // Use the minimum separation between spacecraft as objective function
 
-    const int maxNumberOfEvolutions = 30;
+    const int maxNumberOfEvolutions = 100;
     const double objectiveValue = 0.0;
     boost::shared_ptr< optimization::ObjectiveFunctionFromMinOrMaxDependentVariableSettings > objectiveFunction =
             boost::make_shared< optimization::ObjectiveFunctionFromMinOrMaxDependentVariableSettings >(
@@ -349,9 +369,9 @@ int main( )
     missionSegments.push_back( missionSegment_1 );
     missionSegments.push_back( missionSegment_2 );
 
-    optimization::MissionLinker missionLinker(missionSegments,
+    optimization::MissionLinker missionLinker( missionSegments,
             boost::make_shared< optimization::OptimizationSettings >( optimization::global_optimization,
-                    32, true, 1 ), false  );
+                    16, true, 1 ), false  );
 
     // Start optimization
     missionLinker.optimize();

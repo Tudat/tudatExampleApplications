@@ -45,7 +45,7 @@ int main( )
     problem prob{EarthMarsTransfer( bounds )};
 
     // Perform grid saerch
-    createGridSearch( prob, bounds, { 250, 250 }, "porkchopEarthMars" );
+    createGridSearch( prob, bounds, { 1000, 1000 }, "porkchopEarthMars" );
 
     // Perform optimization with 8 different optimizers
     for( int j = 0; j < 8; j++ )

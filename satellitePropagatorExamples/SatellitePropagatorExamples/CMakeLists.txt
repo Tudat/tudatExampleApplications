@@ -305,7 +305,6 @@ add_executable(application_ThrustFromFile
 setup_executable_target(application_ThrustFromFile "${SRCROOT}")
 target_link_libraries(application_ThrustFromFile ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
-<<<<<<< HEAD
 # Add Satellite rendez-vous example 1
 if(USE_OPTIMIZATION_PACKAGE)
   add_executable(application_SatelliteRendezVous
@@ -313,7 +312,7 @@ if(USE_OPTIMIZATION_PACKAGE)
   setup_executable_target(application_SatelliteRendezVous "${SRCROOT}")
   target_link_libraries(application_SatelliteRendezVous ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 endif( )
-=======
+
 # Add simulated Earth orbiter simulated POD example
 add_executable(application_EarthOrbiterStateEstimation
                "${SRCROOT}/earthOrbiterStateEstimation.cpp")
@@ -324,4 +323,3 @@ add_executable(application_EarthOrbiterBasicStateEstimation
                "${SRCROOT}/earthOrbiterBasicStateEstimation.cpp")
 setup_executable_target(application_EarthOrbiterBasicStateEstimation "${SRCROOT}")
 target_link_libraries(application_EarthOrbiterBasicStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
->>>>>>> master
