@@ -199,32 +199,11 @@ if(USE_NRLMSISE00)
   list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
 endif()
 
-
-# Find PaGMO library on local system.
-if( USE_OPTIMIZATION_PACKAGE )
-  find_package(PaGMO2)
-
-  # Include PaGMO directories.
-  if(NOT APPLE)
-    include_directories(SYSTEM AFTER "${PAGMO_INCLUDE_DIR}")
-  else( )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${PAGMO_INCLUDE_DIR}\"")
-  endif( )
-
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES pthread)
-
-endif( )
-
-
 list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_propagators
     tudat_aerodynamics tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
     tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
     tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_basics
-    tudat_optimization ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
-
-if(USE_OPTIMIZATION_PACKAGE)
- list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_optimization )
-endif( )
+    ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
 list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_ground_stations tudat_propagators
     tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
@@ -304,14 +283,6 @@ add_executable(application_ThrustFromFile
                "${SRCROOT}/thrustAccelerationFromFileExample.cpp")
 setup_executable_target(application_ThrustFromFile "${SRCROOT}")
 target_link_libraries(application_ThrustFromFile ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
-
-# Add Satellite rendez-vous example 1
-if(USE_OPTIMIZATION_PACKAGE)
-  add_executable(application_SatelliteRendezVous
-                 "${SRCROOT}/satelliteRendezVousExample.cpp")
-  setup_executable_target(application_SatelliteRendezVous "${SRCROOT}")
-  target_link_libraries(application_SatelliteRendezVous ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
-endif( )
 
 # Add simulated Earth orbiter simulated POD example
 add_executable(application_EarthOrbiterStateEstimation
