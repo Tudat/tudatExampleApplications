@@ -60,7 +60,7 @@ int main()
     algorithm algo{de1220( )};
 
     // Create an island with 128 individuals
-    int populationSize = 128;
+    pagmo::population::size_type populationSize = 128;
     island isl{algo, prob, populationSize};
 
     // Evolve for 25 generations

@@ -13,6 +13,7 @@
 
 int main( )
 {
+    // Set random seed
     pagmo::random_device::set_seed( 12345 );
 
     // Define run settings
@@ -59,7 +60,7 @@ int main( )
                 // Perform optimization for each population size/number of generations
                 for( unsigned int l = 0; l < numberOfPopulationCases; l++ )
                 {
-                    int populationSize = 0;
+                    pagmo::population::size_type populationSize = 0;
                     int numberOfGenerations = 0;
                     if( l == 0 )
                     {
