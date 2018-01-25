@@ -1,5 +1,5 @@
- #    Copyright (c) 2010-2013, Delft University of Technology
- #    All rights reserved.
+ #    Copyright (c) 2010-2018, Delft University of Technology
+ #    All rigths reserved
  #
  #    Redistribution and use in source and binary forms, with or without modification, are
  #    permitted provided that the following conditions are met:
