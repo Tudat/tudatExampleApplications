@@ -197,7 +197,7 @@ endif()
 
 
 # Find PaGMO library on local system.
-if( USE_OPTIMIZATION_PACKAGE )
+if( USE_PAGMO )
   find_package(PaGMO2)
 
   # Include PaGMO directories.
@@ -211,16 +211,6 @@ if( USE_OPTIMIZATION_PACKAGE )
 
 endif( )
 
-
-list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_propagators
-    tudat_aerodynamics tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
-    tudat_electro_magnetism tudat_propulsion tudat_ephemerides tudat_numerical_integrators tudat_reference_frames
-    tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators tudat_basics
-     ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
-
-if(USE_OPTIMIZATION_PACKAGE)
- list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES  )
-endif( )
 
 list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_ground_stations tudat_propagators
     tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
