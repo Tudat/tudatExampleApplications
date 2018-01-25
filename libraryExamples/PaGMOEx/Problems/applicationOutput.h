@@ -66,12 +66,12 @@ void createGridSearch(
 
     for( int i = 0; i < numberOfPoints.at( 0 ); i++ )
     {
+        std::cout<<"Grid search "<<i<<std::endl;
         for( int j = 0; j < numberOfPoints.at( 1 ); j++ )
         {
             decisionVector[ 0 ] = xDataPoints[ i ];
             decisionVector[ 1 ] = yDataPoints[ j ];
 
-            std::cout<<"Grid search "<<i<<" "<<j<<std::endl;
             gridSearch( i, j ) = problem.fitness( decisionVector ).at( 0 );
         }
     }

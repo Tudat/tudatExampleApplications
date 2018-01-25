@@ -70,7 +70,7 @@ std::vector<double> EarthMarsTransfer::fitness( const std::vector<double> &xv ) 
 }
 
 //! Function to obtain position of Earth and Mars
-StateType EarthMarsTransfer::getPlanetPosition( const double date,
+EarthMarsTransfer::StateType EarthMarsTransfer::getPlanetPosition( const double date,
                                                 const std::string planetName ) const {
 
     using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;

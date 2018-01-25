@@ -54,7 +54,7 @@ int main()
     // Perform Grid Search and write results to file
     if( performGridSearch )
     {
-        createGridSearch( prob, {{0.0, 0.0}, {360.0, 180.0}}, { 100, 50 }, "propagationTargetingGridSearch_pert" );
+        createGridSearch( prob, {{0.0, 0.0}, {360.0, 180.0}}, { 100, 50 }, "propagationTargetingGridSearch_" );
     }
     // Instantiate a pagmo algorithm
     algorithm algo{de1220( )};

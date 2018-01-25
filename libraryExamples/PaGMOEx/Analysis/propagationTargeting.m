@@ -31,7 +31,7 @@ set(gcf,'PaperPositionMode','auto');
 
 pause(0.1)
 saveas(gcf,strcat('unperturbedTargetingGridSearch'),'png');
-
+%%
 
 figure(2)
 population = cell(8,1);
@@ -86,6 +86,8 @@ saveas(gcf,strcat('unperturbedTargetingOptimization'),'png');
 load(strcat(dataFolder,'propagationTargetingGridSearch_pert.dat'))
 load(strcat(dataFolder,'propagationTargetingGridSearch_pert_x_data.dat'))
 load(strcat(dataFolder,'propagationTargetingGridSearch_pert_y_data.dat'))
+
+%%
 
 % Plot objective function as contour plot for perturbed case
 figure(3)

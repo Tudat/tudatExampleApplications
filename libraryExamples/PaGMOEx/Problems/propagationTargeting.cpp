@@ -36,6 +36,7 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
     using namespace tudat::input_output;
 
     // Definition of the orbit
+    const double earthRotationRate = 2.0 * mathematical_constants::PI / physical_constants::SIDEREAL_DAY;
     const double earthRadius = spice_interface::getAverageRadius( "Earth" );
     const double radiusOfPerigee =  earthRadius + altitudeOfPerigee_;
     const double radiusOfApogee = earthRadius + altitudeOfApogee_;
@@ -44,8 +45,8 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
 
     //Integration time: half a orbit
     const double simulationStartEpoch = 0.0;
-    const double simulationEndEpoch = mathematical_constants::PI *
-            sqrt(pow(semiMajorAxis,3)/earthGravitationalParameter);
+    const double simulationEndEpoch = 1.2 * mathematical_constants::PI *
+            std::sqrt(pow(semiMajorAxis,3)/earthGravitationalParameter);
     const double fixedStepSize = 2.0;
 
     // Create the body Earth from Spice interface
@@ -137,19 +138,22 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
     std::map< double, Eigen::VectorXd > integrationResult =
             dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
+
     //Find minimum distance from target
+    Eigen::Vector3d separationFromTarget =
+            Eigen::Quaterniond( Eigen::AngleAxisd(
+                                    -earthRotationRate * integrationResult.begin( )->first, Eigen::Vector3d::UnitZ( ) ) ) *
+            ( integrationResult.begin( )->second.segment( 0, 3 ) )- target;
 
-
-    Eigen::Vector3d separationFromTarget = integrationResult.begin( )->second.segment( 0, 3 ) - target;
-
-    double bestDistanceFromTarget = sqrt(pow(separationFromTarget[0],2) + pow(separationFromTarget[1],2) +
-            + pow(separationFromTarget[3],2));
+    double bestDistanceFromTarget = separationFromTarget.norm( );
     double timeForBestDistanceFromTarget = integrationResult.begin( )->first;
 
     for( std::map< double, Eigen::VectorXd >::const_iterator stateIterator = integrationResult.begin( );
          stateIterator != integrationResult.end( ); stateIterator++ )
     {
-        separationFromTarget = stateIterator->second.segment( 0, 3 ) - target;
+        separationFromTarget = Eigen::Quaterniond( Eigen::AngleAxisd(
+                                                       -earthRotationRate * stateIterator->first, Eigen::Vector3d::UnitZ( ) ) ) *
+                stateIterator->second.segment( 0, 3 ) - target;
         const double distanceFromTarget = separationFromTarget.norm( );
 
         if( distanceFromTarget < bestDistanceFromTarget )
