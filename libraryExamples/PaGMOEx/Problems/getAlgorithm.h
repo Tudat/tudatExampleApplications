@@ -39,6 +39,10 @@ pagmo::algorithm getMultiObjectiveAlgorithm( const int index )
         return algo;
         break;
     }
+    default:
+    {
+        throw std::runtime_error( "Error, multi-objective pagmo algorithm " + std::to_string( index ) + " was not found." );
+    }
     }
 }
 pagmo::algorithm getAlgorithm( const int index )
@@ -110,6 +114,10 @@ pagmo::algorithm getAlgorithm( const int index )
         pagmo::algorithm algo{ pagmo::xnes( ) };
         return algo;
         break;
+    }
+    default:
+    {
+        throw std::runtime_error( "Error, sinlge-objective pagmo algorithm " + std::to_string( index ) + " was not found." );
     }
     }
 }
