@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # Specify project name.
-project(SatellitePropagatorExamples)
+project(PaGMOLibraryExamples)
 
 # Load UserSettings.txt
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
@@ -82,21 +82,6 @@ if(NOT TUDAT_BUNDLE_DISTRIBUTION_PATH)
     set(TUDAT_BUNDLE_DISTRIBUTION_PATH "${CODEROOT}")
 endif(NOT TUDAT_BUNDLE_DISTRIBUTION_PATH)
 
-if(NOT SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH)
-    set(SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH
-        "${TUDAT_BUNDLE_DISTRIBUTION_PATH}/tudatApplications/satellitePropagatorExamples")
-endif(NOT SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH)
-
-# Install files.
-install(DIRECTORY "${SRCROOT}/"
-        DESTINATION "${SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH}/SatellitePropagatorExamples"
-        PATTERN ".DS_STORE" EXCLUDE
-        PATTERN "CMakeLists.txt.user" EXCLUDE
-        PATTERN ".svn" EXCLUDE
-        PATTERN ".git" EXCLUDE
-        PATTERN ".bzr" EXCLUDE
-)
-
 # Include the top-level directories.
 include_directories(AFTER
   "${CODEROOT}"
@@ -125,8 +110,8 @@ if(NOT Boost_USE_STATIC_RUNTIME)
 endif()
 
 # Find Boost libraries on local system.
-find_package(Boost 1.55.0
-             COMPONENTS thread date_time system unit_test_framework filesystem regex REQUIRED)
+find_package(Boost 1.45.0
+             COMPONENTS thread date_time system serialization filesystem regex REQUIRED)
 
 # Include Boost directories.
 # Set CMake flag to suppress Boost warnings (platform-dependent solution).
@@ -147,121 +132,20 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
 
-  # Find CSPICE library on local system.
-  find_package(Spice)
-
-  # Include CSpice directories.
-  if(NOT APPLE OR APPLE_INCLUDE_FORCE)
-    include_directories(SYSTEM AFTER "${SPICE_INCLUDE_DIR}")
-  else( )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${SPICE_INCLUDE_DIR}\"")
-  endif( )
-
-option(USE_NRLMSISE00 "build Tudat with NRLMSISE-00 enabled" ON)
-if(NOT USE_NRLMSISE00)
-  message(STATUS "NRLMSISE-00 disabled!")
-  add_definitions(-DUSE_NRLMSISE00=0)
-else()
-  message(STATUS "NRLMSISE-00 enabled!")
-  add_definitions(-DUSE_NRLMSISE00=1)
-  # Find USE_NRLMSISE00 library on local system.
-  find_package(NRLMSISE00)
-
-  # Include NRLMSISE00 directories.
-  if(NOT APPLE OR APPLE_INCLUDE_FORCE)
-    include_directories(SYSTEM AFTER "${NRLMSISE00_INCLUDE_DIR}")
-  else( )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${NRLMSISE00_INCLUDE_DIR}\"")
-  endif( )
-endif( )
-
-add_subdirectory( "${SRCROOT}/AstroToolbox")
-include_directories(SYSTEM AFTER "${SRCROOT}/AstroToolbox")
-
-
-list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES "")
-list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES "")
-list(APPEND TUDAT_APPLICATION_ITRS_LIBRARIES "")
-
-list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES astro_toolbox)
-
-if(USE_SOFA)
- list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES sofa)
- list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES tudat_sofa_interface )
- list(APPEND TUDAT_APPLICATION_ITRS_LIBRARIES tudat_earth_orientation )
-endif()
-
-if(USE_CSPICE)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES cspice)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES tudat_spice_interface )
-endif()
-
-if(USE_JSON)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nlohmann_json)
-endif()
-
-if(USE_NRLMSISE00)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
-endif()
-
-
 # Find PaGMO library on local system.
-if( USE_PAGMO )
-  find_package(PaGMO2)
+find_package(PaGMO)
 
-  # Include PaGMO directories.
-  if(NOT APPLE)
-    include_directories(SYSTEM AFTER "${PAGMO_INCLUDE_DIR}")
-  else( )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${PAGMO_INCLUDE_DIR}\"")
-  endif( )
-
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES pthread)
-
+# Include PaGMO directories.
+if(NOT APPLE OR APPLE_INCLUDE_FORCE)
+  include_directories(SYSTEM AFTER "${PAGMO_INCLUDE_DIR}")
+else( )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${PAGMO_INCLUDE_DIR}\"")
 endif( )
 
-
-list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_ground_stations tudat_propagators
-    tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
-    tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
-     tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics
-     tudat_root_finders tudat_basic_mathematics tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
-
-list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_simulation_setup tudat_observation_models tudat_ground_stations tudat_acceleration_partials
-    tudat_observation_partials tudat_estimatable_parameters tudat_orbit_determination  tudat_propagators
-    tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
-    tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
-    tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics
-    tudat_root_finders tudat_basic_mathematics tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
-
-## Add Tudat pagmo examples
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Problems")
 
-add_executable(application_PagmoCEC2013Comparison "${SRCROOT}/cec2013OptimizerComparison.cpp")
-setup_executable_target(application_PagmoCEC2013Comparison "${SRCROOT}")
-target_link_libraries(application_PagmoCEC2013Comparison pagmo2_library_example_problems tudat_input_output pthread ${Boost_LIBRARIES} )
-
-add_executable(application_PagmoHimmelblauOptimization "${SRCROOT}/himmelblauOptimization.cpp")
-setup_executable_target(application_PagmoHimmelblauOptimization "${SRCROOT}")
-target_link_libraries(application_PagmoHimmelblauOptimization pagmo2_library_example_problems tudat_input_output pthread ${Boost_LIBRARIES} )
-
-add_executable(application_PagmoEarthMarsTransferExample "${SRCROOT}/earthMarsTransferExample.cpp")
-setup_executable_target(application_PagmoEarthMarsTransferExample "${SRCROOT}")
-target_link_libraries(application_PagmoEarthMarsTransferExample pagmo2_library_example_problems ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES}
-     pthread ${Boost_LIBRARIES} )
-
- add_executable(application_PagmoMgaTransferExample "${SRCROOT}/mgaTransferExample.cpp")
- setup_executable_target(application_PagmoMgaTransferExample "${SRCROOT}")
- target_link_libraries(application_PagmoMgaTransferExample pagmo2_library_example_problems ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES}
-      pthread ${Boost_LIBRARIES} )
-
-
- add_executable(application_PagmoMultiObjectiveEarthMarsTransferExample "${SRCROOT}/multiObjectiveEarthMarsTransferExample.cpp")
- setup_executable_target(application_PagmoMultiObjectiveEarthMarsTransferExample "${SRCROOT}")
- target_link_libraries(application_PagmoMultiObjectiveEarthMarsTransferExample pagmo2_library_example_problems ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES}
-      pthread ${Boost_LIBRARIES} )
-
-add_executable(application_PagmoPropagationTargetingExample "${SRCROOT}/propagationTargetingExample.cpp")
-setup_executable_target(application_PagmoPropagationTargetingExample "${SRCROOT}")
-target_link_libraries(application_PagmoPropagationTargetingExample pagmo2_library_example_problems ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES}
-      pthread ${Boost_LIBRARIES} )
+# Add application.
+add_executable(example_library_pagmo "${SRCROOT}/main.cpp")
+setup_executable_target(example_library_pagmo "${SRCROOT}")
+target_link_libraries(example_library_pagmo  pthread pagmo my_pagmo_problems
+                      tudat_basic_astrodynamics tudat_mission_segments ${Boost_LIBRARIES})

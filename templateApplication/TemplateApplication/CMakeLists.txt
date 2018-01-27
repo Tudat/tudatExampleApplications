@@ -225,8 +225,3 @@ list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_simulation_setup tudat_
 add_executable(application_HelloWorld "${SRCROOT}/helloWorld.cpp")
 setup_executable_target(application_HelloWorld "${SRCROOT}")
 target_link_libraries(application_HelloWorld tudat_gravitation tudat_basic_astrodynamics ${Boost_LIBRARIES} )
-
-#add_executable(test_test "${SRCROOT}/unittesttest.cpp")
-#setup_executable_target(test_test "${SRCROOT}")
-#target_link_libraries(test_test ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
-

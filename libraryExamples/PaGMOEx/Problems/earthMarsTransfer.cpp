@@ -8,46 +8,47 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#include "earthMarsTransfer.h"
+#include <limits>
 
-EarthMarsTransfer::EarthMarsTransfer( std::vector< std::vector< double > > &bounds,
-                                      const bool useTripTime ) :
-    problemBounds_( bounds ), useTripTime_( useTripTime ) { }
+#include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/convertMeanToEccentricAnomalies.h>
+#include <Tudat/Astrodynamics/MissionSegments/multiRevolutionLambertTargeterIzzo.h>
 
+#include "PaGMOEx/Problems/earthMarsTransfer.h"
+
+namespace pagmo { namespace problem {
+
+EarthMarsTransfer::EarthMarsTransfer(
+    const std::vector< std::vector< double > > problemBounds ) :
+    base( problemBounds[ 0 ], problemBounds[ 1 ], 0, 1 ),
+    problemBounds_( problemBounds )
+{ }
+
+//! Clone method.
+base_ptr EarthMarsTransfer::clone( ) const {
+        return base_ptr( new EarthMarsTransfer( *this ) );
+}
 
 //! Descriptive name of the problem
 std::string EarthMarsTransfer::get_name() const {
     return "Multi-revolution Lambert Earth-Mars transfer trajectory";
 }
 
-//! Get bounds
-std::pair<std::vector<double>, std::vector<double> > EarthMarsTransfer::get_bounds() const {
-
-    return { problemBounds_[0], problemBounds_[1] };
-}
-
-//! Implementation of the fitness function (return delta-v)
-std::vector<double> EarthMarsTransfer::fitness( const std::vector<double> &xv ) const{
-
+//! Implementation of the objective function.
+void EarthMarsTransfer::objfun_impl( fitness_vector &f, const decision_vector &xv ) const{
     using tudat::mission_segments::MultiRevolutionLambertTargeterIzzo;
-
-    std::vector<double> f;
 
     // Gravitational parameter of the Sun
     double mu = 1.32712440018e+20;
 
     // Set initial and final position as those of Earth and Mars at
     // departure and arrival respectively.
-
     StateType initialState = getPlanetPosition( xv[0], "Earth");
-
     StateType finalState   = getPlanetPosition( xv[0] + xv[1], "Mars" );
 
     MultiRevolutionLambertTargeterIzzo lambertTargeter( initialState.segment(0,3),
-        finalState.segment(0,3), xv[1]*86400, mu );
-
+	finalState.segment(0,3), xv[1]*86400, mu );
     double deltaV = std::numeric_limits<double>::infinity();
-
     unsigned int maxrev = lambertTargeter.getMaximumNumberOfRevolutions( );
 
     // Go through all multi-revolution solutions and select the one
@@ -59,20 +60,12 @@ std::vector<double> EarthMarsTransfer::fitness( const std::vector<double> &xv ) 
 	    + ( finalState.segment(3,3)
 		- lambertTargeter.getInertialVelocityAtArrival( )).norm());
     }
-
-    f.push_back(deltaV);
-
-    if( useTripTime_ )
-    {
-        f.push_back( xv[1] );
-    }
-    return f;
+    f[0] = deltaV;
 }
 
 //! Function to obtain position of Earth and Mars
-EarthMarsTransfer::StateType EarthMarsTransfer::getPlanetPosition( const double date,
+StateType EarthMarsTransfer::getPlanetPosition( const double date,
                                                 const std::string planetName ) const {
-
     using tudat::orbital_element_conversions::convertKeplerianToCartesianElements;
     using tudat::orbital_element_conversions::convertMeanAnomalyToEccentricAnomaly;
     using tudat::orbital_element_conversions::convertEccentricAnomalyToTrueAnomaly;
@@ -90,15 +83,15 @@ EarthMarsTransfer::StateType EarthMarsTransfer::getPlanetPosition( const double 
     } else {
         n   = 1.0586e-07;
         jd0 = 2451545.0;
-        stateKepl << 2.2794e+11, 9.3412e-02, 5.85 * M_PI / 180.0, 5.8650e+00, 8.6531e-01, 5.7567e+00;
+        stateKepl << 2.2794e+11, 9.3412e-02, 0.0, 5.8650e+00, 8.6531e-01, 5.7567e+00;
     }
     stateKepl( 5 ) = convertMeanAnomalyToEccentricAnomaly( stateKepl( 1 ),
         fmod( stateKepl( 5 ) + ( date - jd0 ) * 86400. * n, 2.*M_PI ) );
     stateKepl( 5 ) = convertEccentricAnomalyToTrueAnomaly( stateKepl( 5 ), stateKepl( 1 ) );
     stateCart = convertKeplerianToCartesianElements( stateKepl , mu );
     return stateCart;
-
-
 }
 
+}} // namespace problem; namespace pagmo
 
+BOOST_CLASS_EXPORT_IMPLEMENT( pagmo::problem::EarthMarsTransfer );
