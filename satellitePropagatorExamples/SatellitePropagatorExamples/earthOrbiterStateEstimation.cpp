@@ -306,7 +306,7 @@ int main( )
             if( currentObservable == one_way_range )
             {
                 biasSettings = boost::make_shared< ConstantObservationBiasSettings >(
-                            Eigen::Vector1d::Zero( ) );
+                            Eigen::Vector1d::Zero( ), true );
             }
 
             // Define settings for observable, no light-time corrections, and biases for selected links
