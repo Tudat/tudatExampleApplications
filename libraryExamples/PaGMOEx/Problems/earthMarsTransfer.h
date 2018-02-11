@@ -12,96 +12,81 @@
 #define TUDAT_EXAMPLE_PAGMO_PROBLEM_EARTH_MARS_TRANSFER_H
 
 #include <vector>
-
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/string.hpp>
-
-#include <pagmo/src/config.h>
-#include <pagmo/src/serialization.h>
-#include <pagmo/src/types.h>
-#include <pagmo/src/problem/base.h>
+#include <utility>
+#include <limits>
 
 #include <Eigen/Core>
 
-namespace pagmo
-{
+#include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/convertMeanToEccentricAnomalies.h>
+#include <Tudat/Astrodynamics/MissionSegments/multiRevolutionLambertTargeterIzzo.h>
 
-namespace problem
-{
+#include "pagmo/island.hpp"
+#include "pagmo/io.hpp"
+#include "pagmo/serialization.hpp"
+#include "pagmo/problem.hpp"
 
-typedef Eigen::Matrix< double, 6, 1 > StateType;
+/*!
+ *  The class defined in this file is to be used in a Pagmo optimization. It defines the objective function for an Earth-Mars
+ *  two-burn impulsive transfer, using a Lambert targeter. The independent variables are:
+ *
+ *  1) Departure Julian day
+ *  2) Time-of-flight of Earth-Mars transfer
+ *
+ *  The problem minimized the Delta V, and if requested, minimizes the time of flight
+ */
+
+using namespace pagmo;
 
 //! Test function for a new interplanetary trajectory class in Tudat
-class __PAGMO_VISIBLE EarthMarsTransfer : public base
+struct EarthMarsTransfer
 {
-  public:
-    EarthMarsTransfer( const std::vector< std::vector< double > > problemBounds );
-    base_ptr clone( ) const;
+
+    typedef Eigen::Matrix< double, 6, 1 > StateType;
+
+    //! Default constructor, required for Pagmo compatibility
+    EarthMarsTransfer( ): useTripTime_( false ){ }
+
+    //! Constructor that sets boundaries of independent variables, and a boolean denoting whether the fitness is single-objective
+    //! (Delta V), or dual objective (Delta V and time of flight).
+    EarthMarsTransfer( std::vector< std::vector< double > > &bounds, const bool useTripTime = false );
+
+    //! Calculate the fitness as a function of the parameter vector x
+    std::vector< double > fitness( const std::vector< double > &x ) const;
+
+    //! Retrieve the allowable limits of the parameter vector x: pair containing minima and maxima of parameter values
+    std::pair< std::vector< double >, std::vector< double > > get_bounds() const;
+
+    //! Retrieve the name of the problem
     std::string get_name( ) const;
+
+    //! Serialization function for Pagmo compatibility
+    template <typename Archive>
+    void serialize(Archive &ar)
+    {
+        ar(problemBounds_);
+    }
+
+    //! Retrieve the number of objectives in problem, e.g. the size of the vector returned by the fitness function
+    vector_double::size_type get_nobj() const
+    {
+        if(useTripTime_ )
+        {
+            return 2u;
+        }
+        else
+        {
+            return 1u;
+        }
+    }
+
+private:
+
     const std::vector< std::vector< double > > problemBounds_;
 
-  protected:
-    void objfun_impl( fitness_vector& f, const decision_vector& xv ) const;
-
-  private:
     StateType getPlanetPosition( const double date, const std::string planetName ) const;
 
-    friend class boost::serialization::access;
-    template< class Ar > void serialize( Ar &ar, const unsigned int )
-    {
-        ar & boost::serialization::base_object< base >( *this );
-    }
+    bool useTripTime_;
 };
-
-} // namespace problem;
-
-} // namespace pagmo
-
-// BOOST_SERIALIZATION_ASSUME_ABSTRACT( pagmo::problem::EarthMarsTransfer );
-namespace boost {
-
-// Serialization for Eigen vectors and matrices
-template<class Ar, typename _Scalar, int _Rows, int _Cols, int _Options, int _MaxRows, int _MaxCols>
-inline void serialize(
-    Ar &ar,
-    Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols> & t,
-    const unsigned int file_version
-)
-{
-    for( size_t i = 0; static_cast< unsigned int >( i )< t.size( ); i++ )
-        ar & t.data( )[ i ];
-}
-
-// Because we have a non-empty constructor we need to be careful to
-// specify the save and load procedure for serialization.
-namespace serialization
-{
-
-template<class Ar>
-inline void save_construct_data( Ar &ar, const pagmo::problem::EarthMarsTransfer * t,
-    const unsigned int file_version ){
-
-    // save data required to construct instance
-    ar << t->problemBounds_;
-}
-
-template<class Ar>
-inline void load_construct_data( Ar &ar, pagmo::problem::EarthMarsTransfer * t,
-    const unsigned int file_version ){
-
-    // retrieve data from archive required to construct new instance
-    std::vector< std::vector< double > > problemBounds;
-    ar >> problemBounds;
-    // invoke inplace constructor to initialize instance of my_class
-    ::new( t )pagmo::problem::EarthMarsTransfer( problemBounds );
-}
-
-} // namespace serialization;
-
-} // namespace boost
-
-
-
-BOOST_CLASS_EXPORT_KEY( pagmo::problem::EarthMarsTransfer );
 
 #endif // TUDAT_EXAMPLE_PAGMO_PROBLEM_EARTH_MARS_TRANSFER_H
