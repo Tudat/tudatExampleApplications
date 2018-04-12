@@ -90,10 +90,10 @@ EarthMarsTransfer::StateType EarthMarsTransfer::getPlanetPosition( const double 
     } else {
         n   = 1.0586e-07;
         jd0 = 2451545.0;
-        stateKepl << 2.2794e+11, 9.3412e-02, 5.85 * M_PI / 180.0, 5.8650e+00, 8.6531e-01, 5.7567e+00;
+        stateKepl << 2.2794e+11, 9.3412e-02, 5.85 * tudat::mathematical_constants::PI / 180.0, 5.8650e+00, 8.6531e-01, 5.7567e+00;
     }
     stateKepl( 5 ) = convertMeanAnomalyToEccentricAnomaly( stateKepl( 1 ),
-        fmod( stateKepl( 5 ) + ( date - jd0 ) * 86400. * n, 2.*M_PI ) );
+        fmod( stateKepl( 5 ) + ( date - jd0 ) * 86400. * n, 2.*tudat::mathematical_constants::PI ) );
     stateKepl( 5 ) = convertEccentricAnomalyToTrueAnomaly( stateKepl( 5 ), stateKepl( 1 ) );
     stateCart = convertKeplerianToCartesianElements( stateKepl , mu );
     return stateCart;
