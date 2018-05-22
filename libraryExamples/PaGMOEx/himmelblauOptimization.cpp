@@ -2,6 +2,9 @@
 #include "pagmo/algorithms/de1220.hpp"
 #include "pagmo/algorithms/pso.hpp"
 #include "pagmo/algorithms/de.hpp"
+#include "pagmo/algorithms/nsga2.hpp"
+#include "pagmo/algorithms/moead.hpp"
+#include "pagmo/algorithms/ihs.hpp"
 #include "pagmo/algorithms/sga.hpp"
 #include "pagmo/algorithms/sade.hpp"
 #include "pagmo/island.hpp"
@@ -21,10 +24,10 @@ int main( )
     pagmo::problem prob{ HimmelblauFunction( -5, 5, -5, 5) };
 
     // Perform grid saerch
-    //createGridSearch( prob, { {- 5.0, -5.0 },{ 5.0, 5.0 } }, { 1000, 1000 }, "himmelBlauGridSearch" );
+    createGridSearch( prob, { {- 5.0, -5.0 },{ 5.0, 5.0 } }, { 1000, 1000 }, "himmelBlauGridSearch" );
 
     // Solve using DE algorithm
-    pagmo::algorithm algo{ pagmo::de( ) };
+    pagmo::algorithm algo{ pagmo::nsga2( ) };
 
     // Create island with 1000 individuals
     pagmo::island isl = pagmo::island{ algo, prob, 1000 };

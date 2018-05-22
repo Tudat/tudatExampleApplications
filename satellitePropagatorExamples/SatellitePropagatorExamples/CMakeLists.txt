@@ -224,6 +224,12 @@ setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROO
 target_link_libraries(application_SinglePerturbedSatellitePropagator
 		      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+
+add_executable(application_InterplanetaryTrajectoryDesign "${SRCROOT}/interplanetaryTrajectoryDesign.cpp")
+setup_executable_target(application_InterplanetaryTrajectoryDesign "${SRCROOT}")
+target_link_libraries(application_InterplanetaryTrajectoryDesign tudat_trajectory_design
+		      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
 add_executable(application_VariationalEquationsPropagator "${SRCROOT}/variationalEquationsPropagatorExample.cpp")
 setup_executable_target(application_VariationalEquationsPropagator "${SRCROOT}")
 target_link_libraries(application_VariationalEquationsPropagator
