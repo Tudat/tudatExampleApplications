@@ -67,8 +67,11 @@ int main()
     for( int i = 0; i < 25; i++ )
     {
         isl.evolve();
-        while( isl.status()!=pagmo::evolve_status::idle )
-            isl.wait();
+                while(isl.status()!=pagmo::evolve_status::idle &&
+                    isl.status()!=pagmo::evolve_status::idle_error){
+                        isl.wait();
+                }
+        isl.wait_check(); // Raises errors
 
         // Write current iteration results to file
         printPopulationToFile( isl.get_population( ).get_x( ), "targetingPropagation_" + std::to_string( i ) + "_" + std::to_string( i ) , false );
@@ -113,8 +116,11 @@ int main()
     for( int i = 0; i < 4; i++ )
     {
         isl_pert.evolve();
-        while( isl_pert.status()!=pagmo::evolve_status::idle )
-            isl_pert.wait();
+                while(isl_pert.status()!=pagmo::evolve_status::idle &&
+                    isl_pert.status()!=pagmo::evolve_status::idle_error){
+                        isl_pert.wait();
+                }
+        isl_pert.wait_check(); // Raises errors
 
         // Write current iteration results to file
         printPopulationToFile( isl_pert.get_population( ).get_x( ), "targetingPropagation_pert_" + std::to_string( i ) + "_" + std::to_string( i ) , false );

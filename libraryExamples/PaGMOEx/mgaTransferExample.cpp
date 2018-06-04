@@ -69,8 +69,11 @@ int main( )
     for( int i = 0 ; i < 512; i++ )
     {
         isl.evolve();
-        while( isl.status()!=pagmo::evolve_status::idle )
-            isl.wait();
+                while(isl.status()!=pagmo::evolve_status::idle &&
+                    isl.status()!=pagmo::evolve_status::idle_error){
+                        isl.wait();
+                }
+        isl.wait_check(); // Raises errors
 
         // Write current iteration results to file
         printPopulationToFile( isl.get_population( ).get_x( ), "mo_mga_EVEEJ_" + std::to_string( i ), false );

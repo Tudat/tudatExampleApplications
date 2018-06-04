@@ -90,9 +90,12 @@ int main( )
                     // Evolve for required number of generations
                     for( int j = 1; j <= numberOfGenerations; j++ )
                     {
-                        isl.evolve( );
-                        while( isl.status()!=pagmo::evolve_status::idle )
-                            isl.wait();
+                        isl.evolve();
+                                while(isl.status()!=pagmo::evolve_status::idle &&
+                                    isl.status()!=pagmo::evolve_status::idle_error){
+                                        isl.wait();
+                                }
+                        isl.wait_check(); // Raises errors
                     }
 
                     // Save optimal results for current optimization.

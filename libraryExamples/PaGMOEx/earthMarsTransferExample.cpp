@@ -61,8 +61,11 @@ int main( )
         for( int i = 0 ; i < 100; i++ )
         {
             isl.evolve();
-            while( isl.status()!=pagmo::evolve_status::idle )
-                isl.wait();
+                    while(isl.status()!=pagmo::evolve_status::idle &&
+                        isl.status()!=pagmo::evolve_status::idle_error){
+                            isl.wait();
+                    }
+            isl.wait_check(); // Raises errors
 
             // Write current iteration results to file
             printPopulationToFile( isl.get_population( ).get_x( ), "earthMarsLambert_" + std::to_string( j ) + "_" + std::to_string( i ) , false );
