@@ -24,7 +24,7 @@ int main( )
 
     // Create double vector of Matrices that contain optimal solutions
     std::vector< std::vector< Eigen::MatrixXd > > optima;
-    optima.resize( numberOfDimensionCases );    
+    optima.resize( numberOfDimensionCases );
     for( unsigned int i = 0; i < numberOfDimensionCases; i++ )
     {
         optima[ i ].resize( numberOfPopulationCases );
@@ -91,8 +91,12 @@ int main( )
                     for( int j = 1; j <= numberOfGenerations; j++ )
                     {
                         isl.evolve( );
-                        while( isl.status()!=pagmo::evolve_status::idle )
-                            isl.wait();
+                        while( isl.status( ) != pagmo::evolve_status::idle &&
+                               isl.status( ) != pagmo::evolve_status::idle_error )
+                        {
+                            isl.wait( );
+                        }
+                        isl.wait_check( ); // Raises errors
                     }
 
                     // Save optimal results for current optimization.

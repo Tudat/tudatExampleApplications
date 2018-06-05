@@ -33,8 +33,12 @@ int main( )
     for( int i = 1; i <= 100; i++ )
     {
         isl.evolve( );
-        while( isl.status()!=pagmo::evolve_status::idle )
-            isl.wait();
+        while( isl.status( ) != pagmo::evolve_status::idle &&
+               isl.status( ) != pagmo::evolve_status::idle_error )
+        {
+            isl.wait( );
+        }
+        isl.wait_check( ); // Raises errors
 
         printPopulationToFile( isl.get_population( ).get_x( ), "himmelblau_" + std::to_string( i ) , false );
         printPopulationToFile( isl.get_population( ).get_f( ), "himmelblau_" +  std::to_string( i ) , true );
