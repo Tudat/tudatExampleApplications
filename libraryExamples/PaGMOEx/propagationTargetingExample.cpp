@@ -66,12 +66,13 @@ int main()
     // Evolve for 25 generations
     for( int i = 0; i < 25; i++ )
     {
-        isl.evolve();
-                while(isl.status()!=pagmo::evolve_status::idle &&
-                    isl.status()!=pagmo::evolve_status::idle_error){
-                        isl.wait();
-                }
-        isl.wait_check(); // Raises errors
+        isl.evolve( );
+        while( isl.status( ) != pagmo::evolve_status::idle &&
+               isl.status( ) != pagmo::evolve_status::idle_error )
+        {
+            isl.wait( );
+        }
+        isl.wait_check( ); // Raises errors
 
         // Write current iteration results to file
         printPopulationToFile( isl.get_population( ).get_x( ), "targetingPropagation_" + std::to_string( i ) + "_" + std::to_string( i ) , false );
@@ -93,7 +94,7 @@ int main()
 
     // Retrieve population of unperturbed problem, and instantiate population of perturbed problem
     std::vector<vector_double> original_population = isl.get_population( ).get_x( );
-    for( int k = 0; k < populationSize; k++ )
+    for( unsigned int k = 0; k < populationSize; k++ )
     {
         population_pert.push_back( original_population.at( k ) );
     }
@@ -115,12 +116,13 @@ int main()
     // Evolve for 4 generations
     for( int i = 0; i < 4; i++ )
     {
-        isl_pert.evolve();
-                while(isl_pert.status()!=pagmo::evolve_status::idle &&
-                    isl_pert.status()!=pagmo::evolve_status::idle_error){
-                        isl_pert.wait();
-                }
-        isl_pert.wait_check(); // Raises errors
+        isl_pert.evolve( );
+        while( isl_pert.status( ) != pagmo::evolve_status::idle &&
+               isl_pert.status( ) != pagmo::evolve_status::idle_error )
+        {
+            isl_pert.wait( );
+        }
+        isl_pert.wait_check( ); // Raises errors
 
         // Write current iteration results to file
         printPopulationToFile( isl_pert.get_population( ).get_x( ), "targetingPropagation_pert_" + std::to_string( i ) + "_" + std::to_string( i ) , false );

@@ -56,12 +56,13 @@ int main( )
         // Evolve for 25 generations
         for( int i = 0 ; i < 100; i++ )
         {
-            isl.evolve();
-                    while(isl.status()!=pagmo::evolve_status::idle &&
-                        isl.status()!=pagmo::evolve_status::idle_error){
-                            isl.wait();
-                    }
-            isl.wait_check(); // Raises errors
+            isl.evolve( );
+            while( isl.status( ) != pagmo::evolve_status::idle &&
+                   isl.status( ) != pagmo::evolve_status::idle_error )
+            {
+                isl.wait( );
+            }
+            isl.wait_check( ); // Raises errors
 
             // Write current iteration results to file
             printPopulationToFile( isl.get_population( ).get_x( ), "mo_EarthMars_" + std::to_string( i ) + "_" + std::to_string( j ), false );

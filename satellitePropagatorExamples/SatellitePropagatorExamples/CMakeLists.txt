@@ -1,4 +1,4 @@
- #    Copyright (c) 2010-2018, Delft University of Technology
+#    Copyright (c) 2010-2018, Delft University of Technology
  #    All rigths reserved
  #
  #    This file is part of the Tudat. Redistribution and use in source and
@@ -83,7 +83,7 @@ if(NOT TUDAT_BUNDLE_DISTRIBUTION_PATH)
 endif(NOT TUDAT_BUNDLE_DISTRIBUTION_PATH)
 
 if(NOT SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH)
-    set(SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH 
+    set(SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH
         "${TUDAT_BUNDLE_DISTRIBUTION_PATH}/tudatApplications/satellitePropagatorExamples")
 endif(NOT SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH)
 
@@ -200,13 +200,13 @@ if(USE_NRLMSISE00)
 endif()
 
 
-list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_ground_stations tudat_propagators
+list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_trajectory_design tudat_simulation_setup tudat_ground_stations tudat_propagators
     tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
     tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
      tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_basic_mathematics
      tudat_root_finders tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
-list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_simulation_setup tudat_observation_models tudat_ground_stations tudat_acceleration_partials
+list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_trajectory_design tudat_simulation_setup tudat_observation_models tudat_ground_stations tudat_acceleration_partials
     tudat_observation_partials tudat_estimatable_parameters tudat_orbit_determination  tudat_propagators
     tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
     tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
@@ -222,13 +222,13 @@ target_link_libraries(application_SingleSatellitePropagator ${TUDAT_APPLICATION_
 add_executable(application_SinglePerturbedSatellitePropagator "${SRCROOT}/singlePerturbedSatellitePropagator.cpp")
 setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROOT}")
 target_link_libraries(application_SinglePerturbedSatellitePropagator
-		      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 
 add_executable(application_InterplanetaryTrajectoryDesign "${SRCROOT}/interplanetaryTrajectoryDesign.cpp")
 setup_executable_target(application_InterplanetaryTrajectoryDesign "${SRCROOT}")
-target_link_libraries(application_InterplanetaryTrajectoryDesign tudat_trajectory_design
-		      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(application_InterplanetaryTrajectoryDesign
+                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 add_executable(application_VariationalEquationsPropagator "${SRCROOT}/variationalEquationsPropagatorExample.cpp")
 setup_executable_target(application_VariationalEquationsPropagator "${SRCROOT}")
@@ -242,7 +242,7 @@ target_link_libraries(application_AsterixAndObelixPropagator
                       ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Galileo constellation application.
-add_executable(application_GalileoConstellationSimulator 
+add_executable(application_GalileoConstellationSimulator
                "${SRCROOT}/galileoConstellationSimulator.cpp")
 setup_executable_target(application_GalileoConstellationSimulator "${SRCROOT}")
 target_link_libraries(application_GalileoConstellationSimulator
@@ -263,13 +263,13 @@ target_link_libraries(application_ApolloEntry ${TUDAT_APPLICATION_PROPAGATION_LI
 
 # Add JSON-based Apollo propagation
 add_executable(application_ApolloEntryJSON
-	       "${SRCROOT}/apolloCapsuleEntryJSON.cpp")
+               "${SRCROOT}/apolloCapsuleEntryJSON.cpp")
 setup_executable_target(application_ApolloEntryJSON "${SRCROOT}")
 target_link_libraries(application_ApolloEntryJSON json_interface_library ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add lifetime maximisation propagation
 add_executable(application_LifetimeMaximisation
-	       "${SRCROOT}/lifetimeMaximisation.cpp")
+               "${SRCROOT}/lifetimeMaximisation.cpp")
 setup_executable_target(application_LifetimeMaximisation "${SRCROOT}")
 target_link_libraries(application_LifetimeMaximisation json_interface_library ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
