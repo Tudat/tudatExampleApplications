@@ -12,7 +12,7 @@
 
 #include "SatellitePropagatorExamples/applicationOutput.h"
 
-//! Execute propagation of orbit of Asterix around the Earth.
+//! Execute propagation of orbit of TeslaRoadster around the Earth.
 int main()
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,11 +35,12 @@ int main()
 
 
     // Load Spice kernels.
-    spice_interface::loadStandardSpiceKernels( );
+    spice_interface::loadStandardSpiceKernels( { input_output::getSpiceKernelPath( ) + "de430.bsp" } );
 
     // Set simulation time settings.
-    const double simulationStartEpoch = 0.0;
-    const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY;
+    const double simulationStartEpoch =
+            ( 2458163.500000000 - basic_astrodynamics::JULIAN_DAY_ON_J2000 ) * 86400.0;
+    const double simulationEndEpoch = 500.0 * physical_constants::JULIAN_YEAR;
 
     // Define body settings for simulation.
     std::vector< std::string > bodiesToCreate;
@@ -48,15 +49,33 @@ int main()
     bodiesToCreate.push_back( "Moon" );
     bodiesToCreate.push_back( "Mars" );
     bodiesToCreate.push_back( "Venus" );
+    bodiesToCreate.push_back( "Jupiter" );
+    bodiesToCreate.push_back( "Saturn" );
+    bodiesToCreate.push_back( "Mercury" );
 
     // Create body objects.
     std::map< std::string, std::shared_ptr< BodySettings > > bodySettings =
-            getDefaultBodySettings( bodiesToCreate, simulationStartEpoch - 300.0, simulationEndEpoch + 300.0 );
-    for( unsigned int i = 0; i < bodiesToCreate.size( ); i++ )
-    {
-        bodySettings[ bodiesToCreate.at( i ) ]->ephemerisSettings->resetFrameOrientation( "J2000" );
-        bodySettings[ bodiesToCreate.at( i ) ]->rotationModelSettings->resetOriginalFrame( "J2000" );
-    }
+            getDefaultBodySettings( bodiesToCreate );
+//    bodySettings[ "Sun" ]->ephemerisSettings->resetFrameOrientation( "J2000" );
+//    bodySettings[ "Moon" ]->ephemerisSettings->resetFrameOrientation( "J2000" );
+//    bodySettings[ "Earth" ]->ephemerisSettings->resetFrameOrientation( "J2000" );
+
+//    for( unsigned int i = 0; i < bodiesToCreate.size( ); i++ )
+//    {
+//        bodySettings[ bodiesToCreate.at( i ) ]->rotationModelSettings->resetOriginalFrame( "J2000" );
+//    }
+
+    bodySettings[ "Mars" ]->ephemerisSettings = std::make_shared< ApproximatePlanetPositionSettings >(
+                ephemerides::ApproximatePlanetPositionsBase::mars, false );
+    bodySettings[ "Jupiter" ]->ephemerisSettings = std::make_shared< ApproximatePlanetPositionSettings >(
+                ephemerides::ApproximatePlanetPositionsBase::mars, false );
+    bodySettings[ "Saturn" ]->ephemerisSettings = std::make_shared< ApproximatePlanetPositionSettings >(
+                ephemerides::ApproximatePlanetPositionsBase::mars, false );
+    bodySettings[ "Venus" ]->ephemerisSettings = std::make_shared< ApproximatePlanetPositionSettings >(
+                ephemerides::ApproximatePlanetPositionsBase::mars, false );
+    bodySettings[ "Mercury" ]->ephemerisSettings = std::make_shared< ApproximatePlanetPositionSettings >(
+                ephemerides::ApproximatePlanetPositionsBase::mars, false );
+
     NamedBodyMap bodyMap = createBodies( bodySettings );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,37 +83,26 @@ int main()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Create spacecraft object.
-    bodyMap[ "Asterix" ] = std::make_shared< simulation_setup::Body >( );
-    bodyMap[ "Asterix" ]->setConstantBodyMass( 400.0 );
+    bodyMap[ "TeslaRoadster" ] = std::make_shared< simulation_setup::Body >( );
 
-    // Create aerodynamic coefficient interface settings.
-    double referenceArea = 4.0;
-    double aerodynamicCoefficient = 1.2;
-    std::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
-            std::make_shared< ConstantAerodynamicCoefficientSettings >(
-                referenceArea, aerodynamicCoefficient * Eigen::Vector3d::UnitX( ), 1, 1 );
-
-    // Create and set aerodynamic coefficients object
-    bodyMap[ "Asterix" ]->setAerodynamicCoefficientInterface(
-                createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "Asterix" ) );
+    bodyMap[ "TeslaRoadster" ]->setConstantBodyMass( 1500.0 );
 
     // Create radiation pressure settings
-    double referenceAreaRadiation = 4.0;
+    double referenceAreaRadiation = 8.0;
     double radiationPressureCoefficient = 1.2;
     std::vector< std::string > occultingBodies;
-    occultingBodies.push_back( "Earth" );
-    std::shared_ptr< RadiationPressureInterfaceSettings > asterixRadiationPressureSettings =
+    std::shared_ptr< RadiationPressureInterfaceSettings > teslaRoadsterRadiationPressureSettings =
             std::make_shared< CannonBallRadiationPressureInterfaceSettings >(
                 "Sun", referenceAreaRadiation, radiationPressureCoefficient, occultingBodies );
 
     // Create and set radiation pressure settings
-    bodyMap[ "Asterix" ]->setRadiationPressureInterface(
+    bodyMap[ "TeslaRoadster" ]->setRadiationPressureInterface(
                 "Sun", createRadiationPressureInterface(
-                    asterixRadiationPressureSettings, "Asterix", bodyMap ) );
+                    teslaRoadsterRadiationPressureSettings, "TeslaRoadster", bodyMap ) );
 
 
     // Finalize body creation.
-    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
+    setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ACCELERATIONS          //////////////////////////////////////////////////////
@@ -107,8 +115,8 @@ int main()
 
     // Define propagation settings.
     std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
-    accelerationsOfAsterix[ "Earth" ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 5, 5 ) );
-
+    accelerationsOfAsterix[ "Earth" ].push_back( std::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::central_gravity ) );
     accelerationsOfAsterix[ "Sun" ].push_back( std::make_shared< AccelerationSettings >( 
                                                    basic_astrodynamics::central_gravity ) );
     accelerationsOfAsterix[ "Moon" ].push_back( std::make_shared< AccelerationSettings >(
@@ -117,14 +125,19 @@ int main()
                                                      basic_astrodynamics::central_gravity ) );
     accelerationsOfAsterix[ "Venus" ].push_back( std::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::central_gravity ) );
+    accelerationsOfAsterix[ "Mercury" ].push_back( std::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::central_gravity ) );
+    accelerationsOfAsterix[ "Saturn" ].push_back( std::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::central_gravity ) );
+    accelerationsOfAsterix[ "Jupiter" ].push_back( std::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::central_gravity ) );
     accelerationsOfAsterix[ "Sun" ].push_back( std::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::cannon_ball_radiation_pressure ) );
-    accelerationsOfAsterix[ "Earth" ].push_back( std::make_shared< AccelerationSettings >(
-                                                     basic_astrodynamics::aerodynamic ) );
 
-    accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
-    bodiesToPropagate.push_back( "Asterix" );
-    centralBodies.push_back( "Earth" );
+
+    accelerationMap[  "TeslaRoadster" ] = accelerationsOfAsterix;
+    bodiesToPropagate.push_back( "TeslaRoadster" );
+    centralBodies.push_back( "Sun" );
 
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
                 bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
@@ -133,30 +146,55 @@ int main()
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Set Keplerian elements for Asterix.
-    Eigen::Vector6d asterixInitialStateInKeplerianElements;
-    asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0E3;
-    asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
-    asterixInitialStateInKeplerianElements( inclinationIndex ) = unit_conversions::convertDegreesToRadians( 85.3 );
-    asterixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = unit_conversions::convertDegreesToRadians( 235.7 );
-    asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = unit_conversions::convertDegreesToRadians( 23.4 );
-    asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = unit_conversions::convertDegreesToRadians( 139.87 );
+    // Set Keplerian elements for TeslaRoadster.
+    Eigen::Vector6d teslaRoadsterInitialStateJ2000;
+    teslaRoadsterInitialStateJ2000 << -1.484544094935328E+06, -1.530028575781120E+06, -4.100899567817330E+05,
+    -2.358201939417945E+00, -2.459124989364402E+00, -6.370785284397021E-01;
+    teslaRoadsterInitialStateJ2000 *= 1000.0;
+    teslaRoadsterInitialStateJ2000 += spice_interface::getBodyCartesianStateAtEpoch(
+                "Earth", "SSB", "J2000", "None", simulationStartEpoch );
 
-    double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
-    const Eigen::Vector6d asterixInitialState = convertKeplerianToCartesianElements(
-                asterixInitialStateInKeplerianElements, earthGravitationalParameter );
+    Eigen::Quaterniond toEclipJ2000 = spice_interface::computeRotationQuaternionBetweenFrames(
+                                 "J2000", "ECLIPJ2000", 0.0 );
 
+    Eigen::Vector6d teslaRoadsterInitialState;
+    teslaRoadsterInitialState.segment( 0, 3 ) = toEclipJ2000 * teslaRoadsterInitialStateJ2000.segment( 0, 3 );
+    teslaRoadsterInitialState.segment( 3, 3 ) = toEclipJ2000 * teslaRoadsterInitialStateJ2000.segment( 3, 3 );
+\
+
+
+
+
+    // Define list of dependent variables to save.
+    std::vector< std::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariablesList;
+    dependentVariablesList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    relative_position_dependent_variable, "Earth", "Sun" ) );
+    dependentVariablesList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    relative_position_dependent_variable, "Mars", "Sun" ) );
+    dependentVariablesList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    relative_position_dependent_variable, "Venus", "Sun" ) );
+    dependentVariablesList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    relative_distance_dependent_variable, "TeslaRoadster", "Earth" ) );
+
+    // Create object with list of dependent variables
+    std::shared_ptr< DependentVariableSaveSettings > dependentVariablesToSave =
+            std::make_shared< DependentVariableSaveSettings >( dependentVariablesList );
 
     std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             std::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, asterixInitialState, simulationEndEpoch );
+            ( centralBodies, accelerationModelMap, bodiesToPropagate, teslaRoadsterInitialState, simulationEndEpoch, cowell,
+              dependentVariablesToSave );
 
-    const double fixedStepSize = 10.0;
-    std::shared_ptr< IntegratorSettings< > > integratorSettings =
-            std::make_shared< IntegratorSettings< > >
-            ( rungeKutta4, 0.0, fixedStepSize );
+    std::shared_ptr< IntegratorSettings< > > integratorSettings
+            = std::make_shared< tudat::numerical_integrators::BulirschStoerIntegratorSettings< > >(
+                simulationStartEpoch, 3600.0,
+                numerical_integrators::bulirsch_stoer_sequence, 4,
+                std::numeric_limits< double >::epsilon( ), std::numeric_limits< double >::infinity( ),
+                1.0E-15, 1.0E-12 );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
@@ -167,32 +205,26 @@ int main()
     SingleArcDynamicsSimulator< > dynamicsSimulator(
                 bodyMap, integratorSettings, propagatorSettings, true, false, false );
     std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
+    std::map< double, Eigen::VectorXd > dependentVariableResult = dynamicsSimulator.getDependentVariableHistory( );
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PROVIDE OUTPUT TO CONSOLE AND FILES           //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::string outputSubFolder = "PerturbedSatelliteExample/";
-
-    Eigen::VectorXd finalIntegratedState = (--integrationResult.end( ) )->second;
-    // Print the position (in km) and the velocity (in km/s) at t = 0.
-    std::cout << "Single Earth-Orbiting Satellite Example." << std::endl <<
-                 "The initial position vector of Asterix is [km]:" << std::endl <<
-                 asterixInitialState.segment( 0, 3 ) / 1E3 << std::endl <<
-                 "The initial velocity vector of Asterix is [km/s]:" << std::endl <<
-                 asterixInitialState.segment( 3, 3 ) / 1E3 << std::endl;
-
-    // Print the position (in km) and the velocity (in km/s) at t = 86400.
-    std::cout << "After " << simulationEndEpoch <<
-                 " seconds, the position vector of Asterix is [km]:" << std::endl <<
-                 finalIntegratedState.segment( 0, 3 ) / 1E3 << std::endl <<
-                 "And the velocity vector of Asterix is [km/s]:" << std::endl <<
-                 finalIntegratedState.segment( 3, 3 ) / 1E3 << std::endl;
+    std::string outputSubFolder = "SpacexTeslaExample/";
 
     // Write perturbed satellite propagation history to file.
     input_output::writeDataMapToTextFile( integrationResult,
-                                          "singlePerturbedSatellitePropagationHistory.dat",
+                                          "spacexTeslaPropagationHistory.dat",
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
+                                          "",
+                                          std::numeric_limits< double >::digits10,
+                                          std::numeric_limits< double >::digits10,
+                                          "," );
+
+    input_output::writeDataMapToTextFile( dependentVariableResult,
+                                          "spacexTeslaDependentVariableHistory.dat",
                                           tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,

@@ -15,6 +15,8 @@
 //! Simulate the dynamics of the main bodies in the inner solar system
 int main( )
 {
+    time_t tstart, tend;
+    tstart = time(0);
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,11 +38,10 @@ int main( )
 
 
     //Load spice kernels.
-    std::string kernelsPath = input_output::getSpiceKernelPath( );
     spice_interface::loadStandardSpiceKernels( );
 
     // Define bodies in simulation.
-    unsigned int totalNumberOfBodies = 6;
+    unsigned int totalNumberOfBodies = 7;
     std::vector< std::string > bodyNames;
     bodyNames.resize( totalNumberOfBodies );
     bodyNames[ 0 ] = "Moon";
@@ -49,6 +50,7 @@ int main( )
     bodyNames[ 3 ] = "Venus";
     bodyNames[ 4 ] = "Mercury";
     bodyNames[ 5 ] = "Sun";
+    bodyNames[ 6 ] = "Jupiter";
 
     // Create bodies needed in simulation
     std::map< std::string, std::shared_ptr< BodySettings > > bodySettings =
@@ -57,7 +59,6 @@ int main( )
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );
 
     // Run simulation for 2 different central body settings (barycentric and hierarchical)
-    for( int centralBodySettings = 0; centralBodySettings < 2; centralBodySettings++ )
     {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////
@@ -89,34 +90,20 @@ int main( )
         centralBodies.resize( numberOfNumericalBodies );
 
         // Set central body as Solar System Barycente for each body
-        if( centralBodySettings == 0 )
+
+        for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
         {
-            for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
+            // Set Earth as central body for Moon
+            if( i == 0 )
+            {
+                centralBodies[ i ] = "Earth";
+            }
+            else
             {
                 centralBodies[ i ] = "SSB";
             }
         }
-        else if( centralBodySettings == 1 )
-        {
-            for( unsigned int i = 0; i < numberOfNumericalBodies; i++ )
-            {
-                // Set Earth as central body for Moon
-                if( i == 0 )
-                {
-                    centralBodies[ i ] = "Earth";
-                }
-                // Set barycenter as central 'body' for Sun
-                else if( i == 5 )
-                {
-                    centralBodies[ i ] = "SSB";
-                }
-                // Set Sun as central body for all planets
-                else
-                {
-                    centralBodies[ i ] = "Sun";
-                }
-            }
-        }
+
 
         // Create acceleration models and propagation settings.
         AccelerationMap accelerationModelMap = createAccelerationModelsMap(
@@ -129,8 +116,8 @@ int main( )
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Specify initial time
-        double initialEphemerisTime = 1.0E7;
-        double finalEphemerisTime = 1.0E7 + 5.0 * physical_constants::JULIAN_YEAR;
+        double initialEphemerisTime = 0.0;
+        double finalEphemerisTime = 1000.0 * physical_constants::JULIAN_YEAR;
 
         // Get initial state vector as input to integration.
         Eigen::VectorXd systemInitialState = getInitialStatesOfBodies(
@@ -139,12 +126,15 @@ int main( )
 
         std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
                 std::make_shared< TranslationalStatePropagatorSettings< double > >
-                ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, finalEphemerisTime );
+                ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, finalEphemerisTime,
+                  cowell, std::shared_ptr< DependentVariableSaveSettings >( ) );
 
         // Define numerical integrator settings.
         std::shared_ptr< IntegratorSettings< > > integratorSettings =
-                std::make_shared< IntegratorSettings< > >
-                ( rungeKutta4, initialEphemerisTime, 3600.0 );
+                std::make_shared< BulirschStoerIntegratorSettings< double > >(
+                    initialEphemerisTime, 3600.0, bulirsch_stoer_sequence, 6,
+                    std::numeric_limits< double >::epsilon( ), std::numeric_limits< double >::infinity( ),
+                    1.0E-10, 1.0E-8, 10 );
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////             PROPAGATE ORBITS            ///////////////////////////////////////////////////
@@ -180,8 +170,7 @@ int main( )
             // Write propagation history to file.
             input_output::writeDataMapToTextFile(
                         allBodiesPropagationHistory[ i ],
-                        "innerSolarSystemPropagationHistory" + bodyNames.at( i ) +
-                        boost::lexical_cast< std::string >( centralBodySettings ) + ".dat",
+                        "innerLongSolarSystemPropagationHistory" + bodyNames.at( i ) + ".dat",
                         tudat_applications::getOutputPath( ) + outputSubFolder,
                         "",
                         std::numeric_limits< double >::digits10,
@@ -189,6 +178,9 @@ int main( )
                         "," );
         }
     }
+
+    tend = time(0);
+    std::cout << "It took "<< difftime(tend, tstart) <<" second(s)."<< std::endl;
 
     // Final statement.
     // The exit code EXIT_SUCCESS indicates that the program was successfully executed.

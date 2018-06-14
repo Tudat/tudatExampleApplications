@@ -57,9 +57,9 @@ int main( )
     double finalEphemerisTime = initialEphemerisTime + numberOfSimulationDays * 86400.0;
 
     // Create bodies needed in simulation
-    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
+    std::map< std::string, std::shared_ptr< BodySettings > > bodySettings =
             getDefaultBodySettings( bodyNames );
-    bodySettings[ "Earth" ]->rotationModelSettings = boost::make_shared< SimpleRotationModelSettings >(
+    bodySettings[ "Earth" ]->rotationModelSettings = std::make_shared< SimpleRotationModelSettings >(
                 "ECLIPJ2000", "IAU_Earth",
                 spice_interface::computeRotationQuaternionBetweenFrames(
                     "ECLIPJ2000", "IAU_Earth", initialEphemerisTime ),
@@ -67,14 +67,14 @@ int main( )
                 ( physical_constants::JULIAN_DAY ) );
 
     NamedBodyMap bodyMap = createBodies( bodySettings );
-    bodyMap[ "Vehicle" ] = boost::make_shared< Body >( );
+    bodyMap[ "Vehicle" ] = std::make_shared< Body >( );
     bodyMap[ "Vehicle" ]->setConstantBodyMass( 400.0 );
 
     // Create aerodynamic coefficient interface settings.
     double referenceArea = 4.0;
     double aerodynamicCoefficient = 1.2;
-    boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
-            boost::make_shared< ConstantAerodynamicCoefficientSettings >(
+    std::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
+            std::make_shared< ConstantAerodynamicCoefficientSettings >(
                 referenceArea, aerodynamicCoefficient * ( Eigen::Vector3d( )<<1.2, -0.01, 0.1 ).finished( ), 1, 1 );
 
     // Create and set aerodynamic coefficients object
@@ -86,8 +86,8 @@ int main( )
     double radiationPressureCoefficient = 1.2;
     std::vector< std::string > occultingBodies;
     occultingBodies.push_back( "Earth" );
-    boost::shared_ptr< RadiationPressureInterfaceSettings > asterixRadiationPressureSettings =
-            boost::make_shared< CannonBallRadiationPressureInterfaceSettings >(
+    std::shared_ptr< RadiationPressureInterfaceSettings > asterixRadiationPressureSettings =
+            std::make_shared< CannonBallRadiationPressureInterfaceSettings >(
                 "Sun", referenceAreaRadiation, radiationPressureCoefficient, occultingBodies );
 
     // Create and set radiation pressure settings
@@ -95,8 +95,8 @@ int main( )
                 "Sun", createRadiationPressureInterface(
                     asterixRadiationPressureSettings, "Vehicle", bodyMap ) );
 
-    bodyMap[ "Vehicle" ]->setEphemeris( boost::make_shared< MultiArcEphemeris >(
-                                            std::map< double, boost::shared_ptr< Ephemeris > >( ), "Earth", "ECLIPJ2000" ) );
+    bodyMap[ "Vehicle" ]->setEphemeris( std::make_shared< MultiArcEphemeris >(
+                                            std::map< double, std::shared_ptr< Ephemeris > >( ), "Earth", "ECLIPJ2000" ) );
 
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "ECLIPJ2000" );
 
@@ -124,20 +124,20 @@ int main( )
 
     // Set accelerations on Vehicle that are to be taken into account.
     SelectedAccelerationMap accelerationMap;
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfVehicle;
-    accelerationsOfVehicle[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 8, 8 ) );
-    accelerationsOfVehicle[ "Sun" ].push_back( boost::make_shared< AccelerationSettings >(
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfVehicle;
+    accelerationsOfVehicle[ "Earth" ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 8, 8 ) );
+    accelerationsOfVehicle[ "Sun" ].push_back( std::make_shared< AccelerationSettings >(
                                                    basic_astrodynamics::central_gravity ) );
-    accelerationsOfVehicle[ "Moon" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfVehicle[ "Moon" ].push_back( std::make_shared< AccelerationSettings >(
                                                     basic_astrodynamics::central_gravity ) );
-    accelerationsOfVehicle[ "Mars" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfVehicle[ "Mars" ].push_back( std::make_shared< AccelerationSettings >(
                                                     basic_astrodynamics::central_gravity ) );
-    accelerationsOfVehicle[ "Sun" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfVehicle[ "Sun" ].push_back( std::make_shared< AccelerationSettings >(
                                                    basic_astrodynamics::cannon_ball_radiation_pressure ) );
-    accelerationsOfVehicle[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfVehicle[ "Earth" ].push_back( std::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::aerodynamic ) );
-    accelerationsOfVehicle[ "Earth" ].push_back( boost::make_shared< EmpiricalAccelerationSettings >( ) );
-    accelerationsOfVehicle[ "Earth" ].push_back( boost::make_shared< RelativisticAccelerationCorrectionSettings >(
+    accelerationsOfVehicle[ "Earth" ].push_back( std::make_shared< EmpiricalAccelerationSettings >( ) );
+    accelerationsOfVehicle[ "Earth" ].push_back( std::make_shared< RelativisticAccelerationCorrectionSettings >(
                                                      true, false, false ) );
 
     accelerationMap[ "Vehicle" ] = accelerationsOfVehicle;
@@ -173,7 +173,7 @@ int main( )
     double arcOverlap = 3600.0;
 
     // Create propagator settings (including initial state taken from Kepler orbit) for each arc
-    std::vector< boost::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsList;
+    std::vector< std::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsList;
     std::vector< double > arcStartTimes;
     double currentTime = initialEphemerisTime;
     while( currentTime <= finalEphemerisTime )
@@ -184,19 +184,19 @@ int main( )
                     propagateKeplerOrbit( vehicleInitialKeplerianState, currentTime - initialEphemerisTime,
                                           earthGravitationalParameter ), earthGravitationalParameter );
         propagatorSettingsList.push_back(
-                    boost::make_shared< TranslationalStatePropagatorSettings< double > >
+                    std::make_shared< TranslationalStatePropagatorSettings< double > >
                     ( centralBodies, accelerationModelMap, bodiesToIntegrate, currentArcInitialState,
                       currentTime + arcDuration + arcOverlap, cowell ) );
         currentTime += arcDuration;
     }
 
     // Create propagator settings
-    boost::shared_ptr< PropagatorSettings< double > > propagatorSettings =
-            boost::make_shared< MultiArcPropagatorSettings< double > >( propagatorSettingsList );
+    std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
+            std::make_shared< MultiArcPropagatorSettings< double > >( propagatorSettingsList );
 
     // Create integrator settings
-    boost::shared_ptr< IntegratorSettings< double > > integratorSettings =
-            boost::make_shared< RungeKuttaVariableStepSizeSettings< double > >
+    std::shared_ptr< IntegratorSettings< double > > integratorSettings =
+            std::make_shared< RungeKuttaVariableStepSizeSettings< double > >
             ( rungeKuttaVariableStepSize, double( initialEphemerisTime ), 30.0,
               RungeKuttaCoefficients::CoefficientSets::rungeKuttaFehlberg78,
               15.0, 15.0, 1.0, 1.0 );
@@ -239,7 +239,7 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Define list of parameters to estimate.
-    std::vector< boost::shared_ptr< EstimatableParameterSettings > > parameterNames;
+    std::vector< std::shared_ptr< EstimatableParameterSettings > > parameterNames;
 
     // Create concatenated list of arc initial states
     Eigen::VectorXd systemInitialState = Eigen::VectorXd( 6 * arcStartTimes.size( ) );
@@ -248,22 +248,22 @@ int main( )
         systemInitialState.segment( i * 6, 6 ) = propagatorSettingsList.at( i )->getInitialStates( );
     }
     parameterNames.push_back(
-                boost::make_shared< ArcWiseInitialTranslationalStateEstimatableParameterSettings< double > >(
+                std::make_shared< ArcWiseInitialTranslationalStateEstimatableParameterSettings< double > >(
                     "Vehicle", systemInitialState, arcStartTimes, "Earth" ) );
-    parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "global_metric", ppn_parameter_gamma ) );
-    parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Vehicle", radiation_pressure_coefficient ) );
-    parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Vehicle", constant_drag_coefficient ) );
-    parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Earth", constant_rotation_rate ) );
-    parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Earth", rotation_pole_position ) );
-    parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Earth", ground_station_position, "Station1" ) );
-    parameterNames.push_back( boost::make_shared< EstimatableParameterSettings >( "Earth", ground_station_position, "Station2" ) );
-    parameterNames.push_back( boost::make_shared< ConstantObservationBiasEstimatableParameterSettings >(
+    parameterNames.push_back( std::make_shared< EstimatableParameterSettings >( "global_metric", ppn_parameter_gamma ) );
+    parameterNames.push_back( std::make_shared< EstimatableParameterSettings >( "Vehicle", radiation_pressure_coefficient ) );
+    parameterNames.push_back( std::make_shared< EstimatableParameterSettings >( "Vehicle", constant_drag_coefficient ) );
+    parameterNames.push_back( std::make_shared< EstimatableParameterSettings >( "Earth", constant_rotation_rate ) );
+    parameterNames.push_back( std::make_shared< EstimatableParameterSettings >( "Earth", rotation_pole_position ) );
+    parameterNames.push_back( std::make_shared< EstimatableParameterSettings >( "Earth", ground_station_position, "Station1" ) );
+    parameterNames.push_back( std::make_shared< EstimatableParameterSettings >( "Earth", ground_station_position, "Station2" ) );
+    parameterNames.push_back( std::make_shared< ConstantObservationBiasEstimatableParameterSettings >(
                                   linkEndsPerObservable.at( one_way_range ).at( 0 ), one_way_range, true ) );
-    parameterNames.push_back( boost::make_shared< ConstantObservationBiasEstimatableParameterSettings >(
+    parameterNames.push_back( std::make_shared< ConstantObservationBiasEstimatableParameterSettings >(
                                   linkEndsPerObservable.at( one_way_range ).at( 1 ), one_way_range, true ) );
-    parameterNames.push_back( boost::make_shared< SphericalHarmonicEstimatableParameterSettings >(
+    parameterNames.push_back( std::make_shared< SphericalHarmonicEstimatableParameterSettings >(
                                   2, 0, 8, 8, "Earth", spherical_harmonics_cosine_coefficient_block ) );
-    parameterNames.push_back( boost::make_shared< SphericalHarmonicEstimatableParameterSettings >(
+    parameterNames.push_back( std::make_shared< SphericalHarmonicEstimatableParameterSettings >(
                                   2, 1, 8, 8, "Earth", spherical_harmonics_sine_coefficient_block ) );
 
     // Define required settings for arc-wise empirical accelerations
@@ -275,12 +275,12 @@ int main( )
     std::vector< double > empiricalAccelerationArcTimes;
     empiricalAccelerationArcTimes.push_back( initialEphemerisTime );
     empiricalAccelerationArcTimes.push_back( initialEphemerisTime + ( finalEphemerisTime - initialEphemerisTime ) / 2.0 );
-    parameterNames.push_back( boost::make_shared< ArcWiseEmpiricalAccelerationEstimatableParameterSettings >(
+    parameterNames.push_back( std::make_shared< ArcWiseEmpiricalAccelerationEstimatableParameterSettings >(
                                  "Vehicle", "Earth", empiricalAccelerationComponents, empiricalAccelerationArcTimes ) );
 
 
     // Create parameters
-    boost::shared_ptr< estimatable_parameters::EstimatableParameterSet< double > > parametersToEstimate =
+    std::shared_ptr< estimatable_parameters::EstimatableParameterSet< double > > parametersToEstimate =
             createParametersToEstimate( parameterNames, bodyMap, accelerationModelMap );
 
     // Print identifiers and indices of parameters to terminal.
@@ -301,18 +301,18 @@ int main( )
         for( unsigned int i = 0; i < currentLinkEndsList.size( ); i++ )
         {
             // Define bias and light-time correction settings
-            boost::shared_ptr< ObservationBiasSettings > biasSettings;
-            boost::shared_ptr< LightTimeCorrectionSettings > lightTimeCorrections;
+            std::shared_ptr< ObservationBiasSettings > biasSettings;
+            std::shared_ptr< LightTimeCorrectionSettings > lightTimeCorrections;
             if( currentObservable == one_way_range )
             {
-                biasSettings = boost::make_shared< ConstantObservationBiasSettings >(
+                biasSettings = std::make_shared< ConstantObservationBiasSettings >(
                             Eigen::Vector1d::Zero( ), true );
             }
 
             // Define settings for observable, no light-time corrections, and biases for selected links
             observationSettingsMap.insert(
                         std::make_pair( currentLinkEndsList.at( i ),
-                                        boost::make_shared< ObservationSettings >(
+                                        std::make_shared< ObservationSettings >(
                                             currentObservable, lightTimeCorrections, biasSettings ) ) );
         }
     }
@@ -350,7 +350,7 @@ int main( )
     }
 
     // Create measureement simulation input
-    std::map< ObservableType, std::map< LinkEnds, boost::shared_ptr< ObservationSimulationTimeSettings< double > > > >
+    std::map< ObservableType, std::map< LinkEnds, std::shared_ptr< ObservationSimulationTimeSettings< double > > > >
             measurementSimulationInput;
     for( std::map< ObservableType, std::vector< LinkEnds > >::iterator linkEndIterator = linkEndsPerObservable.begin( );
          linkEndIterator != linkEndsPerObservable.end( ); linkEndIterator++ )
@@ -363,13 +363,13 @@ int main( )
         for( unsigned int i = 0; i < currentLinkEndsList.size( ); i++ )
         {
             measurementSimulationInput[ currentObservable ][ currentLinkEndsList.at( i ) ] =
-                    boost::make_shared< TabulatedObservationSimulationTimeSettings< double > >( receiver, baseTimeList );
+                    std::make_shared< TabulatedObservationSimulationTimeSettings< double > >( receiver, baseTimeList );
         }
     }
 
     // Create observation viability settings and calculators
-    std::vector< boost::shared_ptr< ObservationViabilitySettings > > observationViabilitySettings;
-    observationViabilitySettings.push_back( boost::make_shared< ObservationViabilitySettings >(
+    std::vector< std::shared_ptr< ObservationViabilitySettings > > observationViabilitySettings;
+    observationViabilitySettings.push_back( std::make_shared< ObservationViabilitySettings >(
                                                 minimum_elevation_angle, std::make_pair( "Earth", "" ), "",
                                                 5.0 * mathematical_constants::PI / 180.0 ) );
     PerObservableObservationViabilityCalculatorList viabilityCalculators = createObservationViabilityCalculators(
@@ -390,24 +390,24 @@ int main( )
     double dopplerNoise = 1.0E-12;
 
     // Create noise functions per observable
-    std::map< ObservableType, boost::function< double( const double ) > > noiseFunctions;
+    std::map< ObservableType, std::function< double( const double ) > > noiseFunctions;
     noiseFunctions[ one_way_range ] =
-            boost::bind( &utilities::evaluateFunctionWithoutInputArgumentDependency< double, const double >,
+            std::bind( &utilities::evaluateFunctionWithoutInputArgumentDependency< double, const double >,
                          createBoostContinuousRandomVariableGeneratorFunction(
                              normal_boost_distribution,
-                             boost::assign::list_of( 0.0 )( rangeNoise ), 0.0 ), _1 );
+                             boost::assign::list_of( 0.0 )( rangeNoise ), 0.0 ), std::placeholders::_1 );
 
     noiseFunctions[ angular_position ] =
-            boost::bind( &utilities::evaluateFunctionWithoutInputArgumentDependency< double, const double >,
+            std::bind( &utilities::evaluateFunctionWithoutInputArgumentDependency< double, const double >,
                          createBoostContinuousRandomVariableGeneratorFunction(
                              normal_boost_distribution,
-                             boost::assign::list_of( 0.0 )( angularPositionNoise ), 0.0 ), _1 );
+                             boost::assign::list_of( 0.0 )( angularPositionNoise ), 0.0 ), std::placeholders::_1 );
 
     noiseFunctions[ one_way_doppler ] =
-            boost::bind( &utilities::evaluateFunctionWithoutInputArgumentDependency< double, const double >,
+            std::bind( &utilities::evaluateFunctionWithoutInputArgumentDependency< double, const double >,
                          createBoostContinuousRandomVariableGeneratorFunction(
                              normal_boost_distribution,
-                             boost::assign::list_of( 0.0 )( dopplerNoise ), 0.0 ), _1 );
+                             boost::assign::list_of( 0.0 )( dopplerNoise ), 0.0 ), std::placeholders::_1 );
 
     // Simulate observations
     PodInputDataType observationsAndTimes = simulateObservationsWithNoise< double, double >(
@@ -433,8 +433,8 @@ int main( )
     initialParameterEstimate += parameterPerturbation;
 
     // Define estimation input
-    boost::shared_ptr< PodInput< double, double > > podInput =
-            boost::make_shared< PodInput< double, double > >(
+    std::shared_ptr< PodInput< double, double > > podInput =
+            std::make_shared< PodInput< double, double > >(
                 observationsAndTimes, initialParameterEstimate.rows( ),
                 Eigen::MatrixXd::Zero( truthParameters.rows( ), truthParameters.rows( ) ),
                 initialParameterEstimate - truthParameters );
@@ -448,8 +448,8 @@ int main( )
     podInput->defineEstimationSettings( true, false, true, true, true );
 
     // Perform estimation
-    boost::shared_ptr< PodOutput< double > > podOutput = orbitDeterminationManager.estimateParameters(
-                podInput, boost::make_shared< EstimationConvergenceChecker >( 4 ) );
+    std::shared_ptr< PodOutput< double > > podOutput = orbitDeterminationManager.estimateParameters(
+                podInput, std::make_shared< EstimationConvergenceChecker >( 4 ) );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PROVIDE OUTPUT TO CONSOLE AND FILES           //////////////////////////////////////////
