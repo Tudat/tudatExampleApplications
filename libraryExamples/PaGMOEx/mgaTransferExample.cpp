@@ -29,7 +29,7 @@
 int main( )
 {
     //Set seed for reproducible results
-    pagmo::random_device::set_seed( 123 );
+    pagmo::random_device::set_seed( 123456789 );
 
     // We have five decision variables each with a lower and upper
     // bound, create a vector of vectors that will contain these.
@@ -37,8 +37,8 @@ int main( )
     std::vector< std::vector< double > > bounds( 2, std::vector< double >( numberOfParameters, 0.0 ) );
 
     // Define search bounds: first parameter is start date, following parameters are leg durations
-    bounds[ 0 ][ 0 ] = 2458849.5;
-    bounds[ 1 ][ 0 ] = 2458849.5 + 20 * 365;
+    bounds[ 0 ][ 0 ] = 7304.5; //MJD2000
+    bounds[ 1 ][ 0 ] = 7304.5 + 10 * 365; //MJD2000
     bounds[ 0 ][ 1 ] = 200;
     bounds[ 1 ][ 1 ] = 500;
     bounds[ 0 ][ 2 ] = 50;
@@ -68,12 +68,14 @@ int main( )
     // Evolve for 512 generations
     for( int i = 0 ; i < 512; i++ )
     {
+
         isl.evolve( );
         while( isl.status( ) != pagmo::evolve_status::idle &&
                isl.status( ) != pagmo::evolve_status::idle_error )
         {
             isl.wait( );
         }
+
         isl.wait_check( ); // Raises errors
 
         // Write current iteration results to file
