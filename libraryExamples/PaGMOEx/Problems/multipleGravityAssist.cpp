@@ -139,7 +139,7 @@ std::vector<double> MultipleGravityAssist::fitness( const std::vector<double> &x
     }
     variableVector[ numberOfLegs_ ] = 1;//dummy
     variableVector *= physical_constants::JULIAN_DAY;
-    std::cout<<variableVector[ 0 ]<<std::endl;
+
     // Create the trajectory problem.
     Trajectory mgaTraj( numberOfLegs_, legTypeVector_, ephemerisVector_,
                           gravitationalParameterVector_, variableVector, sunGravitationalParameter,
@@ -148,6 +148,11 @@ std::vector<double> MultipleGravityAssist::fitness( const std::vector<double> &x
     // Start the deltaV vector.
     double resultingDeltaV;
     mgaTraj.calculateTrajectory( resultingDeltaV );
+
+    if (std::isnan(resultingDeltaV))
+    {
+        resultingDeltaV = 1.0E10;
+    }
 
     if ( useTripTime_ ){
         return { resultingDeltaV, TOF };
