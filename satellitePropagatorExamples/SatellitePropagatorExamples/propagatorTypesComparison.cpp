@@ -51,6 +51,7 @@ int main( )
     double simulationDuration = 10.0 * physical_constants::JULIAN_DAY;
     double integrationRelativeTolerance = 1.0e-12;
     double integrationAbsoluteTolerance = 1.0e-12;
+    double integrationReferenceTolerance = 1.0e-15;
     double integrationConstantTimeStepSize = 5.0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +80,7 @@ int main( )
         bodySettings[ bodiesToCreate.at( i ) ]->rotationModelSettings->resetOriginalFrame( "J2000" );
     }
     bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< FromFileSphericalHarmonicsGravityFieldSettings >( ggm02s );
-    bodySettings[ "Earth" ]->atmosphereSettings = boost::make_shared< ExponentialAtmosphereSettings >( 7050.0, 240.0, 1.225, 2.87e2 );
+    bodySettings[ "Earth" ]->atmosphereSettings = boost::make_shared< ExponentialAtmosphereSettings >( aerodynamics::earth );
     NamedBodyMap bodyMap = createBodies( bodySettings );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,13 +92,11 @@ int main( )
     const double satelliteMass = 1000.0;
     bodyMap[ "Satellite" ]->setConstantBodyMass( satelliteMass );
 
-    // Aerodynamic parameters
-    const double referenceAreaAerodynamic = 37.5;
-    boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings;
     // Set constant aerodynamic drag coefficient
-    const Eigen::Vector3d aerodynamicCoefficients = 2.2 * Eigen::Vector3d::UnitX( );
-    aerodynamicCoefficientSettings = boost::make_shared< ConstantAerodynamicCoefficientSettings >(
-                referenceAreaAerodynamic, aerodynamicCoefficients, true, true );
+    const double referenceAreaAerodynamic = 37.5;
+    const Eigen::Vector3d aerodynamicCoefficients = 2.2 * Eigen::Vector3d::UnitX( ); // only drag coefficient
+    boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
+            boost::make_shared< ConstantAerodynamicCoefficientSettings >( referenceAreaAerodynamic, aerodynamicCoefficients, true, true );
 
     bodyMap[ "Satellite" ]->setAerodynamicCoefficientInterface(
                 createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "Satellite" ) );
@@ -168,7 +167,7 @@ int main( )
     satelliteInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 93.0 );
     satelliteInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex ) = convertDegreesToRadians( 158.7 );
     satelliteInitialStateInKeplerianElements( argumentOfPeriapsisIndex ) = convertDegreesToRadians( 23.4 );
-    satelliteInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 230.0 );
+    satelliteInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 0.0 );
 
     // Convert to Cartesian elements
     double mainGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
@@ -223,7 +222,8 @@ int main( )
                 // Reference trajectory
                 integratorSettings = boost::make_shared< RungeKuttaVariableStepSizeSettings< > >(
                             rungeKuttaVariableStepSize, simulationStartEpoch, 100.0,
-                            RungeKuttaCoefficients::rungeKuttaFehlberg78, 1.0e-5, 1.0e5, 1.0e-15, 1.0e-15 );
+                            RungeKuttaCoefficients::rungeKuttaFehlberg78, 1.0e-5, 1.0e5,
+                            integrationReferenceTolerance, integrationReferenceTolerance );
             }
             else
             {
@@ -246,7 +246,7 @@ int main( )
 
             // Simulate orbit and output computation time
             SingleArcDynamicsSimulator< > dynamicsSimulator( bodyMap, integratorSettings, propagatorSettings,
-                                                             true, false, false, true );
+                                                             true, false, false, false );
 
             // Retrieve results
             std::map< double, Eigen::VectorXd > cartesianIntegrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
@@ -256,12 +256,21 @@ int main( )
                 {
                     // Store number of function evaluations for variable step-size
                     numberOfFunctionEvaluations.push_back( dynamicsSimulator.getCumulativeNumberOfFunctionEvaluations( ).rbegin( )->second );
+                    std::cout << "Total Number of Function Evaluations: " << numberOfFunctionEvaluations.back( ) << std::endl;
                 }
                 else
                 {
                     // Store propagation time for constant step-size
                     totalPropagationTime.push_back( dynamicsSimulator.getCumulativeComputationTimeHistory( ).rbegin( )->second );
+                    std::cout << "Total Propagation Time: " << totalPropagationTime.back( ) << std::endl;
                 }
+            }
+            else
+            {
+                std::cout << "Total Number of Function Evaluations: " <<
+                          dynamicsSimulator.getCumulativeNumberOfFunctionEvaluations( ).rbegin( )->second << std::endl;
+                std::cout << "Total Propagation Time: " <<
+                          dynamicsSimulator.getCumulativeComputationTimeHistory( ).rbegin( )->second << std::endl;
             }
 
             ///////////////////////     PROVIDE OUTPUT TO FILES             ////////////////////////////////////////////
