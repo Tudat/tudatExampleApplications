@@ -113,7 +113,7 @@ for p = 1:length( nameAdditionPropagator )
     scatter( numberOfFunctionEvaluations( p ), positionRMSErrorVariableStep( p ), 250, 'filled', styles{ p } )
 end
 hold off
-xlabel( 'Number of Function Evaluations [-]' )
+xlabel( 'Function Evaluations [-]' )
 ylabel( 'RMS Error in Position [m]' )
 grid on
 title( 'Variable Step Size' )
