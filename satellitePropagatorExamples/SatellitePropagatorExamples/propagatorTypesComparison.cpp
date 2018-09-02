@@ -221,8 +221,7 @@ int main( )
             {
                 // Reference trajectory
                 integratorSettings = boost::make_shared< RungeKuttaVariableStepSizeSettings< > >(
-                            rungeKuttaVariableStepSize, simulationStartEpoch, 100.0,
-                            RungeKuttaCoefficients::rungeKuttaFehlberg78, 1.0e-5, 1.0e5,
+                            simulationStartEpoch, 100.0, RungeKuttaCoefficients::rungeKuttaFehlberg78, 1.0e-5, 1.0e5,
                             integrationReferenceTolerance, integrationReferenceTolerance );
             }
             else
@@ -231,8 +230,7 @@ int main( )
                 if ( integratorType == 0 )
                 {
                     integratorSettings = boost::make_shared< RungeKuttaVariableStepSizeSettings< > >(
-                                rungeKuttaVariableStepSize, simulationStartEpoch, 100.0,
-                                RungeKuttaCoefficients::rungeKuttaFehlberg56, 1.0e-5, 1.0e5,
+                                simulationStartEpoch, 100.0, RungeKuttaCoefficients::rungeKuttaFehlberg56, 1.0e-5, 1.0e5,
                                 integrationRelativeTolerance, integrationAbsoluteTolerance );
                 }
                 else if ( integratorType == 1 )

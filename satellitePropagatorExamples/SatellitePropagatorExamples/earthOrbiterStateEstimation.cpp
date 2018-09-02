@@ -197,8 +197,7 @@ int main( )
     // Create integrator settings
     boost::shared_ptr< IntegratorSettings< double > > integratorSettings =
             boost::make_shared< RungeKuttaVariableStepSizeSettings< double > >
-            ( rungeKuttaVariableStepSize, double( initialEphemerisTime ), 30.0,
-              RungeKuttaCoefficients::CoefficientSets::rungeKuttaFehlberg78,
+            ( double( initialEphemerisTime ), 30.0, RungeKuttaCoefficients::CoefficientSets::rungeKuttaFehlberg78,
               15.0, 15.0, 1.0, 1.0 );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
