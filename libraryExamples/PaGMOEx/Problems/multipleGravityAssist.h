@@ -15,17 +15,41 @@
 #include <vector>
 #include <utility>
 #include <limits>
-#include "mga.h"
+
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
+
+#include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
+#include <Tudat/Basics/testMacros.h>
+#include <Tudat/Mathematics/BasicMathematics/mathematicalConstants.h>
+#include "Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h"
+#include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
+
+#include <Tudat/InputOutput/basicInputOutput.h>
+
+#include "Tudat/Astrodynamics/Ephemerides/approximatePlanetPositions.h"
+#include "Tudat/Astrodynamics/TrajectoryDesign/trajectory.h"
+#include <random>
 
 #include "pagmo/island.hpp"
 #include "pagmo/io.hpp"
 #include "pagmo/serialization.hpp"
 #include "pagmo/problem.hpp"
+#include <pagmo/rng.hpp>
+
 
 #include <Eigen/Core>
 
 typedef Eigen::Matrix< double, 6, 1 > StateType;
 
+using namespace tudat::ephemerides;
+using namespace tudat::numerical_integrators;
+using namespace tudat::basic_astrodynamics;
+using namespace tudat::orbital_element_conversions;
+using namespace tudat::basic_mathematics;
+using namespace tudat::input_output;
+using namespace tudat::transfer_trajectories; //NEED TO CHANGE THIS TO: transfer_trajectories
+using namespace tudat;
 using namespace pagmo;
 
 //! Test function for a new interplanetary trajectory class in Tudat
@@ -66,11 +90,18 @@ struct MultipleGravityAssist
 
 private:
 
-    mgaproblem mgaObject_;
-
     const std::vector< std::vector< double > > problemBounds_;
 
     bool useTripTime_;
+
+    int numberOfLegs_;
+    std::vector< int > legTypeVector_;
+    std::vector< std::string > bodyNamesVector_;
+    std::vector< ephemerides::EphemerisPointer > ephemerisVector_;
+    Eigen::VectorXd gravitationalParameterVector_;
+    Eigen::VectorXd semiMajorAxes_;
+    Eigen::VectorXd eccentricities_;
+    Eigen::VectorXd minimumPericenterRadii_;
 };
 
 #endif // TUDAT_EXAMPLE_PAGMO_MULTIPLE_GRAVITY_ASSIST_H

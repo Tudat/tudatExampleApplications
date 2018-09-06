@@ -20,9 +20,13 @@
 #include <Tudat/Astrodynamics/BasicAstrodynamics/orbitalElementConversions.h>
 
 #include <Tudat/InputOutput/basicInputOutput.h>
+#include <SatellitePropagatorExamples/applicationOutput.h>
+
 
 #include "Tudat/Astrodynamics/Ephemerides/approximatePlanetPositions.h"
 #include "Tudat/Astrodynamics/TrajectoryDesign/trajectory.h"
+#include "Tudat/Astrodynamics/TrajectoryDesign/exportTrajectory.h"
+#include "Tudat/Astrodynamics/TrajectoryDesign/planetTrajectory.h"
 
 int main( )
 {
@@ -213,6 +217,73 @@ int main( )
             << ". Delta V needed for 4th DSM: " << deltaVVectorMessenger[7] << std::endl;
     std::cout<<" Time of Mercury capture: " << timeVectorMessenger[8]
             << ". Delta V needed at Mercury: " << deltaVVectorMessenger[8] << std::endl;
+
+    // Define vectors to calculate intermediate points
+    std::vector < Eigen::Vector3d > interPositionVectorMessenger;
+    std::vector < double > interTimeVectorMessenger;
+
+    // Calculate intermediate points and write to file
+    std::string outputFileTraj = tudat_applications::getOutputPath( )+"messengerTrajectory.dat";
+    Messenger.intermediatePoints( 1000.0 , interPositionVectorMessenger, interTimeVectorMessenger );
+    writeTrajectoryToFile( interPositionVectorMessenger, interTimeVectorMessenger, outputFileTraj );
+
+    // Define vectors to calculate intermediate points
+    std::vector < Eigen::Vector3d > manPositionVectorMessenger;
+    std::vector < double > manTimeVectorMessenger;
+    std::vector < double > manDeltaVVectorMessenger;
+
+    // Calculate maneuvers and write to file
+    std::string outputFileMan = tudat_applications::getOutputPath( )+"messengerManeuvers.dat";
+    Messenger.maneuvers( manPositionVectorMessenger, manTimeVectorMessenger, manDeltaVVectorMessenger );
+    writeTrajectoryToFile( manPositionVectorMessenger, manTimeVectorMessenger, outputFileMan );
+
+    // Calculate trajectories of the planets and output to file
+    std::vector < Eigen::Vector3d > positionVectorEarth;
+    std::vector < double > timeVectorEarth;
+    std::vector < Eigen::Vector3d > positionVectorVenus;
+    std::vector < double > timeVectorVenus;
+    std::vector < Eigen::Vector3d > positionVectorMercury;
+    std::vector < double > timeVectorMercury;
+
+    // Earth
+    returnSingleRevolutionPlanetTrajectory(
+                boost::make_shared< ephemerides::ApproximatePlanetPositions >(
+                                ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::earthMoonBarycenter ),
+            sunGravitationalParameter,
+            1171.64503236,
+            1000.0,
+            positionVectorEarth,
+            timeVectorEarth);
+
+    // Venus
+    returnSingleRevolutionPlanetTrajectory(
+                boost::make_shared< ephemerides::ApproximatePlanetPositions >(
+                                ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::venus ),
+            sunGravitationalParameter,
+            1171.64503236,
+            1000.0,
+            positionVectorVenus,
+            timeVectorVenus);
+
+    // Mercury
+    returnSingleRevolutionPlanetTrajectory(
+                boost::make_shared< ephemerides::ApproximatePlanetPositions >(
+                                ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::mercury ),
+            sunGravitationalParameter,
+            1171.64503236,
+            1000.0,
+            positionVectorMercury,
+            timeVectorMercury);
+
+    std::string outputFilePlanetE = tudat_applications::getOutputPath(  )+"earthTrajectory.dat";
+    writeTrajectoryToFile( positionVectorEarth, timeVectorEarth, outputFilePlanetE );
+
+    std::string outputFilePlanetV = tudat_applications::getOutputPath(  )+"venusTrajectory.dat";
+    writeTrajectoryToFile( positionVectorVenus, timeVectorVenus, outputFilePlanetV );
+
+    std::string outputFilePlanetM = tudat_applications::getOutputPath(  )+"mercuryTrajectory.dat";
+    writeTrajectoryToFile( positionVectorMercury, timeVectorMercury, outputFilePlanetM );
+
 
     return EXIT_SUCCESS;
 }
