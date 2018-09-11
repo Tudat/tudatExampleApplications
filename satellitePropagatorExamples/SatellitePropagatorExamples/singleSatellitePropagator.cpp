@@ -12,7 +12,6 @@
 
 #include "SatellitePropagatorExamples/applicationOutput.h"
 
-
 //! Execute propagation of orbit of Asterix around the Earth.
 int main()
 {

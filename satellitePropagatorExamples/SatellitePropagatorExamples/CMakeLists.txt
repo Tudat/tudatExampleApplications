@@ -223,6 +223,11 @@ add_executable(application_PropagatorTypesComparison "${SRCROOT}/propagatorTypes
 setup_executable_target(application_PropagatorTypesComparison "${SRCROOT}")
 target_link_libraries(application_PropagatorTypesComparison ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+# Add filter example.
+add_executable(application_FilterEstimation "${SRCROOT}/filterExample")
+setup_executable_target(application_FilterEstimation "${SRCROOT}")
+target_link_libraries(application_FilterEstimation ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
 # Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
 setup_executable_target(application_SingleSatellitePropagator "${SRCROOT}")
@@ -232,7 +237,6 @@ add_executable(application_SinglePerturbedSatellitePropagator "${SRCROOT}/single
 setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROOT}")
 target_link_libraries(application_SinglePerturbedSatellitePropagator
                       ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
-
 
 add_executable(application_InterplanetaryTrajectoryDesign "${SRCROOT}/interplanetaryTrajectoryDesign.cpp")
 setup_executable_target(application_InterplanetaryTrajectoryDesign "${SRCROOT}")
