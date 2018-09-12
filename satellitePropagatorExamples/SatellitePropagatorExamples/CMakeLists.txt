@@ -213,8 +213,22 @@ list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_trajectory_design tudat
     tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_basic_mathematics
     tudat_root_finders tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
+# Add tabulated atmosphere usage example.
+add_executable(application_TabulatedAtmosphereUsage "${SRCROOT}/tabulatedAtmosphereUsage.cpp")
+setup_executable_target(application_TabulatedAtmosphereUsage "${SRCROOT}")
+target_link_libraries(application_TabulatedAtmosphereUsage tudat_aerodynamics tudat_input_output ${Boost_LIBRARIES} )
 
-## Add single, Earth-orbiting satellite propagator application.
+# Add comparison of propagator types.
+add_executable(application_PropagatorTypesComparison "${SRCROOT}/propagatorTypesComparison.cpp")
+setup_executable_target(application_PropagatorTypesComparison "${SRCROOT}")
+target_link_libraries(application_PropagatorTypesComparison ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+# Add filter example.
+add_executable(application_FilterEstimation "${SRCROOT}/filterExample")
+setup_executable_target(application_FilterEstimation "${SRCROOT}")
+target_link_libraries(application_FilterEstimation ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+# Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
 setup_executable_target(application_SingleSatellitePropagator "${SRCROOT}")
 target_link_libraries(application_SingleSatellitePropagator ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
@@ -223,7 +237,6 @@ add_executable(application_SinglePerturbedSatellitePropagator "${SRCROOT}/single
 setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROOT}")
 target_link_libraries(application_SinglePerturbedSatellitePropagator
                       ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
-
 
 add_executable(application_InterplanetaryTrajectoryDesign "${SRCROOT}/interplanetaryTrajectoryDesign.cpp")
 setup_executable_target(application_InterplanetaryTrajectoryDesign "${SRCROOT}")

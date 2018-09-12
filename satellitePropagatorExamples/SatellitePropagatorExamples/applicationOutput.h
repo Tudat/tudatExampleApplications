@@ -1,12 +1,13 @@
 #ifndef TUDAT_APPLICATIONOUTPUT_H
 #define TUDAT_APPLICATIONOUTPUT_H
 
+#include <iostream>
+
 namespace tudat_applications
 {
 
 //! Get path for output directory.
-static inline std::string getOutputPath(
-        const std::string& extraDirectory = "" )
+static inline std::string getOutputPath( const std::string& extraDirectory = "" )
 {
     // Declare file path string assigned to filePath.
     // __FILE__ only gives the absolute path of the header file!
