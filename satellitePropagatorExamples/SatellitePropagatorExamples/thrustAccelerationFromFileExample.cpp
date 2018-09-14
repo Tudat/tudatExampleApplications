@@ -80,7 +80,7 @@ int main()
 
     // Define data to be used for thrust as a function of time.
     const std::string cppFilePath( __FILE__ );
-    const std::string cppFolder = cppFilePath.substr( 0 , cppFilePath.find_last_of("/\\")+1 );
+    const std::string cppFolder = cppFilePath.substr( 0, cppFilePath.find_last_of("/\\") + 1 );
     boost::shared_ptr< FromFileDataMapSettings< Eigen::Vector3d > > thrustDataSettings =
             boost::make_shared< FromFileDataMapSettings< Eigen::Vector3d > >( cppFolder + "testThrustValues.txt" );
 
