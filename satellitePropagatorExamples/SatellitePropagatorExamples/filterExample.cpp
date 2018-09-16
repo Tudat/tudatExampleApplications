@@ -198,9 +198,9 @@ int main( )
                 boost::bind( &measurementFunction, _1, _2 ),
                 boost::bind( &stateJacobianFunction, _1, _2,
                              boost::bind( &ControlSystem< double, double, 3 >::getCurrentControlVector, extendedControl ) ),
-                boost::lambda::constant( Eigen::Matrix3d::Zero( ) ),
+                boost::lambda::constant( Eigen::Matrix3d::Identity( ) ),
                 boost::bind( &measurementJacobianFunction, _1, _2 ),
-                boost::lambda::constant( Eigen::Vector1d::Zero( ) ) );
+                boost::lambda::constant( Eigen::Vector1d::Identity( ) ) );
     boost::shared_ptr< FilterBase< double, double > > unscentedFilter = createFilter< double, double >(
                 unscentedFilterSettings,
                 boost::bind( &stateFunction, _1, _2,
