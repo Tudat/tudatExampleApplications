@@ -133,7 +133,7 @@ int main( )
 
     // Set initial conditions
     const double initialTime = 0;
-    const double timeStep = 0.1;
+    const double timeStepSize = 0.1;
     const unsigned int numberOfTimeSteps = 300;
 
     Eigen::Vector3d initialStateVector;
@@ -162,7 +162,7 @@ int main( )
     // Set integrator settings
     boost::shared_ptr< numerical_integrators::IntegratorSettings< > > integratorSettings =
             boost::make_shared< numerical_integrators::IntegratorSettings< > > (
-                numerical_integrators::euler, initialTime, timeStep );
+                numerical_integrators::euler, initialTime, timeStepSize );
 
     // Create control classes
     // These are only included to show how a control system would need to be implemented, but they have no effect at all on the
@@ -177,6 +177,7 @@ int main( )
             boost::make_shared< ExtendedKalmanFilterSettings< double, double > >(
                 systemUncertainty,
                 measurementUncertainty,
+                timeStepSize,
                 initialTime,
                 initialEstimatedStateVector,
                 initialEstimatedStateCovarianceMatrix,
@@ -185,6 +186,7 @@ int main( )
             boost::make_shared< UnscentedKalmanFilterSettings< double, double > >(
                 systemUncertainty,
                 measurementUncertainty,
+                timeStepSize,
                 initialTime,
                 initialEstimatedStateVector,
                 initialEstimatedStateCovarianceMatrix,
@@ -209,7 +211,7 @@ int main( )
 
     // Loop over each time step
     const bool showProgress = false;
-    double currentTime = initialTime;
+    double currentTime = extendedFilter->getCurrentTime( );;
     Eigen::Vector3d currentActualStateVector = initialStateVector;
     Eigen::Vector3d currentNoisyStateVector;
     Eigen::Vector3d currentControlVector = Eigen::Vector3d::Zero( );
@@ -220,9 +222,8 @@ int main( )
     for( unsigned int i = 0; i < numberOfTimeSteps; i++ )
     {
         // Compute actual values and perturb them
-        currentTime += timeStep;
-        currentActualStateVector += stateFunction( currentTime, currentActualStateVector, currentControlVector ) * timeStep;
-        currentNoisyStateVector = currentActualStateVector + unscentedFilter->produceSystemNoise( ) * timeStep;
+        currentActualStateVector += stateFunction( currentTime, currentActualStateVector, currentControlVector ) * timeStepSize;
+        currentNoisyStateVector = currentActualStateVector + unscentedFilter->produceSystemNoise( ) * timeStepSize;
         currentMeasurementVector = measurementFunction( currentTime, currentActualStateVector ) +
                 unscentedFilter->produceMeasurementNoise( );
         actualStateVectorHistory[ currentTime ] = currentActualStateVector;
@@ -233,8 +234,11 @@ int main( )
         unscentedControl->setCurrentControlVector( currentTime, unscentedFilter->getCurrentStateEstimate( ) );
 
         // Update filters
-        extendedFilter->updateFilter( currentTime, currentMeasurementVector );
-        unscentedFilter->updateFilter( currentTime, currentMeasurementVector );
+        extendedFilter->updateFilter( currentMeasurementVector );
+        unscentedFilter->updateFilter( currentMeasurementVector );
+
+        // Update time
+        currentTime = extendedFilter->getCurrentTime( );
 
         // Print progress
         if ( showProgress )
