@@ -222,8 +222,8 @@ int main( )
     for ( unsigned int i = 0; i < numberOfTimeSteps; i++ )
     {
         // Compute actual values and perturb them
-        currentActualStateVector += stateFunction( currentTime, currentActualStateVector, currentControlVector ) * timeStepSize;
-        currentNoisyStateVector = currentActualStateVector + unscentedFilter->produceSystemNoise( ) * timeStepSize;
+        currentActualStateVector += ( stateFunction( currentTime, currentActualStateVector, currentControlVector ) +
+                                      unscentedFilter->produceSystemNoise( ) ) * timeStepSize;
         currentMeasurementVector = measurementFunction( currentTime, currentActualStateVector ) +
                 unscentedFilter->produceMeasurementNoise( );
 

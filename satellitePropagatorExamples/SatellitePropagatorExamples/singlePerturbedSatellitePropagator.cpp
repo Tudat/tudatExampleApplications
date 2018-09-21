@@ -117,6 +117,7 @@ int main()
                                                      basic_astrodynamics::central_gravity ) );
     accelerationsOfAsterix[ "Venus" ].push_back( boost::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::central_gravity ) );
+
     accelerationsOfAsterix[ "Sun" ].push_back( boost::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::cannon_ball_radiation_pressure ) );
     accelerationsOfAsterix[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
