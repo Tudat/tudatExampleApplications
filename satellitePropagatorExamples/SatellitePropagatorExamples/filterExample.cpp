@@ -219,15 +219,13 @@ int main( )
     std::map< double, Eigen::Vector3d > actualStateVectorHistory;
     std::map< double, Eigen::Vector1d > measurementVectorHistory;
     actualStateVectorHistory[ initialTime ] = initialStateVector;
-    for( unsigned int i = 0; i < numberOfTimeSteps; i++ )
+    for ( unsigned int i = 0; i < numberOfTimeSteps; i++ )
     {
         // Compute actual values and perturb them
         currentActualStateVector += stateFunction( currentTime, currentActualStateVector, currentControlVector ) * timeStepSize;
         currentNoisyStateVector = currentActualStateVector + unscentedFilter->produceSystemNoise( ) * timeStepSize;
         currentMeasurementVector = measurementFunction( currentTime, currentActualStateVector ) +
                 unscentedFilter->produceMeasurementNoise( );
-        actualStateVectorHistory[ currentTime ] = currentActualStateVector;
-        measurementVectorHistory[ currentTime ] = currentMeasurementVector;
 
         // Update control classes
         extendedControl->setCurrentControlVector( currentTime, extendedFilter->getCurrentStateEstimate( ) );
@@ -239,6 +237,10 @@ int main( )
 
         // Update time
         currentTime = extendedFilter->getCurrentTime( );
+
+        // Store values
+        actualStateVectorHistory[ currentTime ] = currentActualStateVector;
+        measurementVectorHistory[ currentTime ] = currentMeasurementVector;
 
         // Print progress
         if ( showProgress )
