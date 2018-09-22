@@ -12,6 +12,7 @@
 #ifndef TUDAT_EXAMPLE_PAGMO_PROBLEM_PROPAGATION_TARGETING_HPP
 #define TUDAT_EXAMPLE_PAGMO_PROBLEM_PROPAGATION_TARGETING_HPP
 
+#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 #include <utility>
 #include <vector>
 
@@ -38,6 +39,15 @@ private:
     double altitudeOfTarget_;
     double longitudeOfTarget_;
     bool useExtendedDynamics_;
+    double earthRadius_;
+    double radiusOfPerigee_;
+    double radiusOfApogee_;
+    double earthGravitationalParameter_;
+    double semiMajorAxis_;
+    double simulationStartEpoch_;
+    double simulationEndEpoch_;
+    mutable tudat::simulation_setup::NamedBodyMap bodyMap_;
+
 
 };
 

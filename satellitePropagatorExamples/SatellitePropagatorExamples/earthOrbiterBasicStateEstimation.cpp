@@ -177,7 +177,7 @@ int main( )
     // Create integrator settings
     std::shared_ptr< IntegratorSettings< double > > integratorSettings =
             std::make_shared< RungeKuttaVariableStepSizeSettings< double > >
-            ( rungeKuttaVariableStepSize, double( initialEphemerisTime ), 40.0,
+            ( double( initialEphemerisTime ), 40.0,
               RungeKuttaCoefficients::CoefficientSets::rungeKuttaFehlberg78,
               40.0, 40.0, 1.0, 1.0 );
 
