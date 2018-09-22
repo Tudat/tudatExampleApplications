@@ -5,6 +5,9 @@ fclose('all'); clear all; close all force; profile off; clc; format long g; rng 
 %...Folder name
 outputRepository = '../SimulationOutput/PropagatorTypesComparison';
 
+%...Toggle use of Kepler orbit
+isKeplerOrbit = true; % if Kepler orbit, no accelerations
+
 %...Set file name additions
 nameAdditionPropagator = { '_cowell', '_encke', '_kepl', '_equi', '_usm7', '_usm6', '_usmem' };
 nameAdditionIntegrator = { '_var', '_const' };
@@ -118,7 +121,6 @@ ylabel( 'RMS Error in Position [m]' )
 grid on
 title( 'Variable Step Size' )
 set( gca, 'FontSize', 15, 'YScale', 'log' )
-% legend( legendLabels{ : }, 'Position', 'Best' )
 [ ~, icons ] = legend( legendLabels{:}, 'Location', 'Best' );
 for p = 1:length( nameAdditionPropagator )
     icons( p ).FontSize = 12.5;
@@ -136,14 +138,17 @@ ylabel( 'RMS Error in Position [m]' )
 grid on
 title( 'Constant Step Size' )
 set( gca, 'FontSize', 15, 'YScale', 'log' )
-% legend( legendLabels{ : }, 'Position', 'Best' )
 [ ~, icons ] = legend( legendLabels{:}, 'Location', 'Best' );
 for p = 1:length( nameAdditionPropagator )
     icons( p ).FontSize = 12.5;
     icons( p + length( nameAdditionPropagator ) ).Children.MarkerSize = 10;
 end
 
-saveas( F, 'propagatorTypesComparison', 'epsc' )
+if isKeplerOrbit
+   saveas( F, 'propagatorTypesComparisonKepler', 'png' )
+else
+   saveas( F, 'propagatorTypesComparison', 'png' )
+end
 
 %...Clean up
 clear F styles icons p

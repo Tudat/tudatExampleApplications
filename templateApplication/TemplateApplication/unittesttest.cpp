@@ -37,7 +37,7 @@ int main( )
     bodiesToCreate.push_back( "Jupiter" );
 
     // Create body objects.
-    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
+    std::map< std::string, std::shared_ptr< BodySettings > > bodySettings =
             getDefaultBodySettings( bodiesToCreate, simulationStartEpoch - 300.0, simulationEndEpoch + 300.0 );
     for( unsigned int i = 0; i < bodiesToCreate.size( ); i++ )
     {
@@ -50,10 +50,10 @@ int main( )
     double initialMass = 1200.0;
 
     // Create spacecraft object.
-    bodyMap[ "LRO" ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap[ "LRO" ] = std::make_shared< simulation_setup::Body >( );
     bodyMap[ "LRO" ]->setConstantBodyMass( initialMass );
 
-    bodyMap[ "LRO2" ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap[ "LRO2" ] = std::make_shared< simulation_setup::Body >( );
     bodyMap[ "LRO2" ]->setConstantBodyMass( initialMass + 1000 );
 
     // Finalize body creation.
@@ -69,8 +69,8 @@ int main( )
     std::vector< std::string > centralBodies;
 
     // Define propagation settings.
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfLRO;
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfLRO2;
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfLRO;
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfLRO2;
 
 
     ///                                         ///
@@ -79,56 +79,56 @@ int main( )
     ///                                         ///
 
     // Turn on central gravity of Sun
-    accelerationsOfLRO[ "Sun" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfLRO[ "Sun" ].push_back( std::make_shared< AccelerationSettings >(
                 basic_astrodynamics::central_gravity ) );
-    accelerationsOfLRO2[ "Sun" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfLRO2[ "Sun" ].push_back( std::make_shared< AccelerationSettings >(
             basic_astrodynamics::central_gravity ) );
 
     // Turn on central gravity from Earth
-    accelerationsOfLRO[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfLRO[ "Earth" ].push_back( std::make_shared< AccelerationSettings >(
             basic_astrodynamics::central_gravity ) );
-    accelerationsOfLRO2[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfLRO2[ "Earth" ].push_back( std::make_shared< AccelerationSettings >(
             basic_astrodynamics::central_gravity ) );
 
     // Turn on spherical harmonic perturbations of Moon
     accelerationsOfLRO[ "Moon" ].push_back(
-            boost::make_shared< SphericalHarmonicAccelerationSettings >( 16, 16 ) );
+            std::make_shared< SphericalHarmonicAccelerationSettings >( 16, 16 ) );
     accelerationsOfLRO2[ "Moon" ].push_back(
-            boost::make_shared< SphericalHarmonicAccelerationSettings >( 16, 16 ) );
+            std::make_shared< SphericalHarmonicAccelerationSettings >( 16, 16 ) );
 
     // Turn on central gravity of Mars
-    accelerationsOfLRO[ "Mars" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfLRO[ "Mars" ].push_back( std::make_shared< AccelerationSettings >(
             basic_astrodynamics::central_gravity ) );
-    accelerationsOfLRO2[ "Mars" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfLRO2[ "Mars" ].push_back( std::make_shared< AccelerationSettings >(
             basic_astrodynamics::central_gravity ) );
 
     // Turn on central gravity of Jupiter
-    accelerationsOfLRO[ "Jupiter" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfLRO[ "Jupiter" ].push_back( std::make_shared< AccelerationSettings >(
             basic_astrodynamics::central_gravity ) );
-    accelerationsOfLRO2[ "Jupiter" ].push_back( boost::make_shared< AccelerationSettings >(
+    accelerationsOfLRO2[ "Jupiter" ].push_back( std::make_shared< AccelerationSettings >(
             basic_astrodynamics::central_gravity ) );
 
     double thrustMagnitude = 1.0;
     double specificImpulse = 200.0;
-    boost::shared_ptr< ThrustEngineSettings > thrustMagnitudeSettings =
-               boost::make_shared< ConstantThrustEngineSettings >(
+    std::shared_ptr< ThrustEngineSettings > thrustMagnitudeSettings =
+               std::make_shared< ConstantThrustEngineSettings >(
                         thrustMagnitude, specificImpulse );
-    boost::shared_ptr< ThrustEngineSettings > thrustMagnitudeSettings2 =
-               boost::make_shared< ConstantThrustEngineSettings >(
+    std::shared_ptr< ThrustEngineSettings > thrustMagnitudeSettings2 =
+               std::make_shared< ConstantThrustEngineSettings >(
                         thrustMagnitude, specificImpulse );
 
-    boost::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionSettings;
-    boost::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionSettings2;
+    std::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionSettings;
+    std::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionSettings2;
 
-    thrustDirectionSettings = boost::make_shared< ThrustDirectionFromStateGuidanceSettings >(
+    thrustDirectionSettings = std::make_shared< ThrustDirectionFromStateGuidanceSettings >(
                 "Moon", true, false );
 
-    thrustDirectionSettings2 = boost::make_shared< ThrustDirectionFromStateGuidanceSettings >(
+    thrustDirectionSettings2 = std::make_shared< ThrustDirectionFromStateGuidanceSettings >(
                 "Moon", true, false );
 
-    accelerationsOfLRO[ "LRO" ].push_back( boost::make_shared< ThrustAccelerationSettings >(
+    accelerationsOfLRO[ "LRO" ].push_back( std::make_shared< ThrustAccelerationSettings >(
             thrustDirectionSettings, thrustMagnitudeSettings ) );
-    accelerationsOfLRO2[ "LRO2" ].push_back( boost::make_shared< ThrustAccelerationSettings >(
+    accelerationsOfLRO2[ "LRO2" ].push_back( std::make_shared< ThrustAccelerationSettings >(
             thrustDirectionSettings2, thrustMagnitudeSettings2 ) );
 
     accelerationMap[ "LRO" ] = accelerationsOfLRO;
@@ -191,23 +191,23 @@ int main( )
         ///                                                         ///
     double timeStep = 30.0;
 
-    boost::shared_ptr< TranslationalStatePropagatorSettings< > > propagatorSettings;
-    boost::shared_ptr< PropagatorSettings< double > > multiPropagatorSettings; // For question 1.6
+    std::shared_ptr< TranslationalStatePropagatorSettings< > > propagatorSettings;
+    std::shared_ptr< PropagatorSettings< double > > multiPropagatorSettings; // For question 1.6
 
     propagatorSettings =
-            boost::make_shared< TranslationalStatePropagatorSettings< > >
+            std::make_shared< TranslationalStatePropagatorSettings< > >
                     ( centralBodies, accelerationModelMap, bodiesToPropagate,
                       initialCartesianState, simulationEndEpoch, cowell );
 
-    boost::shared_ptr< PropagationTimeTerminationSettings > terminationSettings =
-            boost::make_shared< propagators::PropagationTimeTerminationSettings >( simulationEndEpoch );
+    std::shared_ptr< PropagationTimeTerminationSettings > terminationSettings =
+            std::make_shared< propagators::PropagationTimeTerminationSettings >( simulationEndEpoch );
 
-    boost::shared_ptr< MassRateModelSettings > massRateModelSettings =
-            boost::make_shared< FromThrustMassModelSettings >( 1 );
-    boost::shared_ptr< MassRateModelSettings > massRateModelSettings2 =
-            boost::make_shared< FromThrustMassModelSettings >( 1 );
+    std::shared_ptr< MassRateModelSettings > massRateModelSettings =
+            std::make_shared< FromThrustMassModelSettings >( 1 );
+    std::shared_ptr< MassRateModelSettings > massRateModelSettings2 =
+            std::make_shared< FromThrustMassModelSettings >( 1 );
 
-    std::map< std::string, boost::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
+    std::map< std::string, std::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
 
     massRateModels[ "LRO" ] = createMassRateModel(
             "LRO", massRateModelSettings, bodyMap, accelerationModelMap );
@@ -223,20 +223,20 @@ int main( )
     initialBodyMasses( 0 ) = initialMass;
     initialBodyMasses( 1 ) = initialMass + 1000;
 
-    boost::shared_ptr< PropagatorSettings< double > > massPropagatorSettings =
-            boost::make_shared< MassPropagatorSettings< double > >(
+    std::shared_ptr< PropagatorSettings< double > > massPropagatorSettings =
+            std::make_shared< MassPropagatorSettings< double > >(
                     bodiesWithMassToPropagate, massRateModels, initialBodyMasses, terminationSettings );
 
-    std::vector< boost::shared_ptr< PropagatorSettings< double > > > propagatorSettingsVector;
+    std::vector< std::shared_ptr< PropagatorSettings< double > > > propagatorSettingsVector;
 
     propagatorSettingsVector.push_back( massPropagatorSettings );
     propagatorSettingsVector.push_back( propagatorSettings );
     multiPropagatorSettings =
-            boost::make_shared< MultiTypePropagatorSettings< double > >(
+            std::make_shared< MultiTypePropagatorSettings< double > >(
                     propagatorSettingsVector, terminationSettings );
 
 
-    boost::shared_ptr< IntegratorSettings< > > integratorSettings = boost::make_shared< IntegratorSettings< > >
+    std::shared_ptr< IntegratorSettings< > > integratorSettings = std::make_shared< IntegratorSettings< > >
             ( rungeKutta4, simulationStartEpoch, timeStep );
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

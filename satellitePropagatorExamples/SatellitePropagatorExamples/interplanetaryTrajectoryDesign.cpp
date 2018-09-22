@@ -247,7 +247,7 @@ int main( )
 
     // Earth
     returnSingleRevolutionPlanetTrajectory(
-                boost::make_shared< ephemerides::ApproximatePlanetPositions >(
+                std::make_shared< ephemerides::ApproximatePlanetPositions >(
                                 ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::earthMoonBarycenter ),
             sunGravitationalParameter,
             1171.64503236,
@@ -257,7 +257,7 @@ int main( )
 
     // Venus
     returnSingleRevolutionPlanetTrajectory(
-                boost::make_shared< ephemerides::ApproximatePlanetPositions >(
+                std::make_shared< ephemerides::ApproximatePlanetPositions >(
                                 ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::venus ),
             sunGravitationalParameter,
             1171.64503236,
@@ -267,7 +267,7 @@ int main( )
 
     // Mercury
     returnSingleRevolutionPlanetTrajectory(
-                boost::make_shared< ephemerides::ApproximatePlanetPositions >(
+                std::make_shared< ephemerides::ApproximatePlanetPositions >(
                                 ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::mercury ),
             sunGravitationalParameter,
             1171.64503236,

@@ -72,15 +72,15 @@ int main( )
     bodiesToCreate.push_back( "Moon" );
 
     // Create body objects
-    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
+    std::map< std::string, std::shared_ptr< BodySettings > > bodySettings =
             getDefaultBodySettings( bodiesToCreate, simulationStartEpoch - 1.0e3, simulationEndEpoch + 1.0e3 );
     for ( unsigned int i = 0; i < bodiesToCreate.size( ); i++ )
     {
         bodySettings[ bodiesToCreate.at( i ) ]->ephemerisSettings->resetFrameOrientation( "J2000" );
         bodySettings[ bodiesToCreate.at( i ) ]->rotationModelSettings->resetOriginalFrame( "J2000" );
     }
-    bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< FromFileSphericalHarmonicsGravityFieldSettings >( ggm02s );
-    bodySettings[ "Earth" ]->atmosphereSettings = boost::make_shared< ExponentialAtmosphereSettings >( aerodynamics::earth );
+    bodySettings[ "Earth" ]->gravityFieldSettings = std::make_shared< FromFileSphericalHarmonicsGravityFieldSettings >( ggm02s );
+    bodySettings[ "Earth" ]->atmosphereSettings = std::make_shared< ExponentialAtmosphereSettings >( aerodynamics::earth );
     NamedBodyMap bodyMap = createBodies( bodySettings );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -88,15 +88,15 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Create spacecraft object
-    bodyMap[ "Satellite" ] = boost::make_shared< Body >( );
+    bodyMap[ "Satellite" ] = std::make_shared< Body >( );
     const double satelliteMass = 1000.0;
     bodyMap[ "Satellite" ]->setConstantBodyMass( satelliteMass );
 
     // Set constant aerodynamic drag coefficient
     const double referenceAreaAerodynamic = 37.5;
     const Eigen::Vector3d aerodynamicCoefficients = 2.2 * Eigen::Vector3d::UnitX( ); // only drag coefficient
-    boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
-            boost::make_shared< ConstantAerodynamicCoefficientSettings >( referenceAreaAerodynamic, aerodynamicCoefficients, true, true );
+    std::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
+            std::make_shared< ConstantAerodynamicCoefficientSettings >( referenceAreaAerodynamic, aerodynamicCoefficients, true, true );
 
     bodyMap[ "Satellite" ]->setAerodynamicCoefficientInterface(
                 createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "Satellite" ) );
@@ -106,8 +106,8 @@ int main( )
     double radiationPressureCoefficient = 1.25;
     std::vector< std::string > occultingBodies;
     occultingBodies.push_back( "Earth" );
-    boost::shared_ptr< RadiationPressureInterfaceSettings > SatelliteRadiationPressureSettings =
-            boost::make_shared< CannonBallRadiationPressureInterfaceSettings >(
+    std::shared_ptr< RadiationPressureInterfaceSettings > SatelliteRadiationPressureSettings =
+            std::make_shared< CannonBallRadiationPressureInterfaceSettings >(
                 "Sun", referenceAreaRadiation, radiationPressureCoefficient, occultingBodies );
 
     // Create and set radiation pressure settings
@@ -127,25 +127,25 @@ int main( )
     std::vector< std::string > centralBodies;
 
     // Switch between Kepler orbit or perturbed environment
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfSatellite;
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfSatellite;
     if ( keplerOrbit )
     {
         // Only central gravity
-        accelerationsOfSatellite[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >( central_gravity ) );
+        accelerationsOfSatellite[ "Earth" ].push_back( std::make_shared< AccelerationSettings >( central_gravity ) );
     }
     else
     {
         // Define spherical harmonics, third bodies, solar radiation and aerodynamic forces
-        accelerationsOfSatellite[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 4 ) );
+        accelerationsOfSatellite[ "Earth" ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 4, 4 ) );
         for ( unsigned int i = 0; i < bodiesToCreate.size( ); i++ )
         {
             if ( bodiesToCreate.at( i ) != "Earth" )
             {
-                accelerationsOfSatellite[ bodiesToCreate.at( i ) ].push_back( boost::make_shared< AccelerationSettings >( central_gravity ) );
+                accelerationsOfSatellite[ bodiesToCreate.at( i ) ].push_back( std::make_shared< AccelerationSettings >( central_gravity ) );
             }
         }
-        accelerationsOfSatellite[ "Sun" ].push_back( boost::make_shared< AccelerationSettings >( cannon_ball_radiation_pressure ) );
-        accelerationsOfSatellite[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >( aerodynamic ) );
+        accelerationsOfSatellite[ "Sun" ].push_back( std::make_shared< AccelerationSettings >( cannon_ball_radiation_pressure ) );
+        accelerationsOfSatellite[ "Earth" ].push_back( std::make_shared< AccelerationSettings >( aerodynamic ) );
     }
 
     // Add acceleration information
@@ -199,28 +199,28 @@ int main( )
             ///////////////////////     CREATE SIMULATION SETTINGS          ////////////////////////////////////////////
 
             // Propagator settings
-            boost::shared_ptr< TranslationalStatePropagatorSettings< > > propagatorSettings;
+            std::shared_ptr< TranslationalStatePropagatorSettings< > > propagatorSettings;
             if ( propagatorType == 7 )
             {
                 // Reference trajectory
-                propagatorSettings = boost::make_shared< TranslationalStatePropagatorSettings< > >(
+                propagatorSettings = std::make_shared< TranslationalStatePropagatorSettings< > >(
                             centralBodies, accelerationModelMap, bodiesToPropagate, satelliteInitialState,
                             simulationEndEpoch, cowell );
             }
             else
             {
                 // Propagator dependent on loop
-                propagatorSettings = boost::make_shared< TranslationalStatePropagatorSettings< > >(
+                propagatorSettings = std::make_shared< TranslationalStatePropagatorSettings< > >(
                             centralBodies, accelerationModelMap, bodiesToPropagate, satelliteInitialState,
                             simulationEndEpoch, static_cast< TranslationalPropagatorType >( propagatorType ) );
             }
 
             // Integrator settings
-            boost::shared_ptr< IntegratorSettings< > > integratorSettings;
+            std::shared_ptr< IntegratorSettings< > > integratorSettings;
             if ( propagatorType == 7 )
             {
                 // Reference trajectory
-                integratorSettings = boost::make_shared< RungeKuttaVariableStepSizeSettings< > >(
+                integratorSettings = std::make_shared< RungeKuttaVariableStepSizeSettings< > >(
                             simulationStartEpoch, 100.0, RungeKuttaCoefficients::rungeKuttaFehlberg78, 1.0e-5, 1.0e5,
                             integrationReferenceTolerance, integrationReferenceTolerance );
             }
@@ -229,13 +229,13 @@ int main( )
                 // Integrator dependent on loop
                 if ( integratorType == 0 )
                 {
-                    integratorSettings = boost::make_shared< RungeKuttaVariableStepSizeSettings< > >(
+                    integratorSettings = std::make_shared< RungeKuttaVariableStepSizeSettings< > >(
                                 simulationStartEpoch, 100.0, RungeKuttaCoefficients::rungeKuttaFehlberg56, 1.0e-5, 1.0e5,
                                 integrationRelativeTolerance, integrationAbsoluteTolerance );
                 }
                 else if ( integratorType == 1 )
                 {
-                    integratorSettings = boost::make_shared< IntegratorSettings< > >(
+                    integratorSettings = std::make_shared< IntegratorSettings< > >(
                                 rungeKutta4, simulationStartEpoch, integrationConstantTimeStepSize );
                 }
             }

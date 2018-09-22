@@ -43,7 +43,6 @@
 typedef Eigen::Matrix< double, 6, 1 > StateType;
 
 using namespace tudat::ephemerides;
-using namespace tudat::numerical_integrators;
 using namespace tudat::basic_astrodynamics;
 using namespace tudat::orbital_element_conversions;
 using namespace tudat::basic_mathematics;

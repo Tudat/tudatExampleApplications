@@ -107,7 +107,7 @@ int main( )
     // Define constant 30 degree angle of attack
     double constantAngleOfAttack = 30.0 * mathematical_constants::PI / 180.0;
     bodyMap.at( "Apollo" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
-                boost::lambda::constant( constantAngleOfAttack ) );
+                [=]( ){ return constantAngleOfAttack; } );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////

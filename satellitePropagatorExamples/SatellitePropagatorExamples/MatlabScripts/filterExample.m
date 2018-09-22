@@ -60,96 +60,55 @@ fclose(fileID);
 
 %% Plot States
 
-xAxisValue = 1:size(actualStateHistory,2);
+xAxisValue = cpp_result{1}(:,1);
+
+%...Plot variables
+labels = {'Position [ft]','Velocity [ft s^{-1}]','Ballistic Coefficient [lb ft^{-2}]'};
+titles = {'x_1','x_2','x_3'};
 
 %...Plot states over time
-figure
+figure( 'rend', 'painters', 'pos', [ 440, 378, 840, 630 ] )
+for i = 1:3
+    subplot(1,3,i)
+    hold on
+    plot(xAxisValue,ekfStateHistory(i,:),'LineWidth',1.25)
+    plot(xAxisValue,ukfStateHistory(i,:),'LineWidth',1.25,'LineStyle','--')
+    plot(xAxisValue,actualStateHistory(i,:),'LineWidth',1.25,'LineStyle','-.')
+    hold off
+    grid on
+    xlabel('Time [s]')
+    ylabel(labels{i})
+    legend('EKF','UKF','Actual','Location','Best')
+    set(gca,'FontSize',15)
+    title(titles{i})
+end
 
-%...Position
-subplot(1,3,1)
-hold on
-plot(xAxisValue,ekfStateHistory(1,:),'LineWidth',1.25)
-plot(xAxisValue,ukfStateHistory(1,:),'LineWidth',1.25)
-plot(xAxisValue,actualStateHistory(1,:),'LineWidth',1.25)
-hold off
-grid on
-legend('EKF','UKF','Actual','Location','Best')
-set(gca,'FontSize',15)
-title('x_1')
+%% Plot State Errors
 
-%...Velocity
-subplot(1,3,2)
-hold on
-plot(xAxisValue,ekfStateHistory(2,:),'LineWidth',1.25)
-plot(xAxisValue,ukfStateHistory(2,:),'LineWidth',1.25)
-plot(xAxisValue,actualStateHistory(2,:),'LineWidth',1.25)
-hold off
-grid on
-legend('EKF','UKF','Actual','Location','Best')
-set(gca,'FontSize',15)
-title('x_2')
-
-%...Ballistic coefficient
-subplot(1,3,3)
-hold on
-plot(xAxisValue,ekfStateHistory(3,:),'LineWidth',1.25)
-plot(xAxisValue,ukfStateHistory(3,:),'LineWidth',1.25)
-plot(xAxisValue,actualStateHistory(3,:),'LineWidth',1.25)
-hold off
-grid on
-legend('EKF','UKF','Actual','Location','Best')
-set(gca,'FontSize',15)
-title('x_3')
-
-%% Plot State Differences
+%...Plot variables
+labels = {'Position Error [ft]','Velocity Error [ft s^{-1}]','Ballistic Coefficient Error [lb ft^{-2}]'};
+titles = {'x_1','x_2','x_3'};
 
 %...Plot state errors over time
 F = figure( 'rend', 'painters', 'pos', [ 440, 378, 840, 630 ] );
-
-%...Position
-subplot(1,3,1)
-hold on
-plot(xAxisValue,ekfStateHistory(1,:)-actualStateHistory(1,:),'LineWidth',1.25)
-plot(xAxisValue,ukfStateHistory(1,:)-actualStateHistory(1,:),'LineWidth',1.25)
-plot(xAxisValue,sqrt(ekfCovarianceHistory(1,:)),'LineWidth',1.25,'LineStyle','--','Color',[0.929,0.694,0.125])
-plot(xAxisValue,sqrt(ukfCovarianceHistory(1,:)),'LineWidth',1.25,'LineStyle','-.','Color',[0.494,0.184,0.556])
-plot(xAxisValue,-sqrt(ekfCovarianceHistory(1,:)),'LineWidth',1.25,'LineStyle','--','Color',[0.929,0.694,0.125])
-plot(xAxisValue,-sqrt(ukfCovarianceHistory(1,:)),'LineWidth',1.25,'LineStyle','-.','Color',[0.494,0.184,0.556])
-hold off
-grid on
-legend('EKF','UKF','STD EKF','STD UKF','Location','Best')
-set(gca,'FontSize',15)
-title('x_1')
-
-%...Velocity
-subplot(1,3,2)
-hold on
-plot(xAxisValue,ekfStateHistory(2,:)-actualStateHistory(2,:),'LineWidth',1.25)
-plot(xAxisValue,ukfStateHistory(2,:)-actualStateHistory(2,:),'LineWidth',1.25)
-plot(xAxisValue,sqrt(ekfCovarianceHistory(5,:)),'LineWidth',1.25,'LineStyle','--','Color',[0.929,0.694,0.125])
-plot(xAxisValue,sqrt(ukfCovarianceHistory(5,:)),'LineWidth',1.25,'LineStyle','-.','Color',[0.494,0.184,0.556])
-plot(xAxisValue,-sqrt(ekfCovarianceHistory(5,:)),'LineWidth',1.25,'LineStyle','--','Color',[0.929,0.694,0.125])
-plot(xAxisValue,-sqrt(ukfCovarianceHistory(5,:)),'LineWidth',1.25,'LineStyle','-.','Color',[0.494,0.184,0.556])
-hold off
-grid on
-legend('EKF','UKF','STD EKF','STD UKF','Location','Best')
-set(gca,'FontSize',15)
-title('x_2')
-
-%...Ballistic coefficient
-subplot(1,3,3)
-hold on
-plot(xAxisValue,ekfStateHistory(3,:)-actualStateHistory(3,:),'LineWidth',1.25)
-plot(xAxisValue,ukfStateHistory(3,:)-actualStateHistory(3,:),'LineWidth',1.25)
-plot(xAxisValue,sqrt(ekfCovarianceHistory(9,:)),'LineWidth',1.25,'LineStyle','--','Color',[0.929,0.694,0.125])
-plot(xAxisValue,sqrt(ukfCovarianceHistory(9,:)),'LineWidth',1.25,'LineStyle','-.','Color',[0.494,0.184,0.556])
-plot(xAxisValue,-sqrt(ekfCovarianceHistory(9,:)),'LineWidth',1.25,'LineStyle','--','Color',[0.929,0.694,0.125])
-plot(xAxisValue,-sqrt(ukfCovarianceHistory(9,:)),'LineWidth',1.25,'LineStyle','-.','Color',[0.494,0.184,0.556])
-hold off
-grid on
-legend('EKF','UKF','STD EKF','STD UKF','Location','Best')
-set(gca,'FontSize',15)
-title('x_3')
+for i = 1:3
+    subplot(1,3,i)
+    hold on
+    plot(xAxisValue,ekfStateHistory(i,:)-actualStateHistory(i,:),'LineWidth',1.25)
+    plot(xAxisValue,ukfStateHistory(i,:)-actualStateHistory(i,:),'LineWidth',1.25,'LineStyle','--')
+    if i == 1, j = 1; elseif i == 2, j = 5; else, j = 9; end
+    plot(xAxisValue,sqrt(ekfCovarianceHistory(j,:)),'LineWidth',1.25,'LineStyle','-.','Color',[0.929,0.694,0.125])
+    plot(xAxisValue,sqrt(ukfCovarianceHistory(j,:)),'LineWidth',1.25,'LineStyle',':','Color',[0.494,0.184,0.556])
+    plot(xAxisValue,-sqrt(ekfCovarianceHistory(j,:)),'LineWidth',1.25,'LineStyle','-.','Color',[0.929,0.694,0.125])
+    plot(xAxisValue,-sqrt(ukfCovarianceHistory(j,:)),'LineWidth',1.25,'LineStyle',':','Color',[0.494,0.184,0.556])
+    hold off
+    grid on
+    xlabel('Time [s]')
+    ylabel(labels{i})
+    legend('EKF','UKF','STD EKF','STD UKF','Location','Best')
+    set(gca,'FontSize',15)
+    title(titles{i})
+end
 
 %...Save figure
-saveas( F, 'filterExample', 'epsc' )
+saveas( F, 'filterExample', 'png' )

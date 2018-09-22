@@ -71,7 +71,7 @@ PropagationTargetingProblem::PropagationTargetingProblem(
 
     //Create bodyMap and add the satellite as an empty body
     bodyMap_ = simulation_setup::createBodies( bodySettings );
-    bodyMap_["Satellite"] = boost::make_shared<Body>();
+    bodyMap_["Satellite"] = std::make_shared<Body>();
     setGlobalFrameBodyEphemerides( bodyMap_, "Earth", "J2000" );
 }
 
@@ -139,7 +139,7 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
             ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, simulationEndEpoch_ );
     std::shared_ptr< IntegratorSettings< > > integratorSettings =
             std::make_shared< IntegratorSettings< > >
-            ( rungeKutta4, simulationStartEpoch, fixedStepSize );
+            ( rungeKutta4, simulationStartEpoch_, fixedStepSize );
 
     //Start simulation
     SingleArcDynamicsSimulator< > dynamicsSimulator(

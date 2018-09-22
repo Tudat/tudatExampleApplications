@@ -204,4 +204,3 @@ int main()
     // The exit code EXIT_SUCCESS indicates that the program was successfully executed.
     return EXIT_SUCCESS;
 }
-
