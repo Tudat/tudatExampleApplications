@@ -98,8 +98,8 @@ clear i p
 %% Compute RMS Error
 
 %...Define RMS error function
-rmsErrorFunction = @( result ) [ sqrt( sum( rms( referenceResults( :, 1:3 ) - result( :, 1:3 ) ).^2, 2 ) ), ...
-    sqrt( sum( rms( referenceResults( :, 4:6 ) - result( :, 4:6 ) ).^2, 2 ) ) ];
+rmsErrorFunction = @( result ) [ rms( sqrt( sum( ( referenceResults( :, 1:3 ) - result( :, 1:3 ) ).^2, 2 ) ) ), ...
+    rms( sqrt( sum( ( referenceResults( :, 4:6 ) - result( :, 4:6 ) ).^2, 2 ) ) ) ];
 
 %...Compute RMS errors in position and velocity
 rmsErrors = cellfun( rmsErrorFunction, interpolatedCartesianResults, 'UniformOutput', false );
