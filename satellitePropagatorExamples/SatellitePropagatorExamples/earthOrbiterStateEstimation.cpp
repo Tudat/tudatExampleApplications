@@ -394,20 +394,17 @@ int main( )
     noiseFunctions[ one_way_range ] =
             std::bind( &utilities::evaluateFunctionWithoutInputArgumentDependency< double, const double >,
                          createBoostContinuousRandomVariableGeneratorFunction(
-                             normal_boost_distribution,
-                             boost::assign::list_of( 0.0 )( rangeNoise ), 0.0 ), std::placeholders::_1 );
+                             normal_boost_distribution, { 0.0, rangeNoise }, 0.0 ), std::placeholders::_1 );
 
     noiseFunctions[ angular_position ] =
             std::bind( &utilities::evaluateFunctionWithoutInputArgumentDependency< double, const double >,
                          createBoostContinuousRandomVariableGeneratorFunction(
-                             normal_boost_distribution,
-                             boost::assign::list_of( 0.0 )( angularPositionNoise ), 0.0 ), std::placeholders::_1 );
+                             normal_boost_distribution, { 0.0, angularPositionNoise }, 0.0 ), std::placeholders::_1 );
 
     noiseFunctions[ one_way_doppler ] =
             std::bind( &utilities::evaluateFunctionWithoutInputArgumentDependency< double, const double >,
                          createBoostContinuousRandomVariableGeneratorFunction(
-                             normal_boost_distribution,
-                             boost::assign::list_of( 0.0 )( dopplerNoise ), 0.0 ), std::placeholders::_1 );
+                             normal_boost_distribution, { 0.0, dopplerNoise }, 0.0 ), std::placeholders::_1 );
 
     // Simulate observations
     PodInputDataType observationsAndTimes = simulateObservationsWithNoise< double, double >(
