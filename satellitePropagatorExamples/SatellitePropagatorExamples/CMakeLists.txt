@@ -209,7 +209,8 @@ list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_trajectory_design tuda
 
 
 list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_trajectory_design tudat_estimation_setup tudat_propagation_setup tudat_environment_setup  tudat_observation_models tudat_ground_stations tudat_acceleration_partials
-    tudat_torque_partials tudat_observation_partials tudat_orbit_determination tudat_estimatable_parameters  tudat_propagators
+    #tudat_torque_partials
+    tudat_observation_partials tudat_orbit_determination tudat_estimatable_parameters  tudat_propagators
     tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
     tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
     tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_interpolators tudat_root_finders tudat_filters
@@ -245,11 +246,6 @@ add_executable(application_InterplanetaryTrajectoryDesign "${SRCROOT}/interplane
 setup_executable_target(application_InterplanetaryTrajectoryDesign "${SRCROOT}")
 target_link_libraries(application_InterplanetaryTrajectoryDesign
                       ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
-
-add_executable(application_VariationalEquationsPropagator "${SRCROOT}/variationalEquationsPropagatorExample.cpp")
-setup_executable_target(application_VariationalEquationsPropagator "${SRCROOT}")
-target_link_libraries(application_VariationalEquationsPropagator
-                      ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Asterix and Obelix (satellites) propagator application.
 add_executable(application_AsterixAndObelixPropagator "${SRCROOT}/asterixAndObelixPropagator.cpp")
@@ -301,6 +297,12 @@ add_executable(application_ThrustFromFile
 setup_executable_target(application_ThrustFromFile "${SRCROOT}")
 target_link_libraries(application_ThrustFromFile ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+if( BUILD_WITH_ESTIMATION_TOOLS )
+
+add_executable(application_VariationalEquationsPropagator "${SRCROOT}/variationalEquationsPropagatorExample.cpp")
+setup_executable_target(application_VariationalEquationsPropagator "${SRCROOT}")
+target_link_libraries(application_VariationalEquationsPropagator
+                          ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 # Add simulated Earth orbiter simulated POD example
 add_executable(application_EarthOrbiterStateEstimation
                "${SRCROOT}/earthOrbiterStateEstimation.cpp")
@@ -311,3 +313,4 @@ add_executable(application_EarthOrbiterBasicStateEstimation
                "${SRCROOT}/earthOrbiterBasicStateEstimation.cpp")
 setup_executable_target(application_EarthOrbiterBasicStateEstimation "${SRCROOT}")
 target_link_libraries(application_EarthOrbiterBasicStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+endif()
