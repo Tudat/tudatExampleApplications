@@ -69,8 +69,8 @@ int main( )
     std::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionGuidanceSettings =
             std::make_shared< ThrustDirectionFromStateGuidanceSettings >(
                 "Earth", true, false );
-    std::shared_ptr< ThrustEngineSettings > thrustMagnitudeSettings =
-            std::make_shared< ConstantThrustEngineSettings >(
+    std::shared_ptr< ThrustMagnitudeSettings > thrustMagnitudeSettings =
+            std::make_shared< ConstantThrustMagnitudeSettings >(
                 thrustMagnitude, specificImpulse );
 
 
