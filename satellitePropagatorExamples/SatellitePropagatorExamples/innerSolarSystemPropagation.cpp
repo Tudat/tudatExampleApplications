@@ -74,7 +74,7 @@ int main( )
                 if( i != j )
                 {
                     currentAccelerations[ bodyNames.at( j ) ].push_back(
-                                std::make_shared< AccelerationSettings >( central_gravity ) );\
+                                std::make_shared< AccelerationSettings >( central_gravity ) );
                 }
             }
             accelerationMap[ bodyNames.at( i ) ] = currentAccelerations;
@@ -122,13 +122,11 @@ int main( )
         AccelerationMap accelerationModelMap = createAccelerationModelsMap(
                     bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
 
-
-
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////             CREATE PROPAGATION SETTINGS            ///////////////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        // Specify initial time
+        // Specify initial time.
         double initialEphemerisTime = 1.0E7;
         double finalEphemerisTime = 1.0E7 + 5.0 * physical_constants::JULIAN_YEAR;
 
@@ -136,7 +134,7 @@ int main( )
         Eigen::VectorXd systemInitialState = getInitialStatesOfBodies(
                     bodiesToPropagate, centralBodies, bodyMap, initialEphemerisTime );
 
-
+        // Define propagator settings.
         std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
                 std::make_shared< TranslationalStatePropagatorSettings< double > >
                 ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, finalEphemerisTime );
@@ -168,7 +166,6 @@ int main( )
             }
         }
 
-
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////        PROVIDE OUTPUT TO FILES           ////////////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,4 +191,3 @@ int main( )
     // The exit code EXIT_SUCCESS indicates that the program was successfully executed.
     return EXIT_SUCCESS;
 }
-

@@ -79,13 +79,13 @@ int main( )
     // Define acceleration model settings.
     std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfAsterix;
     accelerationsOfAsterix[ "Earth" ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
-    accelerationMap[  "Asterix" ] = accelerationsOfAsterix;
+    accelerationMap[ "Asterix" ] = accelerationsOfAsterix;
     bodiesToPropagate.push_back( "Asterix" );
     centralBodies.push_back( "Earth" );
 
     std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfObelix;
     accelerationsOfObelix[ "Earth" ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
-    accelerationMap[  "Obelix" ] = accelerationsOfObelix;
+    accelerationMap[ "Obelix" ] = accelerationsOfObelix;
     bodiesToPropagate.push_back( "Obelix" );
     centralBodies.push_back( "Earth" );
 
