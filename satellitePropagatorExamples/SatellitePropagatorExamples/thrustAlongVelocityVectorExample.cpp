@@ -46,6 +46,7 @@ int main( )
             getDefaultBodySettings( bodiesToCreate );
 
     NamedBodyMap bodyMap = createBodies( bodySettings );
+
     // Create vehicle objects.
     double vehicleMass = 5.0E3;
     bodyMap[ "Vehicle" ] = std::make_shared< simulation_setup::Body >( );
@@ -67,24 +68,22 @@ int main( )
     double thrustMagnitude = 25.0;
     double specificImpulse = 5000.0;
     std::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionGuidanceSettings =
-            std::make_shared< ThrustDirectionFromStateGuidanceSettings >(
-                "Earth", true, false );
+            std::make_shared< ThrustDirectionFromStateGuidanceSettings >( "Earth", true, false );
     std::shared_ptr< ThrustMagnitudeSettings > thrustMagnitudeSettings =
-            std::make_shared< ConstantThrustMagnitudeSettings >(
-                thrustMagnitude, specificImpulse );
-
+            std::make_shared< ConstantThrustMagnitudeSettings >( thrustMagnitude, specificImpulse );
 
     // Define acceleration model settings.
     std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfVehicle;
     accelerationsOfVehicle[ "Vehicle" ].push_back(
-                std::make_shared< ThrustAccelerationSettings >( thrustDirectionGuidanceSettings, thrustMagnitudeSettings) );
+                std::make_shared< ThrustAccelerationSettings >( thrustDirectionGuidanceSettings, thrustMagnitudeSettings ) );
     accelerationsOfVehicle[ "Earth" ].push_back( std::make_shared< AccelerationSettings >( central_gravity ) );
     accelerationsOfVehicle[ "Moon" ].push_back( std::make_shared< AccelerationSettings >( central_gravity ) );
     accelerationsOfVehicle[ "Sun" ].push_back( std::make_shared< AccelerationSettings >( central_gravity ) );
+
     accelerationMap[ "Vehicle" ] = accelerationsOfVehicle;
+
     bodiesToPropagate.push_back( "Vehicle" );
     centralBodies.push_back( "Earth" );
-
 
     // Create acceleration models and propagation settings.
     basic_astrodynamics::AccelerationMap accelerationModelMap = createAccelerationModelsMap(
@@ -105,9 +104,8 @@ int main( )
 
     // Define settings for propagation of translational dynamics.
     std::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =
-            std::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, terminationSettings,
-              cowell );
+            std::make_shared< TranslationalStatePropagatorSettings< double > >(
+                centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, terminationSettings );
 
     // Create mass rate models
     std::shared_ptr< MassRateModelSettings > massRateModelSettings =
@@ -134,13 +132,11 @@ int main( )
 
     // Create propagation settings for mass and translational dynamics concurrently
     std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
-            std::make_shared< MultiTypePropagatorSettings< double > >(
-                propagatorSettingsVector, terminationSettings );
+            std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings );
 
     // Define integrator settings
     std::shared_ptr< IntegratorSettings< > > integratorSettings =
-            std::make_shared< IntegratorSettings< > >
-            ( rungeKutta4, 0.0, 30.0 );
+            std::make_shared< IntegratorSettings< > >( rungeKutta4, 0.0, 30.0 );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////

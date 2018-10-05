@@ -11,11 +11,10 @@
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 #include <tudatExampleApplications/satellitePropagatorExamples/SatellitePropagatorExamples/applicationOutput.h>
 
-
 //! Execute propagation of orbit of vehicle around the Earth. The vehicle is subject to a thrustforce, which is specified in
 //! the nonconstantThrust.txt file. In that file, the first column is time in seconds, the last three columns give the x, y
 //! and z components of the thrust force in the J2000 (?) frame.
-int main()
+int main( )
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
@@ -72,7 +71,6 @@ int main()
     ///////////////////////            CREATE ACCELERATIONS          //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
     // Define propagator settings variables.
     SelectedAccelerationMap accelerationMap;
     std::vector< std::string > bodiesToPropagate;
@@ -85,8 +83,8 @@ int main()
             std::make_shared< FromFileDataMapSettings< Eigen::Vector3d > >( cppFolder + "testThrustValues.txt" );
 
     // Define interpolator settings.
-    std::shared_ptr< InterpolatorSettings >
-            thrustInterpolatorSettings = std::make_shared< InterpolatorSettings >( linear_interpolator );
+    std::shared_ptr< InterpolatorSettings > thrustInterpolatorSettings =
+            std::make_shared< InterpolatorSettings >( linear_interpolator );
 
     // Create data interpolation settings
     std::shared_ptr< DataInterpolationSettings< double, Eigen::Vector3d > > thrustDataInterpolatorSettings =
@@ -100,9 +98,9 @@ int main()
     std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfVehicle;
     accelerationsOfVehicle[ "Earth" ].push_back( std::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::central_gravity ) );
-    accelerationsOfVehicle[ "Vehicle" ].push_back(
-                std::make_shared< ThrustAccelerationSettings >(
-                    thrustDataInterpolatorSettings, constantSpecificImpulse, lvlh_thrust_frame, "Earth" ) );
+    accelerationsOfVehicle[ "Vehicle" ].push_back( std::make_shared< ThrustAccelerationSettings >(
+                                                       thrustDataInterpolatorSettings, constantSpecificImpulse,
+                                                       lvlh_thrust_frame, "Earth" ) );
 
     accelerationMap[ "Vehicle" ] = accelerationsOfVehicle;
     bodiesToPropagate.push_back( "Vehicle" );
