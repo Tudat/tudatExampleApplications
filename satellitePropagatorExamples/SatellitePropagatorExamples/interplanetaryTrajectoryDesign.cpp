@@ -128,7 +128,6 @@ int main( )
     // Specify required parameters
     // Specify the number of legs and type of legs.
     numberOfLegs = 5;
-
     legTypeVector.resize( numberOfLegs );
     legTypeVector[ 0 ] = mga1DsmVelocity_Departure;
     legTypeVector[ 1 ] = mga1DsmVelocity_Swingby;
@@ -169,7 +168,7 @@ int main( )
             std::acos(  2 * 0.498004040298 - 1. ) - 3.14159265358979 / 2, // 1st leg.
             0.0964769387134, 1.35077257078, 1.80629232251 * 6.378e6, 0.0, // 2nd leg.
             0.829948744508, 1.09554368115, 3.04129845698 * 6.052e6, 0.0, // 3rd leg.
-            0.317174785637, 1.34317576594, 1.10000000891 * 6.052e6, 0.0; //4th leg.
+            0.317174785637, 1.34317576594, 1.10000000891 * 6.052e6, 0.0; // 4th leg.
 
     // Create minimum pericenter radii vector
     minimumPericenterRadii.resize( numberOfLegs );
@@ -282,6 +281,7 @@ int main( )
     std::string outputFilePlanetM = tudat_applications::getOutputPath(  ) + "mercuryTrajectory.dat";
     writeTrajectoryToFile( positionVectorMercury, timeVectorMercury, outputFilePlanetM );
 
-
+    // Final statement.
+    // The exit code EXIT_SUCCESS indicates that the program was successfully executed.
     return EXIT_SUCCESS;
 }

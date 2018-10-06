@@ -274,16 +274,18 @@ setup_executable_target(application_ApolloEntry "${SRCROOT}")
 target_link_libraries(application_ApolloEntry ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add JSON-based Apollo propagation
-add_executable(application_ApolloEntryJSON
-               "${SRCROOT}/apolloCapsuleEntryJSON.cpp")
-setup_executable_target(application_ApolloEntryJSON "${SRCROOT}")
-target_link_libraries(application_ApolloEntryJSON json_interface_library ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+if(USE_JSON)
+ add_executable(application_ApolloEntryJSON
+                "${SRCROOT}/apolloCapsuleEntryJSON.cpp")
+ setup_executable_target(application_ApolloEntryJSON "${SRCROOT}")
+ target_link_libraries(application_ApolloEntryJSON json_interface_library ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 
-# Add lifetime maximisation propagation
-add_executable(application_LifetimeMaximisation
-               "${SRCROOT}/lifetimeMaximisation.cpp")
-setup_executable_target(application_LifetimeMaximisation "${SRCROOT}")
-target_link_libraries(application_LifetimeMaximisation json_interface_library ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+ # Add lifetime maximisation propagation
+ add_executable(application_LifetimeMaximisation
+                "${SRCROOT}/lifetimeMaximisation.cpp")
+ setup_executable_target(application_LifetimeMaximisation "${SRCROOT}")
+ target_link_libraries(application_LifetimeMaximisation json_interface_library ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+endif()
 
 # Add Thrust example 1
 add_executable(application_ThrustAlongVelocityVector
@@ -298,19 +300,19 @@ setup_executable_target(application_ThrustFromFile "${SRCROOT}")
 target_link_libraries(application_ThrustFromFile ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 if( BUILD_WITH_ESTIMATION_TOOLS )
-
-add_executable(application_VariationalEquationsPropagator "${SRCROOT}/variationalEquationsPropagatorExample.cpp")
-setup_executable_target(application_VariationalEquationsPropagator "${SRCROOT}")
-target_link_libraries(application_VariationalEquationsPropagator
+ add_executable(application_VariationalEquationsPropagator "${SRCROOT}/variationalEquationsPropagatorExample.cpp")
+ setup_executable_target(application_VariationalEquationsPropagator "${SRCROOT}")
+ target_link_libraries(application_VariationalEquationsPropagator
                           ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
-# Add simulated Earth orbiter simulated POD example
-add_executable(application_EarthOrbiterStateEstimation
-               "${SRCROOT}/earthOrbiterStateEstimation.cpp")
-setup_executable_target(application_EarthOrbiterStateEstimation "${SRCROOT}")
-target_link_libraries(application_EarthOrbiterStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 
-add_executable(application_EarthOrbiterBasicStateEstimation
-               "${SRCROOT}/earthOrbiterBasicStateEstimation.cpp")
-setup_executable_target(application_EarthOrbiterBasicStateEstimation "${SRCROOT}")
-target_link_libraries(application_EarthOrbiterBasicStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+ # Add simulated Earth orbiter simulated POD example
+ add_executable(application_EarthOrbiterStateEstimation
+                "${SRCROOT}/earthOrbiterStateEstimation.cpp")
+ setup_executable_target(application_EarthOrbiterStateEstimation "${SRCROOT}")
+ target_link_libraries(application_EarthOrbiterStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+ add_executable(application_EarthOrbiterBasicStateEstimation
+                "${SRCROOT}/earthOrbiterBasicStateEstimation.cpp")
+ setup_executable_target(application_EarthOrbiterBasicStateEstimation "${SRCROOT}")
+ target_link_libraries(application_EarthOrbiterBasicStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 endif()
