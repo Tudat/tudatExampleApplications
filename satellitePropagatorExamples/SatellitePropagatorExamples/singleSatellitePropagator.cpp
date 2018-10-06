@@ -13,7 +13,7 @@
 #include "SatellitePropagatorExamples/applicationOutput.h"
 
 //! Execute propagation of orbit of Asterix around the Earth.
-int main()
+int main( )
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
@@ -118,8 +118,7 @@ int main()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Create simulation object and propagate dynamics.
-    SingleArcDynamicsSimulator< > dynamicsSimulator(
-                bodyMap, integratorSettings, propagatorSettings );
+    SingleArcDynamicsSimulator< > dynamicsSimulator( bodyMap, integratorSettings, propagatorSettings );
     std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +127,7 @@ int main()
 
     std::string outputSubFolder = "UnperturbedSatelliteExample/";
 
-    Eigen::VectorXd finalIntegratedState = (--integrationResult.end( ) )->second;
+    Eigen::VectorXd finalIntegratedState = ( --integrationResult.end( ) )->second;
     // Print the position (in km) and the velocity (in km/s) at t = 0.
     std::cout << "Single Earth-Orbiting Satellite Example." << std::endl <<
                  "The initial position vector of Asterix is [km]:" << std::endl <<

@@ -123,17 +123,14 @@ int main( )
     vehicleInitialStateInKeplerianElements( semiMajorAxisIndex ) = 72130.0e3;
     vehicleInitialStateInKeplerianElements( eccentricityIndex ) = 0.6;
     vehicleInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 169.0 );
-    vehicleInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = convertDegreesToRadians( 45.0 );
-    vehicleInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = convertDegreesToRadians( 80.0 );
+    vehicleInitialStateInKeplerianElements( argumentOfPeriapsisIndex ) = convertDegreesToRadians( 45.0 );
+    vehicleInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex ) = convertDegreesToRadians( 80.0 );
     vehicleInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 15.0 );
 
     // Convert vehicle state from Keplerian elements to Cartesian elements.
     double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
-    Eigen::VectorXd systemInitialState = convertKeplerianToCartesianElements(
-                vehicleInitialStateInKeplerianElements,
-                earthGravitationalParameter );
+    Eigen::VectorXd systemInitialState = convertKeplerianToCartesianElements( vehicleInitialStateInKeplerianElements,
+                                                                              earthGravitationalParameter );
 
     // Define propagation termination conditions (stop after 2 weeks).
     std::shared_ptr< PropagationTimeTerminationSettings > terminationSettings =
@@ -141,9 +138,8 @@ int main( )
 
     // Define settings for propagation of translational dynamics.
     std::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =
-            std::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, terminationSettings,
-              cowell );
+            std::make_shared< TranslationalStatePropagatorSettings< double > >(
+                centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, terminationSettings );
 
     // Crete mass rate models
     std::map< std::string, std::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
@@ -163,12 +159,10 @@ int main( )
 
     // Define list of dependent variables to save.
     std::vector< std::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariablesList;
-    dependentVariablesList.push_back(
-                std::make_shared< SingleAccelerationDependentVariableSaveSettings >(
-                    basic_astrodynamics::thrust_acceleration, "Vehicle", "Vehicle", 0 ) );
-    dependentVariablesList.push_back(
-                std::make_shared< SingleDependentVariableSaveSettings >(
-                    lvlh_to_inertial_frame_rotation_dependent_variable, "Vehicle", "Earth" ) );
+    dependentVariablesList.push_back( std::make_shared< SingleAccelerationDependentVariableSaveSettings >(
+                                          basic_astrodynamics::thrust_acceleration, "Vehicle", "Vehicle", 0 ) );
+    dependentVariablesList.push_back( std::make_shared< SingleDependentVariableSaveSettings >(
+                                          lvlh_to_inertial_frame_rotation_dependent_variable, "Vehicle", "Earth" ) );
 
     // Create object with list of dependent variables
     std::shared_ptr< DependentVariableSaveSettings > dependentVariablesToSave =
@@ -181,8 +175,7 @@ int main( )
 
     // Define integrator settings
     std::shared_ptr< IntegratorSettings< > > integratorSettings =
-            std::make_shared< IntegratorSettings< > >
-            ( rungeKutta4, 0.0, 30.0 );
+            std::make_shared< IntegratorSettings< > >( rungeKutta4, 0.0, 30.0 );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT AND PRINT OUTPUT TO FILE         //////////////////////////////////
@@ -190,8 +183,7 @@ int main( )
 
 
     // Create simulation object and propagate dynamics.
-    SingleArcDynamicsSimulator< > dynamicsSimulator(
-                bodyMap, integratorSettings, propagatorSettings, true, false, false );
+    SingleArcDynamicsSimulator< > dynamicsSimulator( bodyMap, integratorSettings, propagatorSettings );
     std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
     std::map< double, Eigen::VectorXd > dependentVariableResult = dynamicsSimulator.getDependentVariableHistory( );
 

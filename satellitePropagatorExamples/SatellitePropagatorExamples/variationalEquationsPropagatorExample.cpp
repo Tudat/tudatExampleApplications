@@ -13,7 +13,7 @@
 #include "SatellitePropagatorExamples/applicationOutput.h"
 
 //! Execute propagation of orbit of Asterix around the Earth.
-int main()
+int main( )
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
@@ -30,11 +30,9 @@ int main()
     using namespace tudat::estimatable_parameters;
     using namespace tudat::ephemerides;
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////     CREATE ENVIRONMENT AND VEHICLE       //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     // Load Spice kernels.
     spice_interface::loadStandardSpiceKernels( );
@@ -144,26 +142,21 @@ int main()
     asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7500.0E3;
     asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.1;
     asterixInitialStateInKeplerianElements( inclinationIndex ) = unit_conversions::convertDegreesToRadians( 85.3 );
-    asterixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = unit_conversions::convertDegreesToRadians( 235.7 );
-    asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = unit_conversions::convertDegreesToRadians( 23.4 );
+    asterixInitialStateInKeplerianElements( argumentOfPeriapsisIndex ) = unit_conversions::convertDegreesToRadians( 235.7 );
+    asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex ) = unit_conversions::convertDegreesToRadians( 23.4 );
     asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = unit_conversions::convertDegreesToRadians( 139.87 );
 
     double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
     const Eigen::Vector6d asterixInitialState = convertKeplerianToCartesianElements(
                 asterixInitialStateInKeplerianElements, earthGravitationalParameter );
 
-
     std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
-            std::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, asterixInitialState, simulationEndEpoch );
+            std::make_shared< TranslationalStatePropagatorSettings< double > >(
+                centralBodies, accelerationModelMap, bodiesToPropagate, asterixInitialState, simulationEndEpoch );
 
     const double fixedStepSize = 10.0;
     std::shared_ptr< IntegratorSettings< > > integratorSettings =
-            std::make_shared< IntegratorSettings< > >
-            ( rungeKutta4, 0.0, fixedStepSize );
-
+            std::make_shared< IntegratorSettings< > >( rungeKutta4, 0.0, fixedStepSize );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////    DEFINE PARAMETERS FOR WHICH SENSITIVITY IS TO BE COMPUTED   ////////////////////////////////
@@ -171,9 +164,8 @@ int main()
 
     // Define list of parameters to estimate.
     std::vector< std::shared_ptr< EstimatableParameterSettings > > parameterNames;
-    parameterNames.push_back(
-                std::make_shared< InitialTranslationalStateEstimatableParameterSettings< double > >(
-                    "Asterix", asterixInitialState, "Earth" ) );
+    parameterNames.push_back( std::make_shared< InitialTranslationalStateEstimatableParameterSettings< double > >(
+                                  "Asterix", asterixInitialState, "Earth" ) );
     parameterNames.push_back( std::make_shared< EstimatableParameterSettings >( "Asterix", radiation_pressure_coefficient ) );
     parameterNames.push_back( std::make_shared< EstimatableParameterSettings >( "Asterix", constant_drag_coefficient ) );
     parameterNames.push_back( std::make_shared< SphericalHarmonicEstimatableParameterSettings >(
@@ -191,7 +183,6 @@ int main()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT AND VARIATIONAL EQUATIONS         /////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     // Create simulation object and propagate dynamics.
     SingleArcVariationalEquationsSolver< > variationalEquationsSimulator(

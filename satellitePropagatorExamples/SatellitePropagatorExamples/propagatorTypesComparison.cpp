@@ -220,7 +220,7 @@ int main( )
             if ( propagatorType == 7 )
             {
                 // Reference trajectory
-                integratorSettings = std::make_shared< RungeKuttaVariableStepSizeSettings< > >(
+                integratorSettings = std::make_shared< RungeKuttaVariableStepSizeSettingsScalarTolerances< > >(
                             simulationStartEpoch, 100.0, RungeKuttaCoefficients::rungeKuttaFehlberg78, 1.0e-5, 1.0e5,
                             integrationReferenceTolerance, integrationReferenceTolerance );
             }
@@ -229,7 +229,7 @@ int main( )
                 // Integrator dependent on loop
                 if ( integratorType == 0 )
                 {
-                    integratorSettings = std::make_shared< RungeKuttaVariableStepSizeSettings< > >(
+                    integratorSettings = std::make_shared< RungeKuttaVariableStepSizeSettingsScalarTolerances< > >(
                                 simulationStartEpoch, 100.0, RungeKuttaCoefficients::rungeKuttaFehlberg56, 1.0e-5, 1.0e5,
                                 integrationRelativeTolerance, integrationAbsoluteTolerance );
                 }

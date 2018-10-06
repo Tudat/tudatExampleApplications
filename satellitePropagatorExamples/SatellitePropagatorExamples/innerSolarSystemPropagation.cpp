@@ -149,8 +149,7 @@ int main( )
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Create simulation object and propagate dynamics.
-        SingleArcDynamicsSimulator< > dynamicsSimulator(
-                    bodyMap, integratorSettings, propagatorSettings, true, false, false );
+        SingleArcDynamicsSimulator< > dynamicsSimulator( bodyMap, integratorSettings, propagatorSettings );
 
         std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 

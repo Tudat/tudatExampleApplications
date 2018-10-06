@@ -39,7 +39,6 @@ int main( )
     ///////////////////////     CREATE ENVIRONMENT AND VEHICLE       //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
     //Load spice kernels.
     spice_interface::loadStandardSpiceKernels( );
 
@@ -57,12 +56,10 @@ int main( )
     // Create bodies needed in simulation
     std::map< std::string, std::shared_ptr< BodySettings > > bodySettings =
             getDefaultBodySettings( bodyNames );
-        bodySettings[ "Earth" ]->rotationModelSettings = std::make_shared< SimpleRotationModelSettings >(
-                    "ECLIPJ2000", "IAU_Earth",
-                    spice_interface::computeRotationQuaternionBetweenFrames(
-                        "ECLIPJ2000", "IAU_Earth", initialEphemerisTime ),
-                    initialEphemerisTime, 2.0 * mathematical_constants::PI /
-                    ( physical_constants::JULIAN_DAY ) );
+    bodySettings[ "Earth" ]->rotationModelSettings = std::make_shared< SimpleRotationModelSettings >(
+                "ECLIPJ2000", "IAU_Earth", spice_interface::computeRotationQuaternionBetweenFrames(
+                    "ECLIPJ2000", "IAU_Earth", initialEphemerisTime ),
+                initialEphemerisTime, 2.0 * mathematical_constants::PI / physical_constants::JULIAN_DAY );
 
     NamedBodyMap bodyMap = createBodies( bodySettings );
     bodyMap[ "Vehicle" ] = std::make_shared< Body >( );
@@ -73,7 +70,7 @@ int main( )
     double aerodynamicCoefficient = 1.2;
     std::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
             std::make_shared< ConstantAerodynamicCoefficientSettings >(
-                referenceArea, aerodynamicCoefficient * ( Eigen::Vector3d( )<<1.2, -0.01, 0.1 ).finished( ), 1, 1 );
+                referenceArea, aerodynamicCoefficient * ( Eigen::Vector3d( ) << 1.2, -0.01, 0.1 ).finished( ), 1, 1 );
 
     // Create and set aerodynamic coefficients object
     bodyMap[ "Vehicle" ]->setAerodynamicCoefficientInterface(
@@ -102,7 +99,6 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////     CREATE GROUND STATIONS               //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     // Create ground stations from geodetic positions.
     std::vector< std::string > groundStationNames;
@@ -156,10 +152,8 @@ int main( )
     asterixInitialStateInKeplerianElements( semiMajorAxisIndex ) = 7200.0E3;
     asterixInitialStateInKeplerianElements( eccentricityIndex ) = 0.05;
     asterixInitialStateInKeplerianElements( inclinationIndex ) = unit_conversions::convertDegreesToRadians( 85.3 );
-    asterixInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = unit_conversions::convertDegreesToRadians( 235.7 );
-    asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = unit_conversions::convertDegreesToRadians( 23.4 );
+    asterixInitialStateInKeplerianElements( argumentOfPeriapsisIndex ) = unit_conversions::convertDegreesToRadians( 235.7 );
+    asterixInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex ) = unit_conversions::convertDegreesToRadians( 23.4 );
     asterixInitialStateInKeplerianElements( trueAnomalyIndex ) = unit_conversions::convertDegreesToRadians( 139.87 );
 
     double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
@@ -170,16 +164,15 @@ int main( )
 
     // Create propagator settings
     std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
-            std::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToIntegrate, systemInitialState,
-              double( finalEphemerisTime ), cowell );
+            std::make_shared< TranslationalStatePropagatorSettings< double > >(
+                centralBodies, accelerationModelMap, bodiesToIntegrate, systemInitialState, double( finalEphemerisTime ) );
 
     // Create integrator settings
     std::shared_ptr< IntegratorSettings< double > > integratorSettings =
-            std::make_shared< RungeKuttaVariableStepSizeSettings< double > >
-            ( double( initialEphemerisTime ), 40.0,
-              RungeKuttaCoefficients::CoefficientSets::rungeKuttaFehlberg78,
-              40.0, 40.0, 1.0, 1.0 );
+            std::make_shared< RungeKuttaVariableStepSizeSettingsScalarTolerances< double > >(
+                double( initialEphemerisTime ), 40.0,
+                RungeKuttaCoefficients::CoefficientSets::rungeKuttaFehlberg78,
+                40.0, 40.0, 1.0, 1.0 );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             DEFINE LINK ENDS FOR OBSERVATIONS            //////////////////////////////////////
@@ -228,13 +221,10 @@ int main( )
         for( unsigned int i = 0; i < currentLinkEndsList.size( ); i++ )
         {
             // Define settings for observable, no light-time corrections, and biases for selected 1-way range links
-            observationSettingsMap.insert(
-                        std::make_pair( currentLinkEndsList.at( i ),
-                                        std::make_shared< ObservationSettings >(
-                                            currentObservable ) ) );
+            observationSettingsMap.insert( std::make_pair( currentLinkEndsList.at( i ),
+                                                           std::make_shared< ObservationSettings >( currentObservable ) ) );
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////    DEFINE PARAMETERS THAT ARE TO BE ESTIMATED      ////////////////////////////////////////////
@@ -242,9 +232,8 @@ int main( )
 
     // Define list of parameters to estimate.
     std::vector< std::shared_ptr< EstimatableParameterSettings > > parameterNames;
-    parameterNames.push_back(
-                std::make_shared< InitialTranslationalStateEstimatableParameterSettings< double > >(
-                    "Vehicle", systemInitialState, "Earth" ) );
+    parameterNames.push_back( std::make_shared< InitialTranslationalStateEstimatableParameterSettings< double > >(
+                                  "Vehicle", systemInitialState, "Earth" ) );
     parameterNames.push_back( std::make_shared< EstimatableParameterSettings >( "Vehicle", radiation_pressure_coefficient ) );
     parameterNames.push_back( std::make_shared< EstimatableParameterSettings >( "Vehicle", constant_drag_coefficient ) );
     parameterNames.push_back( std::make_shared< SphericalHarmonicEstimatableParameterSettings >(
@@ -273,7 +262,6 @@ int main( )
     ///////////////////////          SIMULATE OBSERVATIONS                     ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
     // Define time of first observation
     double observationTimeStart = initialEphemerisTime + 1000.0;
 
@@ -287,7 +275,8 @@ int main( )
         // Simulate 500 observations per day (observationInterval apart)
         for( unsigned int j = 0; j < 500; j++ )
         {
-            baseTimeList.push_back( observationTimeStart + static_cast< double >( i ) * 86400.0 + static_cast< double >( j ) * observationInterval );
+            baseTimeList.push_back( observationTimeStart + static_cast< double >( i ) * 86400.0 +
+                                    static_cast< double >( j ) * observationInterval );
         }
     }
 
@@ -304,12 +293,12 @@ int main( )
         for( unsigned int i = 0; i < currentLinkEndsList.size( ); i++ )
         {
             measurementSimulationInput[ currentObservable ][ currentLinkEndsList.at( i ) ] =
-                        std::make_pair( baseTimeList, receiver );
+                    std::make_pair( baseTimeList, receiver );
         }
     }
 
-    // Set typedefs for POD input (observation types, observation link ends, observation values, associated times with reference
-    // link ends.
+    // Set typedefs for POD input (observation types, observation link ends, observation values, associated times with
+    // reference link ends.
     typedef Eigen::Matrix< double, Eigen::Dynamic, 1 > ObservationVectorType;
     typedef std::map< LinkEnds, std::pair< ObservationVectorType, std::pair< std::vector< double >, LinkEndType > > >
             SingleObservablePodInputType;
@@ -322,7 +311,6 @@ int main( )
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////    PERTURB PARAMETER VECTOR AND ESTIMATE PARAMETERS     ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     // Perturb parameter estimate
     Eigen::Matrix< double, Eigen::Dynamic, 1 > initialParameterEstimate =
@@ -361,12 +349,10 @@ int main( )
 
     std::string outputSubFolder = "EarthOrbiterStateEstimationExample/";
 
-
     // Print true estimation error, limited mostly by numerical error
     Eigen::VectorXd estimationError = podOutput->parameterEstimate_ - truthParameters;
-    std::cout<<"True estimation error is:   "<<std::endl<<( estimationError ).transpose( )<<std::endl;
-    std::cout<<"Formal estimation error is: "<<std::endl<<podOutput->getFormalErrorVector( ).transpose( )<<std::endl;
-
+    std::cout << "True estimation error is:   " << std::endl << ( estimationError ).transpose( ) << std::endl;
+    std::cout << "Formal estimation error is: " << std::endl << podOutput->getFormalErrorVector( ).transpose( ) << std::endl;
 
     input_output::writeMatrixToFile( podOutput->normalizedInformationMatrix_,
                                      "earthOrbitBasicEstimationInformationMatrix.dat", 16,
@@ -407,5 +393,8 @@ int main( )
     input_output::writeMatrixToFile( podOutput->getFormalErrorVector( ),
                                      "earthOrbitBasicObservationFormalEstimationError.dat", 16,
                                      tudat_applications::getOutputPath( ) + outputSubFolder );
+
+    // Final statement.
+    // The exit code EXIT_SUCCESS indicates that the program was successfully executed.
     return EXIT_SUCCESS;
 }
