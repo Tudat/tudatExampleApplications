@@ -11,7 +11,6 @@
 #include "multipleGravityAssist.h"
 
 using namespace tudat::ephemerides;
-using namespace tudat::numerical_integrators;
 using namespace tudat::basic_astrodynamics;
 using namespace tudat::orbital_element_conversions;
 using namespace tudat::basic_mathematics;
@@ -46,55 +45,55 @@ MultipleGravityAssist::MultipleGravityAssist(std::vector< std::vector< double > 
         switch(flybySequence[ i ])
         {
         case( 1 ):
-            ephemerisVector_[ i ] = boost::make_shared< ephemerides::ApproximatePlanetPositions >
+            ephemerisVector_[ i ] = std::make_shared< ephemerides::ApproximatePlanetPositions >
                     ( ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::mercury );
             gravitationalParameterVector_[ i ] = 2.2032E13;
             minimumPericenterRadii_[ i ] = 2639.7E3;
             break;
         case( 2 ):
-            ephemerisVector_[ i ] = boost::make_shared< ephemerides::ApproximatePlanetPositions >
+            ephemerisVector_[ i ] = std::make_shared< ephemerides::ApproximatePlanetPositions >
                     ( ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::venus );
             gravitationalParameterVector_[ i ] = 3.24859E14;
             minimumPericenterRadii_[ i ] = 6251.8E3;
             break;
         case( 3 ):
-            ephemerisVector_[ i ] = boost::make_shared< ephemerides::ApproximatePlanetPositions >
+            ephemerisVector_[ i ] = std::make_shared< ephemerides::ApproximatePlanetPositions >
                     ( ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::earthMoonBarycenter );
             gravitationalParameterVector_[ i ] = 3.986004418E14;
             minimumPericenterRadii_[ i ] = 6578.1E3;
             break;
         case( 4 ):
-            ephemerisVector_[ i ] = boost::make_shared< ephemerides::ApproximatePlanetPositions >
+            ephemerisVector_[ i ] = std::make_shared< ephemerides::ApproximatePlanetPositions >
                     ( ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::mars );
             gravitationalParameterVector_[ i ] = 4.282837E13;
             minimumPericenterRadii_[ i ] = 3596.2E3;
             break;
         case( 5 ):
-            ephemerisVector_[ i ] = boost::make_shared< ephemerides::ApproximatePlanetPositions >
+            ephemerisVector_[ i ] = std::make_shared< ephemerides::ApproximatePlanetPositions >
                     ( ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::jupiter );
             gravitationalParameterVector_[ i ] = 1.26686534E17;
             minimumPericenterRadii_[ i ] = 72000.0E3;
             break;
         case( 6 ):
-            ephemerisVector_[ i ] = boost::make_shared< ephemerides::ApproximatePlanetPositions >
+            ephemerisVector_[ i ] = std::make_shared< ephemerides::ApproximatePlanetPositions >
                     ( ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::saturn );
             gravitationalParameterVector_[ i ] = 3.7931187E16;
             minimumPericenterRadii_[ i ] = 61000.0E3;
             break;
         case( 7 ):
-            ephemerisVector_[ i ] = boost::make_shared< ephemerides::ApproximatePlanetPositions >
+            ephemerisVector_[ i ] = std::make_shared< ephemerides::ApproximatePlanetPositions >
                     ( ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::uranus );
             gravitationalParameterVector_[ i ] = 5.793939E15;
             minimumPericenterRadii_[ i ] = 26000.0E3;
             break;
         case( 8 ):
-            ephemerisVector_[ i ] = boost::make_shared< ephemerides::ApproximatePlanetPositions >
+            ephemerisVector_[ i ] = std::make_shared< ephemerides::ApproximatePlanetPositions >
                     ( ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::neptune );
             gravitationalParameterVector_[ i ] = 6.836529E15;
             minimumPericenterRadii_[ i ] = 25000.0E3;
             break;
         case( 9 ):
-            ephemerisVector_[ i ] = boost::make_shared< ephemerides::ApproximatePlanetPositions >
+            ephemerisVector_[ i ] = std::make_shared< ephemerides::ApproximatePlanetPositions >
                     ( ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::pluto );
             gravitationalParameterVector_[ i ] = 8.71E11;
             minimumPericenterRadii_[ i ] = 1395.0E3;

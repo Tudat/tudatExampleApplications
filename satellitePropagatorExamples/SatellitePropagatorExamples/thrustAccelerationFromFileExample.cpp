@@ -11,11 +11,10 @@
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 #include <tudatExampleApplications/satellitePropagatorExamples/SatellitePropagatorExamples/applicationOutput.h>
 
-
 //! Execute propagation of orbit of vehicle around the Earth. The vehicle is subject to a thrustforce, which is specified in
 //! the nonconstantThrust.txt file. In that file, the first column is time in seconds, the last three columns give the x, y
 //! and z components of the thrust force in the J2000 (?) frame.
-int main()
+int main( )
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
@@ -39,25 +38,25 @@ int main()
     spice_interface::loadStandardSpiceKernels( );
 
     // Define body settings for simulation.
-    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings;
-    bodySettings[ "Earth" ] = boost::make_shared< BodySettings >( );
-    bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< ConstantEphemerisSettings >(
+    std::map< std::string, std::shared_ptr< BodySettings > > bodySettings;
+    bodySettings[ "Earth" ] = std::make_shared< BodySettings >( );
+    bodySettings[ "Earth" ]->ephemerisSettings = std::make_shared< ConstantEphemerisSettings >(
                 Eigen::Vector6d::Zero( ), "SSB", "J2000" );
-    bodySettings[ "Earth" ]->gravityFieldSettings = boost::make_shared< GravityFieldSettings >( central_spice );
+    bodySettings[ "Earth" ]->gravityFieldSettings = std::make_shared< GravityFieldSettings >( central_spice );
 
     // Create Earth object
     NamedBodyMap bodyMap = createBodies( bodySettings );
 
     // Create spacecraft object.
     double vehicleMass = 2000.0;
-    bodyMap[ "Vehicle" ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap[ "Vehicle" ] = std::make_shared< simulation_setup::Body >( );
     bodyMap[ "Vehicle" ]->setConstantBodyMass( vehicleMass );
 
     // Create aerodynamic coefficient interface settings.
     double referenceArea = 4.0;
     double aerodynamicCoefficient = 1.2;
-    boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
-            boost::make_shared< ConstantAerodynamicCoefficientSettings >(
+    std::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
+            std::make_shared< ConstantAerodynamicCoefficientSettings >(
                 referenceArea, aerodynamicCoefficient * Eigen::Vector3d::UnitX( ), 1, 1 );
 
     // Create and set aerodynamic coefficients object
@@ -72,7 +71,6 @@ int main()
     ///////////////////////            CREATE ACCELERATIONS          //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
     // Define propagator settings variables.
     SelectedAccelerationMap accelerationMap;
     std::vector< std::string > bodiesToPropagate;
@@ -80,29 +78,29 @@ int main()
 
     // Define data to be used for thrust as a function of time.
     const std::string cppFilePath( __FILE__ );
-    const std::string cppFolder = cppFilePath.substr( 0, cppFilePath.find_last_of("/\\") + 1 );
-    boost::shared_ptr< FromFileDataMapSettings< Eigen::Vector3d > > thrustDataSettings =
-            boost::make_shared< FromFileDataMapSettings< Eigen::Vector3d > >( cppFolder + "testThrustValues.txt" );
+    const std::string cppFolder = cppFilePath.substr( 0 , cppFilePath.find_last_of("/\\")+1 );
+    std::shared_ptr< FromFileDataMapSettings< Eigen::Vector3d > > thrustDataSettings =
+            std::make_shared< FromFileDataMapSettings< Eigen::Vector3d > >( cppFolder + "testThrustValues.txt" );
 
     // Define interpolator settings.
-    boost::shared_ptr< InterpolatorSettings >
-            thrustInterpolatorSettings = boost::make_shared< InterpolatorSettings >( linear_interpolator );
+    std::shared_ptr< InterpolatorSettings > thrustInterpolatorSettings =
+            std::make_shared< InterpolatorSettings >( linear_interpolator );
 
     // Create data interpolation settings
-    boost::shared_ptr< DataInterpolationSettings< double, Eigen::Vector3d > > thrustDataInterpolatorSettings =
-            boost::make_shared< DataInterpolationSettings< double, Eigen::Vector3d > >(
+    std::shared_ptr< DataInterpolationSettings< double, Eigen::Vector3d > > thrustDataInterpolatorSettings =
+            std::make_shared< DataInterpolationSettings< double, Eigen::Vector3d > >(
                 thrustDataSettings, thrustInterpolatorSettings );
 
     // Define specific impulse
     double constantSpecificImpulse = 3000.0;
 
     // Define propagation settings.
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfVehicle;
-    accelerationsOfVehicle[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfVehicle;
+    accelerationsOfVehicle[ "Earth" ].push_back( std::make_shared< AccelerationSettings >(
                                                      basic_astrodynamics::central_gravity ) );
-    accelerationsOfVehicle[ "Vehicle" ].push_back(
-                boost::make_shared< ThrustAccelerationSettings >(
-                    thrustDataInterpolatorSettings, constantSpecificImpulse, lvlh_thrust_frame, "Earth" ) );
+    accelerationsOfVehicle[ "Vehicle" ].push_back( std::make_shared< ThrustAccelerationSettings >(
+                                                       thrustDataInterpolatorSettings, constantSpecificImpulse,
+                                                       lvlh_thrust_frame, "Earth" ) );
 
     accelerationMap[ "Vehicle" ] = accelerationsOfVehicle;
     bodiesToPropagate.push_back( "Vehicle" );
@@ -125,67 +123,59 @@ int main()
     vehicleInitialStateInKeplerianElements( semiMajorAxisIndex ) = 72130.0e3;
     vehicleInitialStateInKeplerianElements( eccentricityIndex ) = 0.6;
     vehicleInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians( 169.0 );
-    vehicleInitialStateInKeplerianElements( argumentOfPeriapsisIndex )
-            = convertDegreesToRadians( 45.0 );
-    vehicleInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex )
-            = convertDegreesToRadians( 80.0 );
+    vehicleInitialStateInKeplerianElements( argumentOfPeriapsisIndex ) = convertDegreesToRadians( 45.0 );
+    vehicleInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex ) = convertDegreesToRadians( 80.0 );
     vehicleInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians( 15.0 );
 
     // Convert vehicle state from Keplerian elements to Cartesian elements.
     double earthGravitationalParameter = bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
-    Eigen::VectorXd systemInitialState = convertKeplerianToCartesianElements(
-                vehicleInitialStateInKeplerianElements,
-                earthGravitationalParameter );
+    Eigen::VectorXd systemInitialState = convertKeplerianToCartesianElements( vehicleInitialStateInKeplerianElements,
+                                                                              earthGravitationalParameter );
 
     // Define propagation termination conditions (stop after 2 weeks).
-    boost::shared_ptr< PropagationTimeTerminationSettings > terminationSettings =
-            boost::make_shared< propagators::PropagationTimeTerminationSettings >( 4.0E6 );
+    std::shared_ptr< PropagationTimeTerminationSettings > terminationSettings =
+            std::make_shared< propagators::PropagationTimeTerminationSettings >( 4.0E6 );
 
     // Define settings for propagation of translational dynamics.
-    boost::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =
-            boost::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, terminationSettings,
-              cowell );
+    std::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =
+            std::make_shared< TranslationalStatePropagatorSettings< double > >(
+                centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, terminationSettings );
 
     // Crete mass rate models
-    std::map< std::string, boost::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
-    massRateModels[ "Vehicle" ] = createMassRateModel( "Vehicle", boost::make_shared< FromThrustMassModelSettings >( 1 ),
+    std::map< std::string, std::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
+    massRateModels[ "Vehicle" ] = createMassRateModel( "Vehicle", std::make_shared< FromThrustMassModelSettings >( 1 ),
                                                        bodyMap, accelerationModelMap );
 
     // Create settings for propagating the mass of the vehicle
-    boost::shared_ptr< MassPropagatorSettings< double > > massPropagatorSettings =
-            boost::make_shared< MassPropagatorSettings< double > >(
-                boost::assign::list_of( "Vehicle" ), massRateModels,
-                ( Eigen::Matrix< double, 1, 1 >( ) << vehicleMass ).finished( ),
-                terminationSettings );
+    std::shared_ptr< MassPropagatorSettings< double > > massPropagatorSettings =
+            std::make_shared< MassPropagatorSettings< double > >( std::vector< std::string >{ "Vehicle" }, massRateModels,
+                                                                  ( Eigen::Matrix< double, 1, 1 >( ) << vehicleMass ).finished( ),
+                                                                  terminationSettings );
 
     // Create list of propagation settings.
-    std::vector< boost::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
+    std::vector< std::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
     propagatorSettingsVector.push_back( translationalPropagatorSettings );
     propagatorSettingsVector.push_back( massPropagatorSettings );
 
     // Define list of dependent variables to save.
-    std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariablesList;
-    dependentVariablesList.push_back(
-                boost::make_shared< SingleAccelerationDependentVariableSaveSettings >(
-                    basic_astrodynamics::thrust_acceleration, "Vehicle", "Vehicle", 0 ) );
-    dependentVariablesList.push_back(
-                boost::make_shared< SingleDependentVariableSaveSettings >(
-                    lvlh_to_inertial_frame_rotation_dependent_variable, "Vehicle", "Earth" ) );
+    std::vector< std::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariablesList;
+    dependentVariablesList.push_back( std::make_shared< SingleAccelerationDependentVariableSaveSettings >(
+                                          basic_astrodynamics::thrust_acceleration, "Vehicle", "Vehicle", 0 ) );
+    dependentVariablesList.push_back( std::make_shared< SingleDependentVariableSaveSettings >(
+                                          lvlh_to_inertial_frame_rotation_dependent_variable, "Vehicle", "Earth" ) );
 
     // Create object with list of dependent variables
-    boost::shared_ptr< DependentVariableSaveSettings > dependentVariablesToSave =
-            boost::make_shared< DependentVariableSaveSettings >( dependentVariablesList );
+    std::shared_ptr< DependentVariableSaveSettings > dependentVariablesToSave =
+            std::make_shared< DependentVariableSaveSettings >( dependentVariablesList );
 
     // Create propagation settings for mass and translational dynamics concurrently
-    boost::shared_ptr< PropagatorSettings< > > propagatorSettings =
-            boost::make_shared< MultiTypePropagatorSettings< double > >(
+    std::shared_ptr< PropagatorSettings< > > propagatorSettings =
+            std::make_shared< MultiTypePropagatorSettings< double > >(
                 propagatorSettingsVector, terminationSettings, dependentVariablesToSave );
 
     // Define integrator settings
-    boost::shared_ptr< IntegratorSettings< > > integratorSettings =
-            boost::make_shared< IntegratorSettings< > >
-            ( rungeKutta4, 0.0, 30.0 );
+    std::shared_ptr< IntegratorSettings< > > integratorSettings =
+            std::make_shared< IntegratorSettings< > >( rungeKutta4, 0.0, 30.0 );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT AND PRINT OUTPUT TO FILE         //////////////////////////////////
@@ -193,8 +183,7 @@ int main()
 
 
     // Create simulation object and propagate dynamics.
-    SingleArcDynamicsSimulator< > dynamicsSimulator(
-                bodyMap, integratorSettings, propagatorSettings, true, false, false );
+    SingleArcDynamicsSimulator< > dynamicsSimulator( bodyMap, integratorSettings, propagatorSettings );
     std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
     std::map< double, Eigen::VectorXd > dependentVariableResult = dynamicsSimulator.getDependentVariableHistory( );
 

@@ -62,11 +62,11 @@ int main( )
     double fixedStepSize = 0.1;
 
     // Define simulation body settings.
-    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
+    std::map< std::string, std::shared_ptr< BodySettings > > bodySettings =
             getDefaultBodySettings( { "Earth" }, simulationStartEpoch - 300,
                                     simulationEndEpoch + 300 );
 
-    bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
+    bodySettings[ "Earth" ]->ephemerisSettings = std::make_shared< simulation_setup::ConstantEphemerisSettings >(
                 Eigen::Vector6d::Zero( ), "SSB", "J2000" );
 
     bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
@@ -77,8 +77,8 @@ int main( )
     simulation_setup::NamedBodyMap bodyMap_1 = simulation_setup::createBodies( bodySettings );
 
     // Create vehicle objects for first simulation.
-    bodyMap_1[ "Target" ] = boost::make_shared< simulation_setup::Body >( );
-    bodyMap_1[ "Chaser" ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap_1[ "Target" ] = std::make_shared< simulation_setup::Body >( );
+    bodyMap_1[ "Chaser" ] = std::make_shared< simulation_setup::Body >( );
 
     // Set initial body mass of chaser (Space shuttle weight without
     // payload and rendez vous + de-orbit fuel )
@@ -94,8 +94,8 @@ int main( )
     std::vector< std::string > centralBodies_1;
 
     // Define target acceleration model settings.
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfTarget_1;
-    accelerationsOfTarget_1[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfTarget_1;
+    accelerationsOfTarget_1[ "Earth" ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
     accelerationMap_1[  "Target" ] = accelerationsOfTarget_1;
     bodiesToPropagate_1.push_back( "Target" );
     centralBodies_1.push_back( "Earth" );
@@ -107,18 +107,18 @@ int main( )
     double specificImpulse = 316.0; //s
 
     // Thrust opposite to direction of motion
-    boost::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionGuidanceSettings =
-            boost::make_shared< ThrustDirectionFromStateGuidanceSettings >(
+    std::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionGuidanceSettings =
+            std::make_shared< ThrustDirectionFromStateGuidanceSettings >(
                 "Earth", true, true);
-    boost::shared_ptr< ThrustEngineSettings > thrustMagnitudeSettings =
-            boost::make_shared< ConstantThrustEngineSettings >(
+    std::shared_ptr< ThrustEngineSettings > thrustMagnitudeSettings =
+            std::make_shared< ConstantThrustEngineSettings >(
                 thrustMagnitude, specificImpulse );
 
     // Define chaser acceleration model settings.
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfChaser_1;
-    accelerationsOfChaser_1[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfChaser_1;
+    accelerationsOfChaser_1[ "Earth" ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
     accelerationsOfChaser_1[ "Chaser" ].push_back(
-                boost::make_shared< ThrustAccelerationSettings >( thrustDirectionGuidanceSettings, thrustMagnitudeSettings) );
+                std::make_shared< ThrustAccelerationSettings >( thrustDirectionGuidanceSettings, thrustMagnitudeSettings) );
     accelerationMap_1[  "Chaser" ] = accelerationsOfChaser_1;
     bodiesToPropagate_1.push_back( "Chaser" );
     centralBodies_1.push_back( "Earth" );
@@ -189,18 +189,18 @@ int main( )
     systemInitialState.segment( 6, 6 ) = chaserInitialState;
 
     // Preliminary time termination settings for first simulation
-    boost::shared_ptr< PropagationTimeTerminationSettings > timeTerminationSettings_1 =
-            boost::make_shared< propagators::PropagationTimeTerminationSettings >( estimatedBurnTime );
+    std::shared_ptr< PropagationTimeTerminationSettings > timeTerminationSettings_1 =
+            std::make_shared< propagators::PropagationTimeTerminationSettings >( estimatedBurnTime );
 
     // State propagator for first simulation
-    boost::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =
-            boost::make_shared< TranslationalStatePropagatorSettings< double > >
+    std::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =
+            std::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies_1, accelerationModelMap_1, bodiesToPropagate_1, systemInitialState, timeTerminationSettings_1 );
 
     // Create mass rate model for the chaser
-    boost::shared_ptr< MassRateModelSettings > massRateModelSettings =
-            boost::make_shared< FromThrustMassModelSettings >( 1 );
-    std::map< std::string, boost::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
+    std::shared_ptr< MassRateModelSettings > massRateModelSettings =
+            std::make_shared< FromThrustMassModelSettings >( 1 );
+    std::map< std::string, std::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
     massRateModels[ "Chaser" ] = createMassRateModel(
             "Chaser", massRateModelSettings, bodyMap_1, accelerationModelMap_1 );
 
@@ -211,45 +211,45 @@ int main( )
     Eigen::VectorXd initialBodyMasses = Eigen::VectorXd( 1 );
     initialBodyMasses( 0 ) = chaserMass;
 
-    boost::shared_ptr< MassPropagatorSettings< double > > massPropagatorSettings =
-            boost::make_shared< MassPropagatorSettings< double > >(
+    std::shared_ptr< MassPropagatorSettings< double > > massPropagatorSettings =
+            std::make_shared< MassPropagatorSettings< double > >(
                     bodiesWithMassToPropagate, massRateModels, initialBodyMasses, timeTerminationSettings_1 );
 
     // Create multi-type propagator settings (state + chaser mass propagator)
-    std::vector< boost::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
+    std::vector< std::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
                     propagatorSettingsVector.push_back( translationalPropagatorSettings);
                     propagatorSettingsVector.push_back( massPropagatorSettings );
 
-    boost::shared_ptr< MultiTypePropagatorSettings< double > > propagatorSettings_1 =
-            boost::make_shared< MultiTypePropagatorSettings< double > >(
+    std::shared_ptr< MultiTypePropagatorSettings< double > > propagatorSettings_1 =
+            std::make_shared< MultiTypePropagatorSettings< double > >(
                                     propagatorSettingsVector, timeTerminationSettings_1 );
 
     // Create integrator settings for first simulation
-    boost::shared_ptr< IntegratorSettings< > > integratorSettings_1 =
-            boost::make_shared< IntegratorSettings< > >
+    std::shared_ptr< IntegratorSettings< > > integratorSettings_1 =
+            std::make_shared< IntegratorSettings< > >
             ( rungeKutta4, simulationStartEpoch, fixedStepSize );
 
     // Create dynamics simulator for first simulation
-    boost::shared_ptr< SingleArcDynamicsSimulator< > > dynamicsSimulator_1
-            = boost::make_shared< SingleArcDynamicsSimulator< > >(
+    std::shared_ptr< SingleArcDynamicsSimulator< > > dynamicsSimulator_1
+            = std::make_shared< SingleArcDynamicsSimulator< > >(
                 bodyMap_1, integratorSettings_1, propagatorSettings_1, false, false, false );
 
     // Set the simulation time as decision variable, with boundaries +-5 seconds from
     // the estimated burn time.
-    std::vector< boost::shared_ptr< optimization::SingleDecisionVariableSettings > > decisionVariableList;
-    decisionVariableList.push_back( boost::make_shared< optimization::SingleDecisionVariableSettings >(
+    std::vector< std::shared_ptr< optimization::SingleDecisionVariableSettings > > decisionVariableList;
+    decisionVariableList.push_back( std::make_shared< optimization::SingleDecisionVariableSettings >(
                     optimization::simulation_time_decision_variable,
                             estimatedBurnTime - 10.0, estimatedBurnTime + 10.0 ) );
     decisionVariableList.push_back(
-                boost::make_shared< optimization::SingleCartesianComponentDecisionVariableSettings >(
+                std::make_shared< optimization::SingleCartesianComponentDecisionVariableSettings >(
                     orbital_elements::xCartesianVelocity,
                             chaserInitialState( 3 ) - 10.0, chaserInitialState( 3 ) + 10.0, "Chaser" ) );
     decisionVariableList.push_back(
-                boost::make_shared< optimization::SingleCartesianComponentDecisionVariableSettings >(
+                std::make_shared< optimization::SingleCartesianComponentDecisionVariableSettings >(
                     orbital_elements::yCartesianVelocity,
                     chaserInitialState( 4 ) - 10.0, chaserInitialState( 4 ) + 10.0, "Chaser" ) );
     decisionVariableList.push_back(
-                boost::make_shared< optimization::SingleCartesianComponentDecisionVariableSettings >(
+                std::make_shared< optimization::SingleCartesianComponentDecisionVariableSettings >(
                     orbital_elements::zCartesianVelocity,
                     chaserInitialState( 5 ) - 10.0, chaserInitialState( 5 ) + 10.0, "Chaser" ) );
 
@@ -258,12 +258,12 @@ int main( )
     std::cout<<"Boundaries 2 "<<chaserInitialState( 4 ) - 10.<<" "<<chaserInitialState( 4 ) + 10.<<std::endl;
     std::cout<<"Boundaries 3 "<<chaserInitialState( 5 ) - 10.<<" "<<chaserInitialState( 5 ) + 10.<<std::endl;
 
-    boost::shared_ptr< optimization::DecisionVariableSettings > decisionVariableSettings = boost::make_shared<
+    std::shared_ptr< optimization::DecisionVariableSettings > decisionVariableSettings = std::make_shared<
             optimization::DecisionVariableSettings >( decisionVariableList );
 
     // Create first mission segment with the dynamics simulator and the decision variable
-    boost::shared_ptr< optimization::MissionSegmentSettings > missionSegment_1 =
-            boost::make_shared< optimization::MissionSegmentSettings >( dynamicsSimulator_1, decisionVariableSettings );
+    std::shared_ptr< optimization::MissionSegmentSettings > missionSegment_1 =
+            std::make_shared< optimization::MissionSegmentSettings >( dynamicsSimulator_1, decisionVariableSettings );
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -274,8 +274,8 @@ int main( )
     simulation_setup::NamedBodyMap bodyMap_2 = simulation_setup::createBodies( bodySettings );
 
     // Create target and chaser bodies for second simulation
-    bodyMap_2[ "Target" ] = boost::make_shared< simulation_setup::Body >( );
-    bodyMap_2[ "Chaser" ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap_2[ "Target" ] = std::make_shared< simulation_setup::Body >( );
+    bodyMap_2[ "Chaser" ] = std::make_shared< simulation_setup::Body >( );
 
     // Finalize body creation.
     setGlobalFrameBodyEphemerides( bodyMap_2, "SSB", "J2000" );
@@ -288,13 +288,13 @@ int main( )
     fixedStepSize = 5.0; //s
 
     // Define acceleration model settings for target and chaser fro second simulation (unpowered flight for both).
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfTarget_2;
-    accelerationsOfTarget_2[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfTarget_2;
+    accelerationsOfTarget_2[ "Earth" ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
     accelerationMap_2[ "Target" ] = accelerationsOfTarget_2;
     bodiesToPropagate_2.push_back( "Target" );
     centralBodies_2.push_back( "Earth" );
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfChaser_2;
-    accelerationsOfChaser_2[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfChaser_2;
+    accelerationsOfChaser_2[ "Earth" ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 4, 0 ) );
     accelerationMap_2[  "Chaser" ] = accelerationsOfChaser_2;
     bodiesToPropagate_2.push_back( "Chaser" );
     centralBodies_2.push_back( "Earth" );
@@ -306,56 +306,56 @@ int main( )
 
     // Create dependent variable save settings to retrieve
     // the distance between the two spacecraft
-    std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariableSaveSettingsVector;
-    dependentVariableSaveSettingsVector.push_back( boost::make_shared< SingleDependentVariableSaveSettings > (
+    std::vector< std::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariableSaveSettingsVector;
+    dependentVariableSaveSettingsVector.push_back( std::make_shared< SingleDependentVariableSaveSettings > (
             relative_distance_dependent_variable, "Chaser", "Target" ) );
-    boost::shared_ptr< DependentVariableSaveSettings > dependentVariableSaveSettings =
-            boost::make_shared< DependentVariableSaveSettings >( dependentVariableSaveSettingsVector, false );
+    std::shared_ptr< DependentVariableSaveSettings > dependentVariableSaveSettings =
+            std::make_shared< DependentVariableSaveSettings >( dependentVariableSaveSettingsVector, false );
 
     // Create hybrid termination settings to simulate until estimated
     // rendez vous + margin or until minimum separation
     const double minimumSeparation = 1000; //m
 
-    std::vector< boost::shared_ptr< propagators::PropagationTerminationSettings > > multiTerminationSettings;
+    std::vector< std::shared_ptr< propagators::PropagationTerminationSettings > > multiTerminationSettings;
 
-    multiTerminationSettings.push_back( boost::make_shared< propagators::PropagationTimeTerminationSettings >(
+    multiTerminationSettings.push_back( std::make_shared< propagators::PropagationTimeTerminationSettings >(
                                             estimatedBurnTime + estimatedRendezVousTime + 10.0 * fixedStepSize ) );
 
-    multiTerminationSettings.push_back( boost::make_shared<
+    multiTerminationSettings.push_back( std::make_shared<
             propagators::PropagationDependentVariableTerminationSettings >(
                     dependentVariableSaveSettingsVector[0], minimumSeparation, true ) );
 
-    boost::shared_ptr< propagators::PropagationHybridTerminationSettings > hybridTerminationSettings =
-        boost::make_shared< propagators::PropagationHybridTerminationSettings >( multiTerminationSettings, true );
+    std::shared_ptr< propagators::PropagationHybridTerminationSettings > hybridTerminationSettings =
+        std::make_shared< propagators::PropagationHybridTerminationSettings >( multiTerminationSettings, true );
 
     // Create propagator settings for second simulation
-    boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings_2 =
-            boost::make_shared< TranslationalStatePropagatorSettings< double > >
+    std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings_2 =
+            std::make_shared< TranslationalStatePropagatorSettings< double > >
                     ( centralBodies_2, accelerationModelMap_2, bodiesToPropagate_2, Eigen::VectorXd::Zero(12),
                             hybridTerminationSettings, cowell, dependentVariableSaveSettings );
 
     // Create integrator settings for second simulation
-    boost::shared_ptr< IntegratorSettings< > > integratorSettings_2 =
-            boost::make_shared< IntegratorSettings< > >( rungeKutta4, simulationStartEpoch, fixedStepSize );
+    std::shared_ptr< IntegratorSettings< > > integratorSettings_2 =
+            std::make_shared< IntegratorSettings< > >( rungeKutta4, simulationStartEpoch, fixedStepSize );
 
     // Create dynamics simulator for second simulation
-    boost::shared_ptr< SingleArcDynamicsSimulator< > > dynamicsSimulator_2 =
-            boost::make_shared< SingleArcDynamicsSimulator< > >( bodyMap_2, integratorSettings_2,
+    std::shared_ptr< SingleArcDynamicsSimulator< > > dynamicsSimulator_2 =
+            std::make_shared< SingleArcDynamicsSimulator< > >( bodyMap_2, integratorSettings_2,
                     propagatorSettings_2, false );
 
     // Use the minimum separation between spacecraft as objective function
 
     const int maxNumberOfEvolutions = 100;
     const double objectiveValue = 0.0;
-    boost::shared_ptr< optimization::ObjectiveFunctionFromMinOrMaxDependentVariableSettings > objectiveFunction =
-            boost::make_shared< optimization::ObjectiveFunctionFromMinOrMaxDependentVariableSettings >(
+    std::shared_ptr< optimization::ObjectiveFunctionFromMinOrMaxDependentVariableSettings > objectiveFunction =
+            std::make_shared< optimization::ObjectiveFunctionFromMinOrMaxDependentVariableSettings >(
                     dependentVariableSaveSettingsVector[0], objectiveValue, 0, true,
                             minimumSeparation, maxNumberOfEvolutions );
 
     // Create mission segment for second simulation containing the second
     // dynamics simulator and the objective function
-    boost::shared_ptr< optimization::MissionSegmentSettings > missionSegment_2 =
-            boost::make_shared< optimization::MissionSegmentSettings >( dynamicsSimulator_2,
+    std::shared_ptr< optimization::MissionSegmentSettings > missionSegment_2 =
+            std::make_shared< optimization::MissionSegmentSettings >( dynamicsSimulator_2,
                     objectiveFunction );
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -364,13 +364,13 @@ int main( )
 
     // Create object to link the two mission segments and optimize the mission constraint
 
-    std::vector< boost::shared_ptr< optimization::MissionSegmentSettings > > missionSegments;
+    std::vector< std::shared_ptr< optimization::MissionSegmentSettings > > missionSegments;
 
     missionSegments.push_back( missionSegment_1 );
     missionSegments.push_back( missionSegment_2 );
 
     optimization::MissionLinker missionLinker( missionSegments,
-            boost::make_shared< optimization::OptimizationSettings >( optimization::global_optimization,
+            std::make_shared< optimization::OptimizationSettings >( optimization::global_optimization,
                     16, true, 1 ), false  );
 
     // Start optimization

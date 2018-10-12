@@ -33,7 +33,7 @@ approach distance from the target?*/
 using namespace pagmo;
 using namespace tudat_pagmo_applications;
 
-int main()
+int main( )
 {
     bool performGridSearch = true;
 

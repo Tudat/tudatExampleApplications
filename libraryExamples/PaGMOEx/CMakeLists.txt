@@ -178,12 +178,10 @@ endif( )
 add_subdirectory( "${SRCROOT}/AstroToolbox")
 include_directories(SYSTEM AFTER "${SRCROOT}/AstroToolbox")
 
-
 list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES "")
 list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES "")
 list(APPEND TUDAT_APPLICATION_ITRS_LIBRARIES "")
 
-list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES astro_toolbox)
 
 if(USE_SOFA)
  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES sofa)
@@ -205,6 +203,7 @@ if(USE_NRLMSISE00)
 endif()
 
 
+
 # Find PaGMO library on local system.
 if( USE_PAGMO )
   find_package(PaGMO2)
@@ -220,19 +219,20 @@ if( USE_PAGMO )
 
 endif( )
 
-
-list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_ground_stations tudat_propagators tudat_trajectory_design
+list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_trajectory_design tudat_propagation_setup tudat_environment_setup tudat_ground_stations tudat_propagators
     tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
     tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
-     tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics
-     tudat_root_finders tudat_basic_mathematics tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+    tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_interpolators tudat_root_finders tudat_filters
+    tudat_basic_mathematics tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
-list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_simulation_setup tudat_observation_models tudat_ground_stations tudat_acceleration_partials
-    tudat_observation_partials tudat_estimatable_parameters tudat_orbit_determination  tudat_propagators
+
+list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_trajectory_design tudat_estimation_setup tudat_propagation_setup tudat_environment_setup  tudat_observation_models tudat_ground_stations tudat_acceleration_partials
+    tudat_torque_partials tudat_observation_partials tudat_orbit_determination tudat_estimatable_parameters  tudat_propagators
     tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
     tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
-    tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics
-    tudat_root_finders tudat_basic_mathematics tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+    tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_interpolators tudat_root_finders tudat_filters
+    tudat_basic_mathematics tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+
 
 ## Add Tudat pagmo examples
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Problems")

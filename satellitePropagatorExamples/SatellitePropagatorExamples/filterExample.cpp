@@ -72,8 +72,8 @@ public:
     typedef Eigen::Matrix< DependentVariableType, NumberOfElements, 1 > DependentVector;
 
     //! Typedef of the function describing the system.
-    typedef boost::function< DependentVector( const IndependentVariableType,
-                                              const DependentVector& ) > ControlFunction;
+    typedef std::function< DependentVector( const IndependentVariableType,
+                                            const DependentVector& ) > ControlFunction;
 
     //! Default constructor.
     /*!
@@ -160,21 +160,23 @@ int main( )
     measurementUncertainty[ 0 ] = std::pow( 25.0, 2 );
 
     // Set integrator settings
-    boost::shared_ptr< numerical_integrators::IntegratorSettings< > > integratorSettings =
-            boost::make_shared< numerical_integrators::IntegratorSettings< > > (
+    std::shared_ptr< numerical_integrators::IntegratorSettings< > > integratorSettings =
+            std::make_shared< numerical_integrators::IntegratorSettings< > > (
                 numerical_integrators::euler, initialTime, timeStepSize );
 
     // Create control classes
     // These are only included to show how a control system would need to be implemented, but they have no effect at all on the
     // results of this example.
-    boost::shared_ptr< ControlSystem< double, double, 3 > > extendedControl =
-            boost::make_shared< ControlSystem< double, double, 3 > >( boost::lambda::constant( Eigen::Vector3d::Zero( ) ) );
-    boost::shared_ptr< ControlSystem< double, double, 3 > > unscentedControl =
-            boost::make_shared< ControlSystem< double, double, 3 > >( boost::lambda::constant( Eigen::Vector3d::Zero( ) ) );
+    std::shared_ptr< ControlSystem< double, double, 3 > > extendedControl =
+            std::make_shared< ControlSystem< double, double, 3 > >(
+                [ ]( const double, const Eigen::Vector3d& ){ return Eigen::Vector3d::Zero( ); } );
+    std::shared_ptr< ControlSystem< double, double, 3 > > unscentedControl =
+            std::make_shared< ControlSystem< double, double, 3 > >(
+                [ ]( const double, const Eigen::Vector3d& ){ return Eigen::Vector3d::Zero( ); } );
 
     // Create filter settings
-    boost::shared_ptr< FilterSettings< double, double > > extendedFilterSettings =
-            boost::make_shared< ExtendedKalmanFilterSettings< double, double > >(
+    std::shared_ptr< FilterSettings< double, double > > extendedFilterSettings =
+            std::make_shared< ExtendedKalmanFilterSettings< double, double > >(
                 systemUncertainty,
                 measurementUncertainty,
                 timeStepSize,
@@ -182,8 +184,8 @@ int main( )
                 initialEstimatedStateVector,
                 initialEstimatedStateCovarianceMatrix,
                 integratorSettings );
-    boost::shared_ptr< FilterSettings< double, double > > unscentedFilterSettings =
-            boost::make_shared< UnscentedKalmanFilterSettings< double, double > >(
+    std::shared_ptr< FilterSettings< double, double > > unscentedFilterSettings =
+            std::make_shared< UnscentedKalmanFilterSettings< double, double > >(
                 systemUncertainty,
                 measurementUncertainty,
                 timeStepSize,
@@ -193,21 +195,22 @@ int main( )
                 integratorSettings );
 
     // Create filter objects
-    boost::shared_ptr< FilterBase< double, double > > extendedFilter = createFilter< double, double >(
+    std::shared_ptr< FilterBase< double, double > > extendedFilter = createFilter< double, double >(
                 extendedFilterSettings,
-                boost::bind( &stateFunction, _1, _2,
-                             boost::bind( &ControlSystem< double, double, 3 >::getCurrentControlVector, extendedControl ) ),
-                boost::bind( &measurementFunction, _1, _2 ),
-                boost::bind( &stateJacobianFunction, _1, _2,
-                             boost::bind( &ControlSystem< double, double, 3 >::getCurrentControlVector, extendedControl ) ),
-                boost::lambda::constant( Eigen::Matrix3d::Identity( ) ),
-                boost::bind( &measurementJacobianFunction, _1, _2 ),
-                boost::lambda::constant( Eigen::Vector1d::Identity( ) ) );
-    boost::shared_ptr< FilterBase< double, double > > unscentedFilter = createFilter< double, double >(
+                std::bind( &stateFunction, std::placeholders::_1, std::placeholders::_2,
+                           std::bind( &ControlSystem< double, double, 3 >::getCurrentControlVector, extendedControl ) ),
+                std::bind( &measurementFunction, std::placeholders::_1, std::placeholders::_2 ),
+                std::bind( &stateJacobianFunction, std::placeholders::_1, std::placeholders::_2,
+                           std::bind( &ControlSystem< double, double, 3 >::getCurrentControlVector, extendedControl ) ),
+                ( [ ]( double, const Eigen::VectorXd& ){ return  Eigen::Matrix3d::Identity( ); } ),
+                std::bind( &measurementJacobianFunction, std::placeholders::_1, std::placeholders::_2 ),
+                ( [ ]( double, const Eigen::VectorXd& ){ return Eigen::Vector1d::Identity( ); } ) );
+
+    std::shared_ptr< FilterBase< double, double > > unscentedFilter = createFilter< double, double >(
                 unscentedFilterSettings,
-                boost::bind( &stateFunction, _1, _2,
-                             boost::bind( &ControlSystem< double, double, 3 >::getCurrentControlVector, unscentedControl ) ),
-                boost::bind( &measurementFunction, _1, _2 ) );
+                std::bind( &stateFunction, std::placeholders::_1, std::placeholders::_2,
+                           std::bind( &ControlSystem< double, double, 3 >::getCurrentControlVector, unscentedControl ) ),
+                std::bind( &measurementFunction, std::placeholders::_1, std::placeholders::_2 ) );
 
     // Loop over each time step
     const bool showProgress = false;

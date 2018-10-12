@@ -45,7 +45,7 @@ PropagationTargetingProblem::PropagationTargetingProblem(
             std::sqrt(pow(semiMajorAxis_,3)/earthGravitationalParameter_);
 
     // Create the body Earth from Spice interface
-    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings;
+    std::map< std::string, std::shared_ptr< BodySettings > > bodySettings;
     if( useExtendedDynamics_ )
     {
         bodySettings =
@@ -60,7 +60,7 @@ PropagationTargetingProblem::PropagationTargetingProblem(
         bodySettings =
                 getDefaultBodySettings( {"Earth"} );
     }
-    bodySettings[ "Earth" ]->ephemerisSettings = boost::make_shared< simulation_setup::ConstantEphemerisSettings >(
+    bodySettings[ "Earth" ]->ephemerisSettings = std::make_shared< simulation_setup::ConstantEphemerisSettings >(
                 Eigen::Vector6d::Zero( ), "SSB", "J2000" );
     bodySettings[ "Earth" ]->atmosphereSettings = NULL;
     bodySettings[ "Earth" ]->shapeModelSettings = NULL;
@@ -71,6 +71,8 @@ PropagationTargetingProblem::PropagationTargetingProblem(
 
     //Create bodyMap and add the satellite as an empty body
     bodyMap_ = simulation_setup::createBodies( bodySettings );
+    bodyMap_["Satellite"] = std::make_shared<Body>();
+    setGlobalFrameBodyEphemerides( bodyMap_, "Earth", "J2000" );
 }
 
 
@@ -88,10 +90,6 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
 
     const double earthRotationRate = 2.0 * mathematical_constants::PI / physical_constants::SIDEREAL_DAY;
     const double fixedStepSize = 2.0;
-
-    bodyMap_["Satellite"] = boost::make_shared<Body>();
-
-    setGlobalFrameBodyEphemerides( bodyMap_, "Earth", "J2000" );
 
     //Define position of the target at 35000 km from Earth at 30 deg latitude
     Eigen::Vector3d target;
@@ -115,20 +113,20 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
     std::vector< std::string > bodiesToPropagate = { "Satellite" };
     std::vector< std::string > centralBodies = { "Earth" };
     SelectedAccelerationMap accelerationMap;
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfSatellite;
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfSatellite;
     if( useExtendedDynamics_ )
     {
-        accelerationsOfSatellite[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >(
+        accelerationsOfSatellite[ "Earth" ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >(
                                                            2, 2 ) );
-        accelerationsOfSatellite[ "Moon" ].push_back( boost::make_shared< AccelerationSettings >(
+        accelerationsOfSatellite[ "Moon" ].push_back( std::make_shared< AccelerationSettings >(
                                                           point_mass_gravity ) );
-        accelerationsOfSatellite[ "Sun" ].push_back( boost::make_shared< AccelerationSettings >(
+        accelerationsOfSatellite[ "Sun" ].push_back( std::make_shared< AccelerationSettings >(
                                                          point_mass_gravity ) );
         accelerationMap[ "Satellite" ] = accelerationsOfSatellite;
     }
     else
     {
-        accelerationsOfSatellite[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
+        accelerationsOfSatellite[ "Earth" ].push_back( std::make_shared< AccelerationSettings >(
                                                            point_mass_gravity ) );
         accelerationMap[ "Satellite" ] = accelerationsOfSatellite;
     }
@@ -136,11 +134,11 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
                 bodyMap_, accelerationMap, bodiesToPropagate, centralBodies );
 
     //Setup propagator (cowell) and integrator (RK4 fixed stepsize)
-    boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
-            boost::make_shared< TranslationalStatePropagatorSettings< double > >
+    std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
+            std::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, simulationEndEpoch_ );
-    boost::shared_ptr< IntegratorSettings< > > integratorSettings =
-            boost::make_shared< IntegratorSettings< > >
+    std::shared_ptr< IntegratorSettings< > > integratorSettings =
+            std::make_shared< IntegratorSettings< > >
             ( rungeKutta4, simulationStartEpoch_, fixedStepSize );
 
     //Start simulation
