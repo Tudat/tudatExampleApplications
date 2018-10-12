@@ -213,7 +213,7 @@ int main( )
                 std::bind( &measurementFunction, std::placeholders::_1, std::placeholders::_2 ) );
 
     // Loop over each time step
-            const bool showProgress = false;
+    const bool showProgress = false;
     double currentTime = extendedFilter->getCurrentTime( );;
     Eigen::Vector3d currentActualStateVector = initialStateVector;
     Eigen::Vector3d currentNoisyStateVector;
