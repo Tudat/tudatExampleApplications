@@ -77,26 +77,6 @@ macro(setup_unit_test_target target_name CUSTOM_OUTPUT_PATH)
   add_test("${target_name}" "${BINROOT}/unit_tests/${target_name}")
 endmacro(setup_unit_test_target)
 
-# Define the install targets to create a distribution.
-if(NOT TUDAT_BUNDLE_DISTRIBUTION_PATH)
-    set(TUDAT_BUNDLE_DISTRIBUTION_PATH "${CODEROOT}")
-endif(NOT TUDAT_BUNDLE_DISTRIBUTION_PATH)
-
-if(NOT SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH)
-    set(SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH
-        "${TUDAT_BUNDLE_DISTRIBUTION_PATH}/tudatApplications/satellitePropagatorExamples")
-endif(NOT SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH)
-
-# Install files.
-install(DIRECTORY "${SRCROOT}/"
-        DESTINATION "${SATELLITE_PROPAGATOR_EXAMPLES_DISTRIBUTION_PATH}/SatellitePropagatorExamples"
-        PATTERN ".DS_STORE" EXCLUDE
-        PATTERN "CMakeLists.txt.user" EXCLUDE
-        PATTERN ".svn" EXCLUDE
-        PATTERN ".git" EXCLUDE
-        PATTERN ".bzr" EXCLUDE
-)
-
 # Include the top-level directories.
 include_directories(AFTER
   "${CODEROOT}"
@@ -157,7 +137,6 @@ endif()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${SPICE_INCLUDE_DIR}\"")
   endif( )
 
-option(USE_NRLMSISE00 "build Tudat with NRLMSISE-00 enabled" ON)
 if(NOT USE_NRLMSISE00)
   message(STATUS "NRLMSISE-00 disabled!")
   add_definitions(-DUSE_NRLMSISE00=0)
@@ -175,47 +154,8 @@ else()
   endif( )
 endif( )
 
-list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES "")
-list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES "")
-list(APPEND TUDAT_APPLICATION_ITRS_LIBRARIES "")
-
-
-if(USE_SOFA)
- list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES sofa)
- list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES tudat_sofa_interface )
- list(APPEND TUDAT_APPLICATION_ITRS_LIBRARIES tudat_earth_orientation )
-endif()
-
-if(USE_CSPICE)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES cspice)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES tudat_spice_interface )
-endif()
-
-if(USE_JSON)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nlohmann_json)
-endif()
-
-if(USE_NRLMSISE00)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
-endif()
-
-
-
-list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_trajectory_design tudat_propagation_setup tudat_environment_setup tudat_ground_stations tudat_propagators
-    tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
-    tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
-    tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_interpolators tudat_root_finders tudat_filters
-    tudat_basic_mathematics tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
-
-
-list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_trajectory_design tudat_estimation_setup tudat_propagation_setup tudat_environment_setup  tudat_observation_models tudat_ground_stations tudat_acceleration_partials
-    #tudat_torque_partials
-    tudat_observation_partials tudat_orbit_determination tudat_estimatable_parameters  tudat_propagators
-    tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
-    tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
-    tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_interpolators tudat_root_finders tudat_filters
-    tudat_basic_mathematics tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
-
+# Set compiler based on preferences (e.g. USE_CLANG) and system.
+include(tudatLinkLibraries)
 
 # Add tabulated atmosphere usage example.
 add_executable(application_TabulatedAtmosphereUsage "${SRCROOT}/tabulatedAtmosphereUsage.cpp")
@@ -225,94 +165,99 @@ target_link_libraries(application_TabulatedAtmosphereUsage tudat_aerodynamics tu
 # Add comparison of propagator types.s
 add_executable(application_PropagatorTypesComparison "${SRCROOT}/propagatorTypesComparison.cpp")
 setup_executable_target(application_PropagatorTypesComparison "${SRCROOT}")
-target_link_libraries(application_PropagatorTypesComparison ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(application_PropagatorTypesComparison ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add filter example.
 add_executable(application_FilterEstimation "${SRCROOT}/filterExample")
 setup_executable_target(application_FilterEstimation "${SRCROOT}")
-target_link_libraries(application_FilterEstimation ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(application_FilterEstimation ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
 setup_executable_target(application_SingleSatellitePropagator "${SRCROOT}")
-target_link_libraries(application_SingleSatellitePropagator ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(application_SingleSatellitePropagator ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+# Add single, Earth-orbiting satellite propagator, with perturbations, application.
 add_executable(application_SinglePerturbedSatellitePropagator "${SRCROOT}/singlePerturbedSatellitePropagator.cpp")
 setup_executable_target(application_SinglePerturbedSatellitePropagator "${SRCROOT}")
 target_link_libraries(application_SinglePerturbedSatellitePropagator
-                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+                      ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+# Add patched conic interplanetary trajectory design example
 add_executable(application_InterplanetaryTrajectoryDesign "${SRCROOT}/interplanetaryTrajectoryDesign.cpp")
 setup_executable_target(application_InterplanetaryTrajectoryDesign "${SRCROOT}")
 target_link_libraries(application_InterplanetaryTrajectoryDesign
-                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+                      ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Asterix and Obelix (satellites) propagator application.
 add_executable(application_AsterixAndObelixPropagator "${SRCROOT}/asterixAndObelixPropagator.cpp")
 setup_executable_target(application_AsterixAndObelixPropagator "${SRCROOT}")
 target_link_libraries(application_AsterixAndObelixPropagator
-                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+                      ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Galileo constellation application.
 add_executable(application_GalileoConstellationSimulator
                "${SRCROOT}/galileoConstellationSimulator.cpp")
 setup_executable_target(application_GalileoConstellationSimulator "${SRCROOT}")
 target_link_libraries(application_GalileoConstellationSimulator
-                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+                      ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add inner Solar system propagation
 add_executable(application_InnerSolarSystemPropagation
                "${SRCROOT}/innerSolarSystemPropagation.cpp")
 setup_executable_target(application_InnerSolarSystemPropagation "${SRCROOT}")
 target_link_libraries(application_InnerSolarSystemPropagation
-                      ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+                      ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Apollo propagation
 add_executable(application_ApolloEntry
                "${SRCROOT}/apolloCapsuleEntry.cpp")
 setup_executable_target(application_ApolloEntry "${SRCROOT}")
-target_link_libraries(application_ApolloEntry ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(application_ApolloEntry ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add JSON-based Apollo propagation
 if(USE_JSON)
+ # Add Apollo entry propagation using JSON
  add_executable(application_ApolloEntryJSON
                 "${SRCROOT}/apolloCapsuleEntryJSON.cpp")
  setup_executable_target(application_ApolloEntryJSON "${SRCROOT}")
- target_link_libraries(application_ApolloEntryJSON json_interface_library ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+ target_link_libraries(application_ApolloEntryJSON json_interface_library ${TUDAT_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 
  # Add lifetime maximisation propagation
  add_executable(application_LifetimeMaximisation
                 "${SRCROOT}/lifetimeMaximisation.cpp")
  setup_executable_target(application_LifetimeMaximisation "${SRCROOT}")
- target_link_libraries(application_LifetimeMaximisation json_interface_library ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+ target_link_libraries(application_LifetimeMaximisation json_interface_library ${TUDAT_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 endif()
 
 # Add Thrust example 1
 add_executable(application_ThrustAlongVelocityVector
                "${SRCROOT}/thrustAlongVelocityVectorExample.cpp")
 setup_executable_target(application_ThrustAlongVelocityVector "${SRCROOT}")
-target_link_libraries(application_ThrustAlongVelocityVector ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(application_ThrustAlongVelocityVector ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add Thrust example 2
 add_executable(application_ThrustFromFile
                "${SRCROOT}/thrustAccelerationFromFileExample.cpp")
 setup_executable_target(application_ThrustFromFile "${SRCROOT}")
-target_link_libraries(application_ThrustFromFile ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(application_ThrustFromFile ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 if( BUILD_WITH_ESTIMATION_TOOLS )
+ # Add propagation of variational equations for Earth orbiter
  add_executable(application_VariationalEquationsPropagator "${SRCROOT}/variationalEquationsPropagatorExample.cpp")
  setup_executable_target(application_VariationalEquationsPropagator "${SRCROOT}")
  target_link_libraries(application_VariationalEquationsPropagator
-                          ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+                          ${TUDAT_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 
  # Add simulated Earth orbiter simulated POD example
  add_executable(application_EarthOrbiterStateEstimation
                 "${SRCROOT}/earthOrbiterStateEstimation.cpp")
  setup_executable_target(application_EarthOrbiterStateEstimation "${SRCROOT}")
- target_link_libraries(application_EarthOrbiterStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+ target_link_libraries(application_EarthOrbiterStateEstimation ${TUDAT_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+ # Add simulated Earth orbiter simulated POD example with vasic settings
  add_executable(application_EarthOrbiterBasicStateEstimation
                 "${SRCROOT}/earthOrbiterBasicStateEstimation.cpp")
  setup_executable_target(application_EarthOrbiterBasicStateEstimation "${SRCROOT}")
- target_link_libraries(application_EarthOrbiterBasicStateEstimation ${TUDAT_APPLICATION_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
+ target_link_libraries(application_EarthOrbiterBasicStateEstimation ${TUDAT_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 endif()

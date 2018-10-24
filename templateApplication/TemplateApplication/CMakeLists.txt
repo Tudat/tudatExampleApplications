@@ -77,26 +77,6 @@ macro(setup_unit_test_target target_name CUSTOM_OUTPUT_PATH)
   add_test("${target_name}" "${BIN_ROOT}/unit_tests/${target_name}")
 endmacro(setup_unit_test_target)
 
-# Define the install targets to create a distribution.
-if(NOT TUDAT_BUNDLE_DISTRIBUTION_PATH)
-    set(TUDAT_BUNDLE_DISTRIBUTION_PATH "${CODEROOT}")
-endif(NOT TUDAT_BUNDLE_DISTRIBUTION_PATH)
-
-if(NOT TEMPLATE_APPLICATION_DISTRIBUTION_PATH)
-    set(TEMPLATE_APPLICATION_DISTRIBUTION_PATH 
-        "${TUDAT_BUNDLE_DISTRIBUTION_PATH}/tudatApplications/templateApplication")
-endif(NOT TEMPLATE_APPLICATION_DISTRIBUTION_PATH)
-
-# Install Template Application files.
-install(DIRECTORY "${SRCROOT}/"
-        DESTINATION "${TEMPLATE_APPLICATION_DISTRIBUTION_PATH}/TemplateApplication"
-        PATTERN ".DS_STORE" EXCLUDE
-        PATTERN "CMakeLists.txt.user" EXCLUDE
-        PATTERN ".svn" EXCLUDE
-        PATTERN ".git" EXCLUDE
-        PATTERN ".bzr" EXCLUDE
-)
-
 # Include the top-level directories.
 include_directories(AFTER
   "${CODEROOT}"
@@ -157,7 +137,6 @@ else( )
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${SPICE_INCLUDE_DIR}\"")
 endif( )
 
-option(USE_NRLMSISE00 "build Tudat with NRLMSISE-00 enabled" ON)
 if(NOT USE_NRLMSISE00)
   message(STATUS "NRLMSISE-00 disabled!")
   add_definitions(-DUSE_NRLMSISE00=0)
@@ -175,59 +154,24 @@ else()
   endif( )
 endif( )
 
-if(USE_CSPICE)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES tudat_spice_interface cspice)
-endif()
+# Find PaGMO library on local system.
+if( USE_PAGMO )
+  find_package(PaGMO2)
 
-if(USE_NRLMSISE00)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
-endif()
+  # Include PaGMO directories.
+  if(NOT APPLE OR APPLE_INCLUDE_FORCE)
+    include_directories(SYSTEM AFTER "${PAGMO_INCLUDE_DIR}")
+  else( )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${PAGMO_INCLUDE_DIR}\"")
+  endif( )
 
-list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES "")
-list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES "")
-list(APPEND TUDAT_APPLICATION_ITRS_LIBRARIES "")
+  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES pthread)
 
+endif( )
 
-if(USE_SOFA)
- list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES sofa)
- list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES tudat_sofa_interface )
- list(APPEND TUDAT_APPLICATION_ITRS_LIBRARIES tudat_earth_orientation )
-endif()
-
-if(USE_CSPICE)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES cspice)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES tudat_spice_interface )
-endif()
-
-if(USE_JSON)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nlohmann_json)
-endif()
-
-if(USE_NRLMSISE00)
-  list(APPEND TUDAT_APPLICATION_EXTERNAL_LIBRARIES nrlmsise00)
-endif()
-
-
-list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_ground_stations tudat_propagators
-tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
-tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
-tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_basic_mathematics
-tudat_root_finders tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
-
-list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_simulation_setup tudat_observation_models tudat_ground_stations
-tudat_torque_partials tudat_acceleration_partials
-tudat_observation_partials tudat_estimatable_parameters tudat_orbit_determination tudat_propagators
-tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
-tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
-tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics tudat_basic_mathematics
-tudat_root_finders tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+include(tudatLinkLibraries)
 
 # Add helloWorld application.
 add_executable(application_HelloWorld "${SRCROOT}/helloWorld.cpp")
 setup_executable_target(application_HelloWorld "${SRCROOT}")
 target_link_libraries(application_HelloWorld tudat_gravitation tudat_basic_astrodynamics ${Boost_LIBRARIES} )
-
-#add_executable(test_test "${SRCROOT}/unittesttest.cpp")
-#setup_executable_target(test_test "${SRCROOT}")
-#target_link_libraries(test_test ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
-
