@@ -43,7 +43,8 @@ int main( )
     ///  Characteristics of the interplanetary trajectory
 
     // Define central body of the trajectory and body to be propagated.
-    std::vector< std::string > centralBody; centralBody.push_back( "Sun" );
+    std::vector< std::string > centralBody;
+    centralBody.push_back( "Sun" );
     std::string bodyToPropagate = "spacecraft";
 
     // Specify the number and types of legs and type of legs.
@@ -80,8 +81,8 @@ int main( )
     // 1st leg.
     variableVector.push_back( 0.234594654679 );
     variableVector.push_back( 1408.99421278 );
-    variableVector.push_back( 0.37992647165 * 2 * 3.14159265358979 );
-    variableVector.push_back( std::acos(  2 * 0.498004040298 - 1. ) - 3.14159265358979 / 2 );
+    variableVector.push_back( 0.37992647165 * 2.0 * 3.14159265358979 );
+    variableVector.push_back( std::acos(  2.0 * 0.498004040298 - 1. ) - 3.14159265358979 / 2.0 );
     // 2nd leg.
     variableVector.push_back( 0.0964769387134 );
     variableVector.push_back( 1.35077257078 );
@@ -112,9 +113,10 @@ int main( )
 
     // Define integrator settings.
     double initialTime = 0.0;
-    double fixedStepSize = 100.0;
+    double fixedStepSize = 1000.0;
     std::shared_ptr< numerical_integrators::IntegratorSettings< double > > integratorSettings =
-            std::make_shared < numerical_integrators::IntegratorSettings < > > ( numerical_integrators::rungeKutta4, initialTime, fixedStepSize);
+            std::make_shared < numerical_integrators::IntegratorSettings < > > (
+                numerical_integrators::rungeKutta4, initialTime, fixedStepSize);
 
 
 
@@ -142,7 +144,7 @@ int main( )
 
     simulation_setup::NamedBodyMap bodyMap = propagators::setupBodyMapFromUserDefinedEphemeridesForPatchedConicsTrajectory(
             centralBody[0], bodyToPropagate, transferBodyTrajectory,
-            ephemerisVectorTransferBodies, gravitationalParametersTransferBodies);
+            ephemerisVectorTransferBodies, gravitationalParametersTransferBodies, "ECLIPJ2000" );
 
 
     // Create acceleration map.
@@ -152,23 +154,21 @@ int main( )
     // Calculate the patched conics solution and the propagation results of the associated full dynamics problem for each leg.
     std::map< int, std::map< double, Eigen::Vector6d > > patchedConicsTrajectory;
     std::map< int, std::map< double, Eigen::Vector6d > > fullProblemTrajectory;
+    std::map< int, std::map< double, Eigen::VectorXd > > dependentVariablesTrajectory;
 
-    propagators::fullPropagationPatchedConicsTrajectory( bodyMap, accelerationMap, transferBodyTrajectory, centralBody[0], bodyToPropagate,
+    propagators::fullPropagationPatchedConicsTrajectory(
+                bodyMap, accelerationMap, transferBodyTrajectory, centralBody[0], bodyToPropagate,
             legTypeVector, variableVector, minimumPericenterRadii, semiMajorAxes, eccentricities, integratorSettings,
-            patchedConicsTrajectory, fullProblemTrajectory, false);
+            patchedConicsTrajectory, fullProblemTrajectory, dependentVariablesTrajectory, false );
 
 
-    // Compute difference between patched conics trajectory and full problem at departure and at arrival for each leg.
-    std::map< int, std::pair< Eigen::Vector6d, Eigen::Vector6d > > differenceStateArrivalAndDeparturePerLeg =
-            propagators::getDifferenceFullProblemWrtPatchedConicsTrajectory( bodyMap, accelerationMap, transferBodyTrajectory,
-                centralBody[0], bodyToPropagate, legTypeVector, variableVector, minimumPericenterRadii, semiMajorAxes, eccentricities,
-                integratorSettings, false );
-
-    for( std::map< int, std::pair< Eigen::Vector6d, Eigen::Vector6d > >::iterator itr = differenceStateArrivalAndDeparturePerLeg.begin( );
-         itr != differenceStateArrivalAndDeparturePerLeg.end( ); itr++ ){
+    for( auto itr : patchedConicsTrajectory )
+    {
         std::cout << "Leg " << itr->first << "\n\n";
-        std::cout << "Departure: " << itr->second.first << "\n\n";
-        std::cout << "Arrival: " << itr->second.second << "\n\n";
+        std::cout << "Departure: " << fullProblemTrajectory[ itr->first ].begin( )->second -
+                  patchedConicsTrajectory[ itr->first ].begin( )->second<< "\n\n";
+        std::cout << "Arrival: " << fullProblemTrajectory[ itr->first ].rbegin( )->second -
+                     patchedConicsTrajectory[ itr->first ].rbegin( )->second << "\n\n";
     }
 
 
@@ -182,10 +182,6 @@ int main( )
     bodyToPropagateAccelerations[ "Earth" ].push_back(std::make_shared< simulation_setup::AccelerationSettings >(
                                                                 basic_astrodynamics::central_gravity ) );
     bodyToPropagateAccelerations[ "Venus" ].push_back(std::make_shared< simulation_setup::AccelerationSettings >(
-                                                                basic_astrodynamics::central_gravity ) );
-    bodyToPropagateAccelerations[ "Earth" ].push_back(std::make_shared< simulation_setup::AccelerationSettings >(
-                                                                basic_astrodynamics::central_gravity ) );
-    bodyToPropagateAccelerations[ "Sun" ].push_back(std::make_shared< simulation_setup::AccelerationSettings >(
                                                                 basic_astrodynamics::central_gravity ) );
 
     simulation_setup::SelectedAccelerationMap accelerationMapPerturbedCase;
@@ -204,27 +200,22 @@ int main( )
     // Calculate the patched conics trajectory and propagate the full dynamics problem jointly.
     std::map< int, std::map< double, Eigen::Vector6d > > patchedConicsTrajectoryPerturbedCase;
     std::map< int, std::map< double, Eigen::Vector6d > > fullProblemTrajectoryPerturbedCase;
+    std::map< int, std::map< double, Eigen::VectorXd > > dependentVariablesPerturbedCase;
 
     propagators::fullPropagationPatchedConicsTrajectory( bodyMap, accelerationMapVectorPerturbedCase,
             transferBodyTrajectory, centralBody[0], bodyToPropagate, legTypeVector, variableVector, minimumPericenterRadii,
             semiMajorAxes, eccentricities, integratorSettings, patchedConicsTrajectoryPerturbedCase,
-            fullProblemTrajectoryPerturbedCase, false);
+            fullProblemTrajectoryPerturbedCase, dependentVariablesPerturbedCase, true );
 
-    // Compute difference between patched conics trajectory and full problem at departure and at arrival for each leg.
-    std::map< int, std::pair< Eigen::Vector6d, Eigen::Vector6d > > differenceStatePerturbedCase =
-            propagators::getDifferenceFullProblemWrtPatchedConicsTrajectory( bodyMap, accelerationModelMapPerturbedCase, transferBodyTrajectory,
-                centralBody[0], bodyToPropagate, legTypeVector, variableVector, minimumPericenterRadii, semiMajorAxes, eccentricities,
-                integratorSettings, false );
-
-    std::cout << "State difference perturbed case: " << "\n\n";
-    for( std::map< int, std::pair< Eigen::Vector6d, Eigen::Vector6d > >::iterator itr = differenceStatePerturbedCase.begin( );
-         itr != differenceStatePerturbedCase.end( ); itr++ ){
-
+    for( auto itr : patchedConicsTrajectoryPerturbedCase )
+    {
         std::cout << "Leg " << itr->first << "\n\n";
-        std::cout << "Departure: " << itr->second.first << "\n\n";
-        std::cout << "Arrival: " << itr->second.second << "\n\n";
-
+        std::cout << "Departure: " << fullProblemTrajectoryPerturbedCase[ itr->first ].begin( )->second -
+                  patchedConicsTrajectoryPerturbedCase[ itr->first ].begin( )->second<< "\n\n";
+        std::cout << "Arrival: " << fullProblemTrajectoryPerturbedCase[ itr->first ].rbegin( )->second -
+                     patchedConicsTrajectoryPerturbedCase[ itr->first ].rbegin( )->second << "\n\n";
     }
+
 
 
 

@@ -42,7 +42,7 @@ int main( )
     // Specify required parameters
     // Specify the number of legs and type of legs.
     int numberOfLegs = 6;
-    std::vector< int > legTypeVector;
+    std::vector< TransferLegType > legTypeVector;
     legTypeVector.resize( numberOfLegs );
     legTypeVector[ 0 ] = mga_Departure;
     legTypeVector[ 1 ] = mga_Swingby;

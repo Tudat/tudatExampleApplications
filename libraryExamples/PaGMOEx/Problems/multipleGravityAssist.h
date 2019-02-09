@@ -94,7 +94,7 @@ private:
     bool useTripTime_;
 
     int numberOfLegs_;
-    std::vector< int > legTypeVector_;
+    std::vector< TransferLegType > legTypeVector_;
     std::vector< std::string > bodyNamesVector_;
     std::vector< ephemerides::EphemerisPointer > ephemerisVector_;
     Eigen::VectorXd gravitationalParameterVector_;

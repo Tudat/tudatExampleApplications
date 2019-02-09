@@ -250,7 +250,7 @@ target_link_libraries(application_FullPropagationCR3BP ${TUDAT_PROPAGATION_LIBRA
 
 # Add full propagation interplanetary trajectory example
 add_executable(application_FullPropagationInterplanetaryTrajectory
-               "${SRCROOT}/FullPropagationInterplanetaryTrajectory.cpp")
+               "${SRCROOT}/fullPropagationInterplanetaryTrajectory.cpp")
 setup_executable_target(application_FullPropagationInterplanetaryTrajectory "${SRCROOT}")
 target_link_libraries(application_FullPropagationInterplanetaryTrajectory ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
