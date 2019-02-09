@@ -115,7 +115,7 @@ int main( )
 
 
         std::vector< std::string > additionalBodies = { "Earth", "Mars", "Venus", "Saturn" };
-        for( int i = 0; i < additionalBodies.size( ); i++ )
+        for( unsigned int i = 0; i < additionalBodies.size( ); i++ )
         {
 
             perturbedBodyMap[ additionalBodies.at( i ) ] = std::make_shared< Body >( );

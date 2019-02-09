@@ -75,7 +75,7 @@ int main( )
     variableVector.push_back( 178.372255301 * physical_constants::JULIAN_DAY);
     variableVector.push_back( 299.223139512 * physical_constants::JULIAN_DAY);
     variableVector.push_back( 180.510754824 * physical_constants::JULIAN_DAY);
-    variableVector.push_back( 1.0); // The capture time is irrelevant for the final leg.
+    variableVector.push_back( 1.0 ); // The capture time is irrelevant for the final leg.
 
     // Add the additional variables.
     // 1st leg.
@@ -164,11 +164,11 @@ int main( )
 
     for( auto itr : patchedConicsTrajectory )
     {
-        std::cout << "Leg " << itr->first << "\n\n";
-        std::cout << "Departure: " << fullProblemTrajectory[ itr->first ].begin( )->second -
-                  patchedConicsTrajectory[ itr->first ].begin( )->second<< "\n\n";
-        std::cout << "Arrival: " << fullProblemTrajectory[ itr->first ].rbegin( )->second -
-                     patchedConicsTrajectory[ itr->first ].rbegin( )->second << "\n\n";
+        std::cout << "Leg " << itr.first << "\n\n";
+        std::cout << "Departure: " << fullProblemTrajectory[ itr.first ].begin( )->second -
+                  patchedConicsTrajectory[ itr.first ].begin( )->second<< "\n\n";
+        std::cout << "Arrival: " << fullProblemTrajectory[ itr.first ].rbegin( )->second -
+                     patchedConicsTrajectory[ itr.first ].rbegin( )->second << "\n\n";
     }
 
 
@@ -209,11 +209,11 @@ int main( )
 
     for( auto itr : patchedConicsTrajectoryPerturbedCase )
     {
-        std::cout << "Leg " << itr->first << "\n\n";
-        std::cout << "Departure: " << fullProblemTrajectoryPerturbedCase[ itr->first ].begin( )->second -
-                  patchedConicsTrajectoryPerturbedCase[ itr->first ].begin( )->second<< "\n\n";
-        std::cout << "Arrival: " << fullProblemTrajectoryPerturbedCase[ itr->first ].rbegin( )->second -
-                     patchedConicsTrajectoryPerturbedCase[ itr->first ].rbegin( )->second << "\n\n";
+        std::cout << "Leg " << itr.first << "\n\n";
+        std::cout << "Departure: " << fullProblemTrajectoryPerturbedCase[ itr.first ].begin( )->second -
+                  patchedConicsTrajectoryPerturbedCase[ itr.first ].begin( )->second<< "\n\n";
+        std::cout << "Arrival: " << fullProblemTrajectoryPerturbedCase[ itr.first ].rbegin( )->second -
+                     patchedConicsTrajectoryPerturbedCase[ itr.first ].rbegin( )->second << "\n\n";
     }
 
 
