@@ -242,6 +242,18 @@ add_executable(application_ThrustFromFile
 setup_executable_target(application_ThrustFromFile "${SRCROOT}")
 target_link_libraries(application_ThrustFromFile ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+# Add full propagation CR3BP example
+add_executable(application_FullPropagationCR3BP
+               "${SRCROOT}/fullPropagationSpacecraftCR3BP.cpp")
+setup_executable_target(application_FullPropagationCR3BP "${SRCROOT}")
+target_link_libraries(application_FullPropagationCR3BP ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+# Add full propagation interplanetary trajectory example
+add_executable(application_FullPropagationInterplanetaryTrajectory
+               "${SRCROOT}/FullPropagationInterplanetaryTrajectory.cpp")
+setup_executable_target(application_FullPropagationInterplanetaryTrajectory "${SRCROOT}")
+target_link_libraries(application_FullPropagationInterplanetaryTrajectory ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
 if( BUILD_WITH_ESTIMATION_TOOLS )
  # Add propagation of variational equations for Earth orbiter
  add_executable(application_VariationalEquationsPropagator "${SRCROOT}/variationalEquationsPropagatorExample.cpp")
