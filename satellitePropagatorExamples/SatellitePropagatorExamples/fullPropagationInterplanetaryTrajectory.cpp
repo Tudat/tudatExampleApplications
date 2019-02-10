@@ -183,7 +183,8 @@ int main( )
                                                                 basic_astrodynamics::central_gravity ) );
     bodyToPropagateAccelerations[ "Venus" ].push_back(std::make_shared< simulation_setup::AccelerationSettings >(
                                                                 basic_astrodynamics::central_gravity ) );
-
+    bodyToPropagateAccelerations[ "Mercury" ].push_back(std::make_shared< simulation_setup::AccelerationSettings >(
+                                                                basic_astrodynamics::central_gravity ) );
     simulation_setup::SelectedAccelerationMap accelerationMapPerturbedCase;
     accelerationMapPerturbedCase[ "spacecraft" ] = bodyToPropagateAccelerations;
 
