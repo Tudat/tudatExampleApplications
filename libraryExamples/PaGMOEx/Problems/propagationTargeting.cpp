@@ -89,7 +89,7 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
     using namespace tudat::input_output;
 
     const double earthRotationRate = 2.0 * mathematical_constants::PI / physical_constants::SIDEREAL_DAY;
-    const double fixedStepSize = 2.0;
+    const double fixedStepSize = 30.0;
 
     //Define position of the target at 35000 km from Earth at 30 deg latitude
     Eigen::Vector3d target;
@@ -148,6 +148,8 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
     //Retrieve results
     std::map< double, Eigen::VectorXd > integrationResult =
             dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
+    previousStateHistory_ = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
+    previousFinalState_ = previousStateHistory_.rbegin( )->second;
 
 
     //Find minimum distance from target

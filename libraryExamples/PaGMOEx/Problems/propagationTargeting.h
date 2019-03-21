@@ -32,6 +32,17 @@ struct PropagationTargetingProblem {
     // Boundaries of the problem set between 0 and (360) degrees
     std::pair<std::vector<double>, std::vector<double>> get_bounds() const;
 
+    Eigen::VectorXd getPreviousFinalState( )
+    {
+        return previousFinalState_;
+    }
+
+    std::map< double, Eigen::VectorXd > getPreviousStateHistory( )
+    {
+        return previousStateHistory_;
+    }
+
+
 private:
 
     double altitudeOfPerigee_;
@@ -46,6 +57,9 @@ private:
     double semiMajorAxis_;
     double simulationStartEpoch_;
     double simulationEndEpoch_;
+
+    mutable std::map< double, Eigen::VectorXd > previousStateHistory_;
+    mutable Eigen::VectorXd previousFinalState_;
     mutable tudat::simulation_setup::NamedBodyMap bodyMap_;
 
 

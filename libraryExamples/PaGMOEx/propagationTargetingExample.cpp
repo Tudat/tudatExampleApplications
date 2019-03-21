@@ -35,7 +35,7 @@ using namespace tudat_pagmo_applications;
 
 int main( )
 {
-    bool performGridSearch = true;
+    bool performGridSearch = false;
 
     //Set seed for reproducible results
     pagmo::random_device::set_seed(255);
@@ -48,8 +48,10 @@ int main( )
     double altitudeOfApogee = 40000000.0;
     double altitudeOfTarget = 35000000.0;
     double longitudeOfTarget = 30.0; // In degrees
-    problem prob{PropagationTargetingProblem( altitudeOfPerigee, altitudeOfApogee, altitudeOfTarget,
-                                              longitudeOfTarget, false ) };
+    PropagationTargetingProblem targetingProblem( altitudeOfPerigee, altitudeOfApogee, altitudeOfTarget,
+                                                  longitudeOfTarget, false );
+
+    problem prob{ targetingProblem };
 
     // Perform Grid Search and write results to file
     if( performGridSearch )
@@ -80,6 +82,18 @@ int main( )
 
         std::cout<<i<<std::endl;
     }
+
+    // Retrieve final Cartesian states for population in last generation, and save final states to a file.
+    std::vector<std::vector< double > > decisionVariables = isl.get_population( ).get_x( );
+    std::map< int, Eigen::VectorXd > finalStates;
+    for( unsigned int i = 0; i < decisionVariables.size( ); i++ )
+    {
+        targetingProblem.fitness( decisionVariables.at( i ) );
+        finalStates[ i ] = targetingProblem.getPreviousFinalState( );
+    }
+
+    tudat::input_output::writeDataMapToTextFile(
+                finalStates, "targetingFinalStates.dat", tudat_pagmo_applications::getOutputPath( ) );
 
     // Create object to compute the problem fitness; with perturbations
     problem prob_pert{PropagationTargetingProblem( altitudeOfPerigee, altitudeOfApogee, altitudeOfTarget,
