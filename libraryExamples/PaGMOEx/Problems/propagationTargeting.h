@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+using namespace tudat;
 
 // Define the problem PaGMO-style
 struct PropagationTargetingProblem {
@@ -24,7 +25,9 @@ struct PropagationTargetingProblem {
     PropagationTargetingProblem( ){ }
 
     PropagationTargetingProblem( const double altitudeOfPerigee, const double altitudeOfApogee,
-                                 const double altitudeOfTarget, const double longitudeOfTarget, const bool useExtendedDynamics = false );
+                                 const double altitudeOfTarget, const double longitudeOfTarget,
+                                 const std::shared_ptr< propagators::DependentVariableSaveSettings > dependentVariablesToSave,
+                                 const bool useExtendedDynamics = false );
 
     // Fitness: takes the value of the RAAN and returns the value of the closest distance from target
     std::vector<double> fitness(const std::vector<double> &x) const;
@@ -42,6 +45,17 @@ struct PropagationTargetingProblem {
         return previousStateHistory_;
     }
 
+    std::map< double, Eigen::VectorXd > getPreviousDependentVariablesHistory()
+    {
+        return previousDependentVariablesHistory_;
+    }
+
+    Eigen::VectorXd getPreviousDependentVariablesFinalValues()
+    {
+        return previousDependentVariablesFinalValues_;
+    }
+
+
 
 private:
 
@@ -58,9 +72,15 @@ private:
     double simulationStartEpoch_;
     double simulationEndEpoch_;
 
+    std::shared_ptr< propagators::DependentVariableSaveSettings > dependentVariablesToSave_;
+
     mutable std::map< double, Eigen::VectorXd > previousStateHistory_;
     mutable Eigen::VectorXd previousFinalState_;
     mutable tudat::simulation_setup::NamedBodyMap bodyMap_;
+    mutable std::map< double, Eigen::VectorXd > previousDependentVariablesHistory_;
+    mutable Eigen::VectorXd previousDependentVariablesFinalValues_;
+
+
 
 
 };

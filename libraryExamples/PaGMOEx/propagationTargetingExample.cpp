@@ -32,6 +32,7 @@ approach distance from the target?*/
 
 using namespace pagmo;
 using namespace tudat_pagmo_applications;
+using namespace tudat;
 
 int main( )
 {
@@ -48,8 +49,19 @@ int main( )
     double altitudeOfApogee = 40000000.0;
     double altitudeOfTarget = 35000000.0;
     double longitudeOfTarget = 30.0; // In degrees
+
+    // Define list of dependent variables to save.
+    std::vector< std::shared_ptr< propagators::SingleDependentVariableSaveSettings > > dependentVariablesList;
+    dependentVariablesList.push_back( std::make_shared< propagators::SingleDependentVariableSaveSettings >(
+                                          propagators::altitude_dependent_variable, "Satellite", "Earth" ) );
+
+    // Create object with list of dependent variables.
+    std::shared_ptr< propagators::DependentVariableSaveSettings > dependentVariablesToSave =
+            std::make_shared< propagators::DependentVariableSaveSettings >( dependentVariablesList );
+
+
     PropagationTargetingProblem targetingProblem( altitudeOfPerigee, altitudeOfApogee, altitudeOfTarget,
-                                                  longitudeOfTarget, false );
+                                                  longitudeOfTarget, dependentVariablesToSave, false );
 
     problem prob{ targetingProblem };
 
@@ -91,13 +103,23 @@ int main( )
         targetingProblem.fitness( decisionVariables.at( i ) );
         finalStates[ i ] = targetingProblem.getPreviousFinalState( );
     }
-
     tudat::input_output::writeDataMapToTextFile(
                 finalStates, "targetingFinalStates.dat", tudat_pagmo_applications::getOutputPath( ) );
 
+    // Retrieve final values of dependent variables for population in last generation, and save final dependent variables values to a file.
+    std::map< int, Eigen::VectorXd > dependentVariablesFinalValues;
+    for( unsigned int i = 0; i < decisionVariables.size( ); i++ )
+    {
+        targetingProblem.fitness( decisionVariables.at( i ) );
+        dependentVariablesFinalValues[ i ] = targetingProblem.getPreviousDependentVariablesFinalValues();
+    }
+    tudat::input_output::writeDataMapToTextFile(
+                dependentVariablesFinalValues, "targetingDependentVariablesFinalVariables.dat", tudat_pagmo_applications::getOutputPath( ) );
+
+
     // Create object to compute the problem fitness; with perturbations
     problem prob_pert{PropagationTargetingProblem( altitudeOfPerigee, altitudeOfApogee, altitudeOfTarget,
-                                                   longitudeOfTarget, true ) };
+                                                   longitudeOfTarget, dependentVariablesToSave, true ) };
 
 
     // Instantiate a pagmo algorithm for the new problem.

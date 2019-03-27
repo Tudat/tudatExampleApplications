@@ -13,13 +13,14 @@
 
 #include "propagationTargeting.h"
 
+using namespace tudat;
 
-PropagationTargetingProblem::PropagationTargetingProblem(
-        const double altitudeOfPerigee,
+PropagationTargetingProblem::PropagationTargetingProblem(const double altitudeOfPerigee,
         const double altitudeOfApogee, const double altitudeOfTarget, const double longitudeOfTarget,
+        const std::shared_ptr< propagators::DependentVariableSaveSettings> dependentVariablesToSave,
         const bool useExtendedDynamics) :
     altitudeOfPerigee_( altitudeOfPerigee ), altitudeOfApogee_( altitudeOfApogee ),
-    altitudeOfTarget_( altitudeOfTarget ), longitudeOfTarget_( longitudeOfTarget ),
+    altitudeOfTarget_( altitudeOfTarget ), longitudeOfTarget_( longitudeOfTarget ), dependentVariablesToSave_( dependentVariablesToSave ),
     useExtendedDynamics_( useExtendedDynamics )
 {
     using namespace tudat;
@@ -63,7 +64,7 @@ PropagationTargetingProblem::PropagationTargetingProblem(
     bodySettings[ "Earth" ]->ephemerisSettings = std::make_shared< simulation_setup::ConstantEphemerisSettings >(
                 Eigen::Vector6d::Zero( ), "SSB", "J2000" );
     bodySettings[ "Earth" ]->atmosphereSettings = NULL;
-    bodySettings[ "Earth" ]->shapeModelSettings = NULL;
+//    bodySettings[ "Earth" ]->shapeModelSettings = NULL;
 
     bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
     bodySettings[ "Earth" ]->ephemerisSettings->resetFrameOrientation( "J2000" );
@@ -136,7 +137,7 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
     //Setup propagator (cowell) and integrator (RK4 fixed stepsize)
     std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
             std::make_shared< TranslationalStatePropagatorSettings< double > >
-            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, simulationEndEpoch_ );
+            ( centralBodies, accelerationModelMap, bodiesToPropagate, systemInitialState, simulationEndEpoch_, cowell, dependentVariablesToSave_ );
     std::shared_ptr< IntegratorSettings< > > integratorSettings =
             std::make_shared< IntegratorSettings< > >
             ( rungeKutta4, simulationStartEpoch_, fixedStepSize );
@@ -150,6 +151,8 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
             dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
     previousStateHistory_ = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
     previousFinalState_ = previousStateHistory_.rbegin( )->second;
+    previousDependentVariablesHistory_ = dynamicsSimulator.getDependentVariableHistory();
+    previousDependentVariablesFinalValues_ = previousDependentVariablesHistory_.rbegin()->second;
 
 
     //Find minimum distance from target
