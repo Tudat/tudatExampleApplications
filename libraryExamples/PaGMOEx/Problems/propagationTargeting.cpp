@@ -63,8 +63,6 @@ PropagationTargetingProblem::PropagationTargetingProblem(const double altitudeOf
     }
     bodySettings[ "Earth" ]->ephemerisSettings = std::make_shared< simulation_setup::ConstantEphemerisSettings >(
                 Eigen::Vector6d::Zero( ), "SSB", "J2000" );
-    bodySettings[ "Earth" ]->atmosphereSettings = NULL;
-//    bodySettings[ "Earth" ]->shapeModelSettings = NULL;
 
     bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
     bodySettings[ "Earth" ]->ephemerisSettings->resetFrameOrientation( "J2000" );
@@ -147,8 +145,7 @@ std::vector<double> PropagationTargetingProblem::fitness(const std::vector<doubl
                 bodyMap_, integratorSettings, propagatorSettings, true, false, false );
 
     //Retrieve results
-    std::map< double, Eigen::VectorXd > integrationResult =
-            dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
+    std::map< double, Eigen::VectorXd > integrationResult = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
     previousStateHistory_ = dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
     previousFinalState_ = previousStateHistory_.rbegin( )->second;
     previousDependentVariablesHistory_ = dynamicsSimulator.getDependentVariableHistory();
