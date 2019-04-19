@@ -254,6 +254,12 @@ add_executable(application_FullPropagationInterplanetaryTrajectory
 setup_executable_target(application_FullPropagationInterplanetaryTrajectory "${SRCROOT}")
 target_link_libraries(application_FullPropagationInterplanetaryTrajectory ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+# Add spaceX Tesla trajectory example
+add_executable(application_SpaceXTeslaTrajectory
+               "${SRCROOT}/spacexTeslaTrajectory")
+setup_executable_target(application_SpaceXTeslaTrajectory "${SRCROOT}")
+target_link_libraries(application_SpaceXTeslaTrajectory ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
 if( BUILD_WITH_ESTIMATION_TOOLS )
  # Add propagation of variational equations for Earth orbiter
  add_executable(application_VariationalEquationsPropagator "${SRCROOT}/variationalEquationsPropagatorExample.cpp")
