@@ -10,14 +10,15 @@ correlations = load(strcat(dataDirectory,'earthOrbitEstimationCorrelations.dat')
 residualHistory = load(strcat(dataDirectory,'earthOrbitResidualHistory.dat'));
 weightsDiagonal = load(strcat(dataDirectory,'earthOrbitEstimationWeightsDiagonal.dat'));
 observations = load(strcat(dataDirectory,'earthOrbitObservationMeasurements.dat'));
-observationTimes = load(strcat(dataDirectory,'earthOrbitObservationTimes.dat'));
-observationTimes = (observationTimes - observationTimes(1) )/86400;
+rawObservationTimes = load(strcat(dataDirectory,'earthOrbitObservationTimes.dat'));
+observationTimes = (rawObservationTimes - rawObservationTimes(1) )/86400;
 observationLinkEnds = load(strcat(dataDirectory,'earthOrbitObservationLinkEnds.dat'));
 observationTypes = load(strcat(dataDirectory,'earthOrbitObservationObservableTypes.dat'));
 partialsMatrix = load(strcat(dataDirectory,'earthOrbitEstimationInformationMatrix.dat'));
 trueError = load(strcat(dataDirectory,'earthOrbitObservationTrueEstimationError.dat'));
 formalError = load(strcat(dataDirectory,'earthOrbitObservationFormalEstimationError.dat'));
 
+%%
 %%%%% CREATE MATRIX OF PARTIAL DERIVATIVES, WITH TERMS SCALED BY SQUARE ROOT OF WEIGHT
 
 weightedPartialsMatrix = partialsMatrix;
@@ -105,6 +106,8 @@ for j=1:6
     set( figure(j),'PaperUnits','centimeters','PaperPosition',[0 0 60 40]);
 end
 
+%%
+
 pause(2.0)
 
 for j=1:6
@@ -123,3 +126,17 @@ for j=1:6
         saveas(gcf,strcat('formalErrorRatios'),'png');
     end
 end
+
+%%
+
+propagatedCovariance = load(strcat(dataDirectory,'earthOrbitEstimationPropagatedErrors.dat'));
+
+figure(7)
+
+covarianceTimes = ( propagatedCovariance(:,1)-propagatedCovariance(1,1) )/86400;
+
+semilogy(covarianceTimes,sqrt(sum(propagatedCovariance(:,2:4)').^2)')
+hold on
+grid on
+xlabel('Time [days]')
+ylabel('Position ucnertainty [m]')

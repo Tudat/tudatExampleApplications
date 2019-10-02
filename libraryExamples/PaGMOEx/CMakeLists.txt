@@ -174,29 +174,29 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Problems")
 
 add_executable(application_PagmoCEC2013Comparison "${SRCROOT}/cec2013OptimizerComparison.cpp")
 setup_executable_target(application_PagmoCEC2013Comparison "${SRCROOT}")
-target_link_libraries(application_PagmoCEC2013Comparison pagmo2_library_example_problems tudat_input_output pthread ${Boost_LIBRARIES} )
+target_link_libraries(application_PagmoCEC2013Comparison pagmo pagmo2_library_example_problems tudat_input_output pthread ${Boost_LIBRARIES} )
 
 add_executable(application_PagmoHimmelblauOptimization "${SRCROOT}/himmelblauOptimization.cpp")
 setup_executable_target(application_PagmoHimmelblauOptimization "${SRCROOT}")
-target_link_libraries(application_PagmoHimmelblauOptimization pagmo2_library_example_problems tudat_input_output pthread ${Boost_LIBRARIES} )
+target_link_libraries(application_PagmoHimmelblauOptimization pagmo pagmo2_library_example_problems tudat_input_output pthread ${Boost_LIBRARIES} )
 
 add_executable(application_PagmoEarthMarsTransferExample "${SRCROOT}/earthMarsTransferExample.cpp")
 setup_executable_target(application_PagmoEarthMarsTransferExample "${SRCROOT}")
-target_link_libraries(application_PagmoEarthMarsTransferExample pagmo2_library_example_problems ${TUDAT_PROPAGATION_LIBRARIES}
+target_link_libraries(application_PagmoEarthMarsTransferExample pagmo pagmo2_library_example_problems ${TUDAT_PROPAGATION_LIBRARIES}
      pthread ${Boost_LIBRARIES} )
 
  add_executable(application_PagmoMgaTransferExample "${SRCROOT}/mgaTransferExample.cpp")
  setup_executable_target(application_PagmoMgaTransferExample "${SRCROOT}")
- target_link_libraries(application_PagmoMgaTransferExample pagmo2_library_example_problems ${TUDAT_PROPAGATION_LIBRARIES}
+ target_link_libraries(application_PagmoMgaTransferExample pagmo pagmo2_library_example_problems ${TUDAT_PROPAGATION_LIBRARIES}
       pthread ${Boost_LIBRARIES} )
 
 
  add_executable(application_PagmoMultiObjectiveEarthMarsTransferExample "${SRCROOT}/multiObjectiveEarthMarsTransferExample.cpp")
  setup_executable_target(application_PagmoMultiObjectiveEarthMarsTransferExample "${SRCROOT}")
- target_link_libraries(application_PagmoMultiObjectiveEarthMarsTransferExample pagmo2_library_example_problems ${TUDAT_PROPAGATION_LIBRARIES}
+ target_link_libraries(application_PagmoMultiObjectiveEarthMarsTransferExample pagmo pagmo2_library_example_problems ${TUDAT_PROPAGATION_LIBRARIES}
       pthread ${Boost_LIBRARIES} )
 
 add_executable(application_PagmoPropagationTargetingExample "${SRCROOT}/propagationTargetingExample.cpp")
 setup_executable_target(application_PagmoPropagationTargetingExample "${SRCROOT}")
-target_link_libraries(application_PagmoPropagationTargetingExample pagmo2_library_example_problems ${TUDAT_PROPAGATION_LIBRARIES}
+target_link_libraries(application_PagmoPropagationTargetingExample pagmo pagmo2_library_example_problems ${TUDAT_PROPAGATION_LIBRARIES}
       pthread ${Boost_LIBRARIES} )

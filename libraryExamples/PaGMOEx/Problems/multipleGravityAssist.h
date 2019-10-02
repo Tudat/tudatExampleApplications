@@ -33,7 +33,6 @@
 
 #include "pagmo/island.hpp"
 #include "pagmo/io.hpp"
-#include "pagmo/serialization.hpp"
 #include "pagmo/problem.hpp"
 #include <pagmo/rng.hpp>
 

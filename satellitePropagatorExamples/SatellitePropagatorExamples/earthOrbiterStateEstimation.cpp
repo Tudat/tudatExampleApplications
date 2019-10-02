@@ -52,7 +52,7 @@ int main( )
 
     // Specify initial and final time
     double initialEphemerisTime = 1.0E7;
-    int numberOfSimulationDays = 30.0;
+    int numberOfSimulationDays = 10.0;
     double finalEphemerisTime = initialEphemerisTime + numberOfSimulationDays * 86400.0;
 
     // Create bodies needed in simulation
@@ -273,7 +273,7 @@ int main( )
 
     // Create parameters
     std::shared_ptr< estimatable_parameters::EstimatableParameterSet< double > > parametersToEstimate =
-            createParametersToEstimate( parameterNames, bodyMap, accelerationModelMap );
+            createParametersToEstimate( parameterNames, bodyMap, propagatorSettings );
 
     // Print identifiers and indices of parameters to terminal.
     printEstimatableParameterEntries( parametersToEstimate );
@@ -450,6 +450,17 @@ int main( )
     std::cout << "Formal estimation error is: " << std::endl << podOutput->getFormalErrorVector( ).transpose( ) << std::endl;
     std::cout << "True to form estimation error ratio is: " << std::endl <<
                  ( podOutput->getFormalErrorVector( ).cwiseQuotient( estimationError ) ).transpose( ) << std::endl;
+
+    // Propagate errors to total time period
+    std::map< double, Eigen::VectorXd > propagatedErrors;
+    propagateFormalErrors(
+                propagatedErrors, podOutput->getUnnormalizedCovarianceMatrix( ),
+                orbitDeterminationManager.getStateTransitionAndSensitivityMatrixInterface( ),
+                60.0, initialEphemerisTime + 3600.0, finalEphemerisTime - 3600.0 );
+    input_output::writeDataMapToTextFile( propagatedErrors,
+                                          "earthOrbitEstimationPropagatedErrors.dat",
+                                          tudat_applications::getOutputPath( ) + outputSubFolder );
+
 
     input_output::writeMatrixToFile( podOutput->normalizedInformationMatrix_,
                                      "earthOrbitEstimationInformationMatrix.dat", 16,
