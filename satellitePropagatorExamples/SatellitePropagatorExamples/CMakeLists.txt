@@ -254,6 +254,13 @@ add_executable(application_FullPropagationInterplanetaryTrajectory
 setup_executable_target(application_FullPropagationInterplanetaryTrajectory "${SRCROOT}")
 target_link_libraries(application_FullPropagationInterplanetaryTrajectory ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+# Add shape-based trajectory design example
+add_executable(application_ShapeBasedTrajectoryDesign
+               "${SRCROOT}/shapeBasedTrajectoryDesign.cpp")
+setup_executable_target(application_ShapeBasedTrajectoryDesign "${SRCROOT}")
+target_link_libraries(application_ShapeBasedTrajectoryDesign tudat_shape_based_methods tudat_low_thrust_direct_methods tudat_numerical_quadrature ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+
+
 # Add spaceX Tesla trajectory example
 add_executable(application_SpaceXTeslaTrajectory
                "${SRCROOT}/spacexTeslaTrajectory")
