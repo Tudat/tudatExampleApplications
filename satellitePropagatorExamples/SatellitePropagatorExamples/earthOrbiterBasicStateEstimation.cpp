@@ -1,4 +1,4 @@
-/*    Copyright (c) 2010-2018, Delft University of Technology
+/*    Copyright (c) 2010-2019, Delft University of Technology
  *    All rigths reserved
  *
  *    This file is part of the Tudat. Redistribution and use in source and
@@ -354,6 +354,19 @@ int main( )
     std::cout << "True estimation error is:   " << std::endl << ( estimationError ).transpose( ) << std::endl;
     std::cout << "Formal estimation error is: " << std::endl << podOutput->getFormalErrorVector( ).transpose( ) << std::endl;
 
+    std::map< double, Eigen::VectorXd > propagatedErrors;
+
+    propagateFormalErrors(
+                propagatedErrors, podOutput->getUnnormalizedCovarianceMatrix( ),
+                orbitDeterminationManager.getStateTransitionAndSensitivityMatrixInterface( ),
+                60.0, initialEphemerisTime + 3600.0, finalEphemerisTime - 3600.0 );
+    input_output::writeDataMapToTextFile( propagatedErrors,
+                                          "earthOrbitBasicEstimationPropagatedErrors.dat",
+                                          tudat_applications::getOutputPath( ) + outputSubFolder );
+
+    input_output::writeMatrixToFile( podOutput->getUnnormalizedCovarianceMatrix( ),
+                                     "earthOrbitBasicEstimationCovariance.dat", 16,
+                                     tudat_applications::getOutputPath( ) + outputSubFolder );
     input_output::writeMatrixToFile( podOutput->normalizedInformationMatrix_,
                                      "earthOrbitBasicEstimationInformationMatrix.dat", 16,
                                      tudat_applications::getOutputPath( ) + outputSubFolder );
