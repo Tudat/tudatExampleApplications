@@ -254,17 +254,15 @@ add_executable(application_FullPropagationInterplanetaryTrajectory
 setup_executable_target(application_FullPropagationInterplanetaryTrajectory "${SRCROOT}")
 target_link_libraries(application_FullPropagationInterplanetaryTrajectory ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
+if( BUILD_WITH_SOCIS_2019 )
+
 # Add shape-based trajectory design example
 add_executable(application_ShapeBasedTrajectoryDesign
                "${SRCROOT}/shapeBasedTrajectoryDesign.cpp")
 setup_executable_target(application_ShapeBasedTrajectoryDesign "${SRCROOT}")
 target_link_libraries(application_ShapeBasedTrajectoryDesign tudat_shape_based_methods tudat_low_thrust_trajectories tudat_numerical_quadrature ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
-# Add spaceX Tesla trajectory example
-add_executable(application_SpaceXTeslaTrajectory
-               "${SRCROOT}/spacexTeslaTrajectory")
-setup_executable_target(application_SpaceXTeslaTrajectory "${SRCROOT}")
-target_link_libraries(application_SpaceXTeslaTrajectory ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+endif( )
 
 if( BUILD_WITH_ESTIMATION_TOOLS )
  # Add propagation of variational equations for Earth orbiter
