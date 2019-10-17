@@ -17,13 +17,13 @@
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 #include <Tudat/InputOutput/basicInputOutput.h>
 #include <SatellitePropagatorExamples/applicationOutput.h>
-#include "Tudat/Astrodynamics/ShapeBasedMethods/compositeFunctionHodographicShaping.h"
-#include "Tudat/Astrodynamics/ShapeBasedMethods/hodographicShaping.h"
-#include "Tudat/Astrodynamics/ShapeBasedMethods/baseFunctionsHodographicShaping.h"
-#include "Tudat/Astrodynamics/ShapeBasedMethods/createBaseFunctionHodographicShaping.h"
-#include "Tudat/Astrodynamics/ShapeBasedMethods/baseFunctionsSphericalShaping.h"
-#include "Tudat/Astrodynamics/ShapeBasedMethods/compositeFunctionSphericalShaping.h"
-#include "Tudat/Astrodynamics/ShapeBasedMethods/sphericalShaping.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/compositeFunctionHodographicShaping.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/hodographicShaping.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/baseFunctionsHodographicShaping.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/createBaseFunctionHodographicShaping.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/baseFunctionsSphericalShaping.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/compositeFunctionSphericalShaping.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/sphericalShaping.h"
 #include "Tudat/Astrodynamics/Ephemerides/approximatePlanetPositions.h"
 #include "Tudat/SimulationSetup/tudatSimulationHeader.h"
 #include "Tudat/External/SpiceInterface/spiceEphemeris.h"
@@ -36,6 +36,7 @@ int main( )
     using namespace tudat::simulation_setup;
     using namespace tudat::shape_based_methods;
 
+    std::string outputSubFolder = "ShapeBasedTrajectoriesExample/";
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////           DEFINE TRAJECTORY GLOBAL PARAMETERS      ////////////////////////////////////////////
@@ -272,7 +273,7 @@ int main( )
     ////////////////////////////       NUMERICALLY PROPAGATE THE SIMPLIFIED PROBLEM            /////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::map< double, Eigen::VectorXd > hodographicShapingPropagationResults;
+    std::map< double, Eigen::VectorXd > hodographicShapingPropagationUnperturbedCase;
     std::map< double, Eigen::Vector6d > hodographicShapingAnalyticalResults;
     std::map< double, Eigen::VectorXd > hodographicShapingDependentVariablesHistory;
 
@@ -283,11 +284,11 @@ int main( )
 
     // Compute shaped trajectory and propagated trajectory.
     hodographicShaping.computeSemiAnalyticalAndFullPropagation(
-                integratorSettings, hodographicShapingPropagatorSettings, hodographicShapingPropagationResults,
+                integratorSettings, hodographicShapingPropagatorSettings, hodographicShapingPropagationUnperturbedCase,
                 hodographicShapingAnalyticalResults, hodographicShapingDependentVariablesHistory );
 
 
-    std::map< double, Eigen::VectorXd > sphericalShapingPropagationResults;
+    std::map< double, Eigen::VectorXd > sphericalShapingPropagationUnperturbedCase;
     std::map< double, Eigen::Vector6d > sphericalShapingAnalyticalResults;
     std::map< double, Eigen::VectorXd > sphericalShapingDependentVariablesHistory;
 
@@ -298,12 +299,12 @@ int main( )
 
     // Compute shaped trajectory and propagated trajectory.
     sphericalShaping.computeSemiAnalyticalAndFullPropagation(
-                integratorSettings, sphericalShapingPropagatorSettings, sphericalShapingPropagationResults,
+                integratorSettings, sphericalShapingPropagatorSettings, sphericalShapingPropagationUnperturbedCase,
                 sphericalShapingAnalyticalResults, sphericalShapingDependentVariablesHistory );
 
     input_output::writeDataMapToTextFile( hodographicShapingAnalyticalResults,
                                           "hodographicShapingAnalyticalResults.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
@@ -311,23 +312,23 @@ int main( )
 
     input_output::writeDataMapToTextFile( sphericalShapingAnalyticalResults,
                                           "sphericalShapingAnalyticalResults.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
                                           "," );
 
-    input_output::writeDataMapToTextFile( hodographicShapingPropagationResults,
-                                          "hodographicShapingFullPropagationResults.dat",
-                                          tudat_applications::getOutputPath( ),
+    input_output::writeDataMapToTextFile( hodographicShapingPropagationUnperturbedCase,
+                                          "hodographicShapingPropagationUnperturbedCase.dat",
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
                                           "," );
 
-    input_output::writeDataMapToTextFile( sphericalShapingPropagationResults,
-                                          "sphericalShapingFullPropagationResults.dat",
-                                          tudat_applications::getOutputPath( ),
+    input_output::writeDataMapToTextFile( sphericalShapingPropagationUnperturbedCase,
+                                          "sphericalShapingPropagationUnperturbedCase.dat",
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
@@ -383,11 +384,11 @@ int main( )
     //////////////////////////////         PROPAGATE THE FULLY PERTURBED PROBLEM           /////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::map< double, Eigen::VectorXd > hodographicShapingPropagationResultsPerturbedCase;
+    std::map< double, Eigen::VectorXd > hodographicShapingPropagationPerturbedCase;
     std::map< double, Eigen::Vector6d > hodographicShapingAnalyticalResultsPerturbedCase;
     std::map< double, Eigen::VectorXd > hodographicShapingDependentVariablesHistoryPerturbedCase;
 
-    std::map< double, Eigen::VectorXd > sphericalShapingPropagationResultsPerturbedCase;
+    std::map< double, Eigen::VectorXd > sphericalShapingPropagationPerturbedCase;
     std::map< double, Eigen::Vector6d > sphericalShapingAnalyticalResultsPerturbedCase;
     std::map< double, Eigen::VectorXd > sphericalShapingDependentVariablesHistoryPerturbedCase;
 
@@ -398,7 +399,7 @@ int main( )
 
     // Compute shaped trajectory and propagated trajectory.
     hodographicShaping.computeSemiAnalyticalAndFullPropagation(
-                integratorSettings, hodographicShapingPropagatorSettingsPerturbedCase, hodographicShapingPropagationResultsPerturbedCase,
+                integratorSettings, hodographicShapingPropagatorSettingsPerturbedCase, hodographicShapingPropagationPerturbedCase,
                 hodographicShapingAnalyticalResultsPerturbedCase, hodographicShapingDependentVariablesHistoryPerturbedCase );
 
     // Create propagator settings for spherical shaping.
@@ -408,22 +409,22 @@ int main( )
 
     // Compute shaped trajectory and propagated trajectory.
     sphericalShaping.computeSemiAnalyticalAndFullPropagation(
-                integratorSettings, sphericalShapingPropagatorSettingsPerturbedCase, sphericalShapingPropagationResultsPerturbedCase,
+                integratorSettings, sphericalShapingPropagatorSettingsPerturbedCase, sphericalShapingPropagationPerturbedCase,
                 sphericalShapingAnalyticalResultsPerturbedCase, sphericalShapingDependentVariablesHistoryPerturbedCase );
 
 
 
-    input_output::writeDataMapToTextFile( hodographicShapingPropagationResultsPerturbedCase,
-                                          "hodographicShapingPropagationResultsPerturbedCase.dat",
-                                          tudat_applications::getOutputPath( ),
+    input_output::writeDataMapToTextFile( hodographicShapingPropagationPerturbedCase,
+                                          "hodographicShapingPropagationPerturbedCase.dat",
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
                                           "," );
 
-    input_output::writeDataMapToTextFile( sphericalShapingPropagationResultsPerturbedCase,
-                                          "sphericalShapingPropagationResultsPerturbedCase.dat",
-                                          tudat_applications::getOutputPath( ),
+    input_output::writeDataMapToTextFile( sphericalShapingPropagationPerturbedCase,
+                                          "sphericalShapingPropagationPerturbedCase.dat",
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
@@ -431,7 +432,7 @@ int main( )
 
     input_output::writeDataMapToTextFile( hodographicShapingMassProfile,
                                           "hodographicShapingMassProfile.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
@@ -439,7 +440,7 @@ int main( )
 
     input_output::writeDataMapToTextFile( hodographicShapingThrustProfile,
                                           "hodographicShapingThrustProfile.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
@@ -447,7 +448,7 @@ int main( )
 
     input_output::writeDataMapToTextFile( hodographicShapingThrustAccelerationProfile,
                                           "hodographicShapingThrustAccelerationProfile.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
@@ -455,7 +456,7 @@ int main( )
 
     input_output::writeDataMapToTextFile( sphericalShapingMassProfile,
                                           "sphericalShapingMassProfile.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
@@ -463,7 +464,7 @@ int main( )
 
     input_output::writeDataMapToTextFile( sphericalShapingThrustProfile,
                                           "sphericalShapingThrustProfile.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
@@ -471,7 +472,7 @@ int main( )
 
     input_output::writeDataMapToTextFile( sphericalShapingThrustAccelerationProfile,
                                           "sphericalShapingThrustAccelerationProfile.dat",
-                                          tudat_applications::getOutputPath( ),
+                                          tudat_applications::getOutputPath( ) + outputSubFolder,
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,

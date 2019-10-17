@@ -13,9 +13,7 @@ set(MY_PAGMO_PROBLEMS_HEADERS
   "${CMAKE_CURRENT_SOURCE_DIR}/propagationTargeting.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/multipleGravityAssist.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/himmelblau.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/lowThrustTrajectory.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/getAlgorithm.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/getRecommendedBaseFunctionsHodographicShaping.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/saveOptimizationResults.h"
 )
 
@@ -23,7 +21,6 @@ set(MY_PAGMO_PROBLEMS_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/earthMarsTransfer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/propagationTargeting.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/multipleGravityAssist.cpp"
-#  "${CMAKE_CURRENT_SOURCE_DIR}/lowThrustTrajectory.cpp"
 )
 
 add_library(pagmo2_library_example_problems STATIC ${MY_PAGMO_PROBLEMS_SOURCES} ${MY_PAGMO_PROBLEMS_HEADERS})

@@ -185,16 +185,16 @@ setup_executable_target(application_PagmoEarthMarsTransferExample "${SRCROOT}")
 target_link_libraries(application_PagmoEarthMarsTransferExample pagmo pagmo2_library_example_problems ${TUDAT_PROPAGATION_LIBRARIES}
      pthread ${Boost_LIBRARIES} )
 
-add_executable(application_PagmoLowThrustTrajectoryExample "${SRCROOT}/lowThrustTrajectoryExample.cpp")
-setup_executable_target(application_PagmoLowThrustTrajectoryExample "${SRCROOT}")
-target_link_libraries(application_PagmoLowThrustTrajectoryExample pagmo pagmo2_library_example_problems tudat_shape_based_methods tudat_low_thrust_direct_methods
+add_executable(application_PagmoHodographicShapingTrajectoryExample "${SRCROOT}/hodographicShapingTrajectoryExample.cpp")
+setup_executable_target(application_PagmoHodographicShapingTrajectoryExample "${SRCROOT}")
+target_link_libraries(application_PagmoHodographicShapingTrajectoryExample pagmo pagmo2_library_example_problems tudat_shape_based_methods tudat_low_thrust_trajectories
     tudat_numerical_quadrature ${TUDAT_PROPAGATION_LIBRARIES}
   pthread ${Boost_LIBRARIES} )
 
 # Add low-thrust trajectory design example
-add_executable(application_PagmoSimsFlanaganTrajectoryExample "${SRCROOT}/SimsFlanaganTrajectoryExample.cpp")
+add_executable(application_PagmoSimsFlanaganTrajectoryExample "${SRCROOT}/simsFlanaganTrajectoryExample.cpp")
 setup_executable_target(application_PagmoSimsFlanaganTrajectoryExample "${SRCROOT}")
-target_link_libraries(application_PagmoSimsFlanaganTrajectoryExample pagmo pagmo2_library_example_problems tudat_low_thrust_direct_methods tudat_shape_based_methods
+target_link_libraries(application_PagmoSimsFlanaganTrajectoryExample pagmo pagmo2_library_example_problems tudat_low_thrust_trajectories tudat_shape_based_methods
     tudat_numerical_quadrature ${TUDAT_PROPAGATION_LIBRARIES} pthread ${Boost_LIBRARIES} )
 
  add_executable(application_PagmoMgaTransferExample "${SRCROOT}/mgaTransferExample.cpp")

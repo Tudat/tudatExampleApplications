@@ -15,14 +15,18 @@
 #include "Problems/applicationOutput.h"
 #include "Problems/getAlgorithm.h"
 #include "Problems/saveOptimizationResults.h"
-
-#include "Tudat/Astrodynamics/LowThrustDirectMethods/lowThrustOptimisationSetup.h"
-#include "Tudat/Astrodynamics/ShapeBasedMethods/hodographicShaping.h"
-#include "Tudat/Astrodynamics/ShapeBasedMethods/createBaseFunctionHodographicShaping.h"
-#include "Tudat/Astrodynamics/LowThrustDirectMethods/lowThrustLegSettings.h"
+#include "Tudat/SimulationSetup/tudatSimulationHeader.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/lowThrustOptimisationSetup.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/hodographicShaping.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/sphericalShaping.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/createBaseFunctionHodographicShaping.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/lowThrustLegSettings.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/lowThrustLeg.h"
 #include "Tudat/Astrodynamics/Ephemerides/approximatePlanetPositions.h"
-#include "Problems/lowThrustTrajectory.h"
-#include "Problems/getRecommendedBaseFunctionsHodographicShaping.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/hodographicShapingOptimisationSetup.h"
+#include "Tudat/Astrodynamics/LowThrustTrajectories/ShapeBasedMethods/getRecommendedBaseFunctionsHodographicShaping.h"
+
+using namespace tudat;
 
 //! Execute  main
 int main( )
@@ -128,7 +132,7 @@ int main( )
     // Initialize free coefficients vector for axial velocity function.
     Eigen::VectorXd freeCoefficientsAxialVelocityFunction = Eigen::VectorXd::Zero( 0 );
 
-    std::map< int, Eigen::Vector4d > hodographicShapingResults;
+    std::map< int, Eigen::Vector4d > hodographicShapingResultsLowOrder;
 
     int numberCases = 0;
 
@@ -139,11 +143,11 @@ int main( )
 
         // Get recommended base functions for the radial velocity composite function.
         std::vector< std::shared_ptr< shape_based_methods::BaseFunctionHodographicShaping > > radialVelocityFunctionComponents;
-        getRecommendedRadialVelocityBaseFunctions( radialVelocityFunctionComponents, freeCoefficientsRadialVelocityFunction, currentTOF );
+        shape_based_methods::getRecommendedRadialVelocityBaseFunctions( radialVelocityFunctionComponents, freeCoefficientsRadialVelocityFunction, currentTOF );
 
         // Get recommended base functions for the normal velocity composite function.
         std::vector< std::shared_ptr< shape_based_methods::BaseFunctionHodographicShaping > > normalVelocityFunctionComponents;
-        getRecommendedNormalAxialBaseFunctions( normalVelocityFunctionComponents, freeCoefficientsNormalVelocityFunction, currentTOF );
+        shape_based_methods::getRecommendedNormalAxialBaseFunctions( normalVelocityFunctionComponents, freeCoefficientsNormalVelocityFunction, currentTOF );
 
         // for-loop parsing the departure date values, ranging from 7304 MJD to 10225 MJD (with 401 steps)
         for ( int j = 0 ; j <= 400; j++ )
@@ -164,7 +168,7 @@ int main( )
 
                 // Get recommended base functions for the axial velocity composite function.
                 std::vector< std::shared_ptr< shape_based_methods::BaseFunctionHodographicShaping > > axialVelocityFunctionComponents;
-                getRecommendedAxialVelocityBaseFunctions( axialVelocityFunctionComponents, freeCoefficientsAxialVelocityFunction, currentTOF,
+                shape_based_methods::getRecommendedAxialVelocityBaseFunctions( axialVelocityFunctionComponents, freeCoefficientsAxialVelocityFunction, currentTOF,
                                                           currentNumberOfRevolutions );
 
                 // Create hodographically shaped trajectory.
@@ -193,14 +197,14 @@ int main( )
             Eigen::Vector4d outputVector = ( Eigen::Vector4d( ) << currentTOF / physical_constants::JULIAN_DAY,
                                              currentDepartureDate / physical_constants::JULIAN_DAY, currentBestDeltaV, bestNumberOfRevolutions ).finished( );
             numberCases++;
-            hodographicShapingResults[ numberCases ] = outputVector;
+            hodographicShapingResultsLowOrder[ numberCases ] = outputVector;
 
         }
     }
 
-    input_output::writeDataMapToTextFile( hodographicShapingResults,
-                                          "hodographicShapingGridSearch.dat",
-                                          "C:/tudatBundle/tudatExampleApplications/libraryExamples/PaGMOEx/SimulationOutput/",
+    input_output::writeDataMapToTextFile( hodographicShapingResultsLowOrder,
+                                          "hodographicShapingLowOrder.dat",
+                                          tudat_pagmo_applications::getOutputPath( ),
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
@@ -224,7 +228,7 @@ int main( )
     int numberOfRevolutions = 1;
 
     std::map< int, Eigen::Vector4d > hodographicShapingResultsHigherOrder;
-    std::map< int, Eigen::Vector4d > hodographicShapingResultsLowResultOneRevolution;
+    std::map< int, Eigen::Vector4d > hodographicShapingResultsLowOrderOneRevolution;
 
     // for-loop parsing the time-of-flight values, ranging from 500 to 900 days, with a time-step of 20 days.
     for ( int i = 0 ; i <= ( 900.0 * physical_constants::JULIAN_DAY - timeOfFlightBounds.first ) / ( 20 * physical_constants::JULIAN_DAY ) ; i++  )
@@ -243,7 +247,7 @@ int main( )
         // Get recommended base functions for the radial velocity composite function, and add two additional base functions
         // (introducing two degrees of freedom in the trajectory design problem).
         std::vector< std::shared_ptr< shape_based_methods::BaseFunctionHodographicShaping > > radialVelocityFunctionComponents;
-        getRecommendedRadialVelocityBaseFunctions( radialVelocityFunctionComponents, freeCoefficientsRadialVelocityFunction, currentTOF );
+        shape_based_methods::getRecommendedRadialVelocityBaseFunctions( radialVelocityFunctionComponents, freeCoefficientsRadialVelocityFunction, currentTOF );
         radialVelocityFunctionComponents.push_back(
                     createBaseFunctionHodographicShaping( shape_based_methods::scaledPowerSine, fourthRadialVelocityBaseFunctionSettings ) );
         radialVelocityFunctionComponents.push_back(
@@ -251,7 +255,7 @@ int main( )
 
         // Get recommended base functions for the normal velocity composite function.
         std::vector< std::shared_ptr< shape_based_methods::BaseFunctionHodographicShaping > > normalVelocityFunctionComponents;
-        getRecommendedNormalAxialBaseFunctions( normalVelocityFunctionComponents, freeCoefficientsNormalVelocityFunction, currentTOF );
+        shape_based_methods::getRecommendedNormalAxialBaseFunctions( normalVelocityFunctionComponents, freeCoefficientsNormalVelocityFunction, currentTOF );
 
 
         // for-loop parsing departure dates ranging from 7304 MJD to 7379 MJD (with a time-step of 15 days).
@@ -267,15 +271,15 @@ int main( )
 
             // Get recommended base functions for the axial velocity composite function.
             std::vector< std::shared_ptr< shape_based_methods::BaseFunctionHodographicShaping > > axialVelocityFunctionComponents;
-            getRecommendedAxialVelocityBaseFunctions( axialVelocityFunctionComponents, freeCoefficientsAxialVelocityFunction,
+            shape_based_methods::getRecommendedAxialVelocityBaseFunctions( axialVelocityFunctionComponents, freeCoefficientsAxialVelocityFunction,
                                                       currentTOF, numberOfRevolutions );
 
 
             // Create hodographic shaping optimisation problem.
-            problem prob{ HodographicShapingOptimisationProblem( cartesianStateAtDeparture, cartesianStateAtArrival, currentTOF, numberOfRevolutions,
-                                                                 bodyMap, "Borzi", "Sun", radialVelocityFunctionComponents,
-                                                                 normalVelocityFunctionComponents,
-                                                                 axialVelocityFunctionComponents, bounds ) };
+            problem prob{ shape_based_methods::HodographicShapingOptimisationProblem(
+                            cartesianStateAtDeparture, cartesianStateAtArrival, currentTOF, numberOfRevolutions,
+                            bodyMap, "Borzi", "Sun", radialVelocityFunctionComponents,
+                            normalVelocityFunctionComponents, axialVelocityFunctionComponents, bounds ) };
 
             // Perform optimisation.
             algorithm algo{ pagmo::sga( ) };
@@ -319,24 +323,24 @@ int main( )
             // Save low-order shaping solution.
             outputVector = ( Eigen::Vector4d( ) << currentTOF / physical_constants::JULIAN_DAY,
                           currentDepartureDate / physical_constants::JULIAN_DAY, hodographicShapingLowOrderOneRevolution.computeDeltaV( ), 1 ).finished( );
-            hodographicShapingResultsLowResultOneRevolution[ numberCases ] = outputVector;
+            hodographicShapingResultsLowOrderOneRevolution[ numberCases ] = outputVector;
 
             numberCases++;
 
         }
     }
 
-    input_output::writeDataMapToTextFile( hodographicShapingResultsLowResultOneRevolution,
-                                          "hodographicShapingOneRevolution.dat",
-                                          "C:/tudatBundle/tudatExampleApplications/libraryExamples/PaGMOEx/SimulationOutput/",
+    input_output::writeDataMapToTextFile( hodographicShapingResultsLowOrderOneRevolution,
+                                          "hodographicShapingLowOrderOneRevolution.dat",
+                                          tudat_pagmo_applications::getOutputPath( ),
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
                                           "," );
 
     input_output::writeDataMapToTextFile( hodographicShapingResultsHigherOrder,
-                                          "hodographicShapingResultsHigherOrder.dat",
-                                          "C:/tudatBundle/tudatExampleApplications/libraryExamples/PaGMOEx/SimulationOutput/",
+                                          "hodographicShapingHigherOrder.dat",
+                                          tudat_pagmo_applications::getOutputPath( ),
                                           "",
                                           std::numeric_limits< double >::digits10,
                                           std::numeric_limits< double >::digits10,
