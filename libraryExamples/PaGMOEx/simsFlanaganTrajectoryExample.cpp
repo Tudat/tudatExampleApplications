@@ -227,7 +227,7 @@ int main( )
     std::map< double, Eigen::Vector3d > initialGuessThrustAccelerationProfile;
     std::map< double, Eigen::Vector1d > initialGuessMassProfile;
 
-    for ( int i = 0 ; i < epochsToSaveResults.size( ) ; i++ )
+    for ( unsigned int i = 0 ; i < epochsToSaveResults.size( ) ; i++ )
     {
         double currentTime = epochsToSaveResults[ i ];
         initialGuessThrustProfile[ currentTime ] =  initialGuessThrustFromShaping( currentTime );

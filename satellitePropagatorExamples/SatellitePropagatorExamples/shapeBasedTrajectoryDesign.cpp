@@ -49,7 +49,6 @@ int main( )
     // Ephemeris departure body.
     ephemerides::EphemerisPointer pointerToDepartureBodyEphemeris = std::make_shared< ephemerides::ApproximatePlanetPositions>(
                 ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::earthMoonBarycenter );
-
     // Ephemeris arrival body.
     ephemerides::EphemerisPointer pointerToArrivalBodyEphemeris = std::make_shared< ephemerides::ApproximatePlanetPositions >(
                 ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::mars );
