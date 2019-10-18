@@ -91,6 +91,7 @@ int main( )
     simulation_setup::NamedBodyMap bodyMap = createBodies( bodySettings );
 
     bodyMap[ "Borzi" ] = std::make_shared< simulation_setup::Body >( );
+    bodyMap.at( "Borzi" )->setSuppressDependentOrientationCalculatorWarning( true );
     bodyMap.at( "Borzi" )->setEphemeris( std::make_shared< ephemerides::TabulatedCartesianEphemeris< > >(
                                                          std::shared_ptr< interpolators::OneDimensionalInterpolator
                                                          < double, Eigen::Vector6d > >( ), frameOrigin, frameOrientation ) );

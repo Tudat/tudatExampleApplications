@@ -52,9 +52,7 @@ int main( )
     const unsigned int numberOfSatellitesPerPlane = numberOfSatellites / numberOfPlanes;
 
     // Load Spice kernels.
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de-403-masses.tpc" );
-    spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "de421.bsp" );
+    spice_interface::loadStandardSpiceKernels( );
 
     // Define environment settings
     std::map< std::string, std::shared_ptr< BodySettings > > bodySettings =
