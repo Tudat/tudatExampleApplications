@@ -145,135 +145,130 @@ int main( )
     bounds[ 0 ][ 6 ] = -5000;
     bounds[ 1 ][ 6 ] = 5000.0;
 
-    for( int revolutions = 2; revolutions < 3; revolutions++ )
+    for( int useMultiObjective = 0; useMultiObjective < 2; useMultiObjective++ )
     {
-        // Create object to compute the problem fitness
-        problem prob{ HodographicShapingOptimisationProblem(
-                        departureStateFunction, arrivalStateFunction, spice_interface::getBodyGravitationalParameter( "Sun" ),
-                        revolutions, std::bind( &getShapingBasisFunctions, std::placeholders::_1, revolutions ), bounds ) };
-
-        //sade, gaco, sga, de
-        algorithm algo{simulated_annealing( )};
-
-        // Create an island with 1000 individuals
-        island isl{algo, prob, 1000 };
-
-        // Evolve for 512 generations
-        for( int i = 0 ; i < 250; i++ )
+        for( int revolutions = 2; revolutions < 3; revolutions++ )
         {
+            // Create object to compute the problem fitness
+            problem prob{ HodographicShapingOptimisationProblem(
+                            departureStateFunction, arrivalStateFunction, spice_interface::getBodyGravitationalParameter( "Sun" ),
+                            revolutions, std::bind( &getShapingBasisFunctions, std::placeholders::_1, revolutions ), bounds,
+                            useMultiObjective, 2000.0, 3000.0 ) };
 
-            isl.evolve( );
-            while( isl.status( ) != pagmo::evolve_status::idle &&
-                   isl.status( ) != pagmo::evolve_status::idle_error )
+            //sade, gaco, sga, de
+            algorithm algo;
+            if( !useMultiObjective )
             {
-                isl.wait( );
+                algo = algorithm{ simulated_annealing( ) };
+            }
+            else
+            {
+                algo = algorithm{ nsga2( ) };
             }
 
-            if( i % 50 == 0 )
+            // Create an island with 1000 individuals
+            island isl{algo, prob, 2000 };
+
+            // Evolve for 512 generations
+            for( int i = 0 ; i < 101; i++ )
             {
-                std::cout<<"Iteration: "<<" "<<i<<"; Best Delta V: "<<isl.get_population( ).champion_f( ).at( 0 )<<std::endl;
-                std::cout<<isl.get_population( ).champion_x( ).at( 0 ) / physical_constants::JULIAN_DAY <<" "<<
-                           isl.get_population( ).champion_x( ).at( 1 ) / physical_constants::JULIAN_DAY <<" "<<
-                           isl.get_population( ).champion_x( ).at( 2 )<<" "<<
-                           isl.get_population( ).champion_x( ).at( 3 )<<" "<<
-                           isl.get_population( ).champion_x( ).at( 4 )<<" "<<
-                           isl.get_population( ).champion_x( ).at( 5 )<<" "<<
-                           isl.get_population( ).champion_x( ).at( 6 )<<std::endl<<std::endl;
+                isl.evolve( );
+                while( isl.status( ) != pagmo::evolve_status::idle &&
+                       isl.status( ) != pagmo::evolve_status::idle_error )
+                {
+                    isl.wait( );
+                }
+
+                if( i % 25 == 0 )
+                {
+                    if( !useMultiObjective )
+                    {
+                        std::cout<<"Iteration: "<<" "<<i<<"; Best Delta V: "<<isl.get_population( ).champion_f( ).at( 0 )<<std::endl;
+
+                        printPopulationToFile( isl.get_population( ).get_x( ), "hodograph_single_objective_" + std::to_string( i / 25 ), false );
+                        printPopulationToFile( isl.get_population( ).get_f( ), "hodograph_single_objective_" + std::to_string( i / 25 ), true );
+                    }
+                    else
+                    {
+                        std::cout<<"Iteration: "<<" "<<i<<std::endl;
+
+                        printPopulationToFile( isl.get_population( ).get_x( ), "hodograph_multi_objective_" + std::to_string( i / 25 ), false );
+                        printPopulationToFile( isl.get_population( ).get_f( ), "hodograph_multi_objective_" + std::to_string( i / 25 ), true );
+                    }
+                }
+
             }
 
+
+            if( !useMultiObjective )
+            {
+                std::cout<<"Final best Delta V: "<<isl.get_population( ).champion_f( ).at( 0 )<<std::endl;
+
+                std::vector< double > bestPopulation = isl.get_population( ).champion_x( );
+
+                Eigen::VectorXd radialFreeParameters = Eigen::VectorXd::Zero( 2 );
+                Eigen::VectorXd normalFreeParameters = Eigen::VectorXd::Zero( 0 );
+                Eigen::VectorXd axialFreeParameters = Eigen::VectorXd::Zero( 3 );
+
+                radialFreeParameters << bestPopulation.at( 2 ), bestPopulation.at( 3 );
+                axialFreeParameters << bestPopulation.at( 4 ), bestPopulation.at( 5 ), bestPopulation.at( 6 );
+
+                double timeOfFlight = bestPopulation.at( 1 );
+                double derpartureTime = bestPopulation.at( 0 );
+                double arrivalTime = derpartureTime + timeOfFlight;
+
+                double initialMass = 2000.0;
+                double specificImpulse = 3000.0;
+
+
+                std::vector< std::vector< std::shared_ptr< BaseFunctionHodographicShaping > > > shapingFunctions = getShapingBasisFunctions(
+                            timeOfFlight, 2 );
+
+                std::shared_ptr< HodographicShaping > hodographicShaping =
+                        std::make_shared< HodographicShaping >(
+                            departureStateFunction( derpartureTime ), arrivalStateFunction( arrivalTime ), timeOfFlight,
+                            spice_interface::getBodyGravitationalParameter( "Sun" ), 2,
+                            shapingFunctions.at( 0 ), shapingFunctions.at( 1 ), shapingFunctions.at( 2 ),
+                            radialFreeParameters, normalFreeParameters, axialFreeParameters, initialMass );
+
+                // Save results
+                int numberOfSteps = 1000;
+                double stepSize = timeOfFlight / static_cast< double >( numberOfSteps );
+                std::shared_ptr< numerical_integrators::IntegratorSettings< double > > integratorSettings =
+                        std::make_shared< numerical_integrators::IntegratorSettings< double > > ( numerical_integrators::rungeKutta4, 0.0, stepSize );
+
+                std::vector< double > epochsToSaveResults;
+                for ( int i = 0 ; i <= numberOfSteps ; i++ )
+                {
+                    epochsToSaveResults.push_back( i * stepSize );
+                }
+
+                std::map< double, Eigen::Vector6d > hodographicShapingTrajectory;
+                std::map< double, Eigen::VectorXd > hodographicShapingMassProfile;
+                std::map< double, Eigen::VectorXd > hodographicShapingThrustProfile;
+                std::map< double, Eigen::VectorXd > hodographicShapingThrustAcceleration;
+
+                hodographicShaping->getTrajectory(
+                            epochsToSaveResults, hodographicShapingTrajectory );
+                hodographicShaping->getMassProfile(
+                            epochsToSaveResults, hodographicShapingMassProfile, [ = ]( const double ){ return specificImpulse; }, integratorSettings );
+                hodographicShaping->getThrustForceProfile(
+                            epochsToSaveResults, hodographicShapingThrustProfile, [ = ]( const double ){ return specificImpulse; }, integratorSettings );
+                hodographicShaping->getCylindricalThrustAccelerationProfile(
+                            epochsToSaveResults, hodographicShapingThrustAcceleration );
+
+                input_output::writeDataMapToTextFile(
+                            hodographicShapingTrajectory, "hodographicShapingOptimalTrajectory.dat", tudat_pagmo_applications::getOutputPath( ) );
+
+                input_output::writeDataMapToTextFile(
+                            hodographicShapingMassProfile, "hodographicShapingOptimalMassProfile.dat", tudat_pagmo_applications::getOutputPath( ) );
+
+                input_output::writeDataMapToTextFile(
+                            hodographicShapingThrustProfile, "hodographicShapingOptimalThrustProfile.dat", tudat_pagmo_applications::getOutputPath( ) );
+
+                input_output::writeDataMapToTextFile(
+                            hodographicShapingThrustAcceleration, "hodographicShapingOptimalThrustAcceleration.dat", tudat_pagmo_applications::getOutputPath( ) );
+            }
         }
-
-        std::cout<<"Best Delta V"<<isl.get_population( ).champion_f( ).at( 0 )<<std::endl;
-
-        std::vector< double > bestPopulation = isl.get_population( ).champion_x( );
-
-        Eigen::VectorXd radialFreeParameters = Eigen::VectorXd::Zero( 2 );
-        Eigen::VectorXd normalFreeParameters = Eigen::VectorXd::Zero( 0 );
-        Eigen::VectorXd axialFreeParameters = Eigen::VectorXd::Zero( 3 );
-
-        radialFreeParameters << bestPopulation.at( 2 ), bestPopulation.at( 3 );
-        axialFreeParameters << bestPopulation.at( 4 ), bestPopulation.at( 5 ), bestPopulation.at( 6 );
-
-        double timeOfFlight = bestPopulation.at( 1 );
-        double derpartureTime = bestPopulation.at( 0 );
-        double arrivalTime = derpartureTime + timeOfFlight;
-
-        double initialMass = 2000.0;
-        double specificImpulse = 3000.0;
-
-
-        std::vector< std::vector< std::shared_ptr< BaseFunctionHodographicShaping > > > shapingFunctions = getShapingBasisFunctions(
-                    timeOfFlight, 2 );
-
-        std::shared_ptr< HodographicShaping > hodographicShaping =
-                std::make_shared< HodographicShaping >(
-                    departureStateFunction( derpartureTime ), arrivalStateFunction( arrivalTime ), timeOfFlight,
-                    spice_interface::getBodyGravitationalParameter( "Sun" ), 2,
-                    shapingFunctions.at( 0 ), shapingFunctions.at( 1 ), shapingFunctions.at( 2 ),
-                    radialFreeParameters, normalFreeParameters, axialFreeParameters, initialMass );
-
-        // Save results
-        int numberOfSteps = 1000;
-        double stepSize = timeOfFlight / static_cast< double >( numberOfSteps );
-        std::shared_ptr< numerical_integrators::IntegratorSettings< double > > integratorSettings =
-                std::make_shared< numerical_integrators::IntegratorSettings< double > > ( numerical_integrators::rungeKutta4, 0.0, stepSize );
-
-        std::vector< double > epochsToSaveResults;
-        for ( int i = 0 ; i <= numberOfSteps ; i++ )
-        {
-            epochsToSaveResults.push_back( i * stepSize );
-        }
-
-        std::map< double, Eigen::Vector6d > hodographicShapingTrajectory;
-        std::map< double, Eigen::VectorXd > hodographicShapingMassProfile;
-        std::map< double, Eigen::VectorXd > hodographicShapingThrustProfile;
-        std::map< double, Eigen::VectorXd > hodographicShapingThrustAcceleration;
-
-        hodographicShaping->getTrajectory(
-                    epochsToSaveResults, hodographicShapingTrajectory );
-        hodographicShaping->getMassProfile(
-                    epochsToSaveResults, hodographicShapingMassProfile, [ = ]( const double ){ return specificImpulse; }, integratorSettings );
-        hodographicShaping->getThrustForceProfile(
-                    epochsToSaveResults, hodographicShapingThrustProfile, [ = ]( const double ){ return specificImpulse; }, integratorSettings );
-        hodographicShaping->getCylindricalThrustAccelerationProfile(
-                    epochsToSaveResults, hodographicShapingThrustAcceleration );
-
-        input_output::writeDataMapToTextFile( hodographicShapingTrajectory,
-                                              "hodographicShapingTrajectory.dat",
-                                              tudat_pagmo_applications::getOutputPath( ),
-                                              "",
-                                              std::numeric_limits< double >::digits10,
-                                              std::numeric_limits< double >::digits10,
-                                              "," );
-
-        input_output::writeDataMapToTextFile( hodographicShapingMassProfile,
-                                              "hodographicShapingMassProfile.dat",
-                                              tudat_pagmo_applications::getOutputPath( ),
-                                              "",
-                                              std::numeric_limits< double >::digits10,
-                                              std::numeric_limits< double >::digits10,
-                                              "," );
-
-        input_output::writeDataMapToTextFile( hodographicShapingThrustProfile,
-                                              "hodographicShapingThrustProfile.dat",
-                                              tudat_pagmo_applications::getOutputPath( ),
-                                              "",
-                                              std::numeric_limits< double >::digits10,
-                                              std::numeric_limits< double >::digits10,
-                                              "," );
-
-        input_output::writeDataMapToTextFile( hodographicShapingThrustAcceleration,
-                                              "hodographicShapingThrustAcceleration.dat",
-                                              tudat_pagmo_applications::getOutputPath( ),
-                                              "",
-                                              std::numeric_limits< double >::digits10,
-                                              std::numeric_limits< double >::digits10,
-                                              "," );
-
-
-
-
     }
-
-
 }

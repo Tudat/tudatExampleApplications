@@ -4,10 +4,10 @@ close all
 clear all
 
 % Load hodographic shaping results (trajectory, mass, thrust, and thrust acceleration profiles)
-hodographicShapingTrajectory = load('../SimulationOutput/hodographicShapingTrajectory.dat');
-hodographicShapingMassProfile = load('../SimulationOutput/hodographicShapingMassProfile.dat');
-hodographicShapingThrustProfile = load('../SimulationOutput/hodographicShapingThrustProfile.dat');
-hodographicShapingThrustAccelerationProfile = load('../SimulationOutput/hodographicShapingThrustAcceleration.dat');
+hodographicShapingTrajectory = load('../SimulationOutput/hodographicShapingOptimalTrajectory.dat');
+hodographicShapingMassProfile = load('../SimulationOutput/hodographicShapingOptimalMassProfile.dat');
+hodographicShapingThrustProfile = load('../SimulationOutput/hodographicShapingOptimalThrustProfile.dat');
+hodographicShapingThrustAccelerationProfile = load('../SimulationOutput/hodographicShapingOptimalThrustAcceleration.dat');
 
 figure
 
@@ -24,6 +24,7 @@ for i=1:3
     
 end
 
+
 subplot(1,3,2)
 plot(sqrt(sum(hodographicShapingThrustProfile(:,2:4).^2')))
 grid on
@@ -31,10 +32,11 @@ grid on
 subplot(1,3,3)
 plot(hodographicShapingMassProfile(:,1),hodographicShapingMassProfile(:,2))
 grid on
-
 %%
-for i=1:5
-    hodographicMultiObjectiveFitness = load(strcat('../SimulationOutput/fitness_hodographic_multi',num2str(i),'.dat'));
+figure
+
+for i=2:4
+    hodographicMultiObjectiveFitness = load(strcat('../SimulationOutput/fitness_hodograph_multi_objective_',num2str(i),'.dat'));
     
     
     scatter(hodographicMultiObjectiveFitness(:,1)/1000,hodographicMultiObjectiveFitness(:,2))
