@@ -34,8 +34,7 @@ int main( )
     //Set seed for reproducible results
     pagmo::random_device::set_seed( 123 );
 
-    double julianDateAtDeparture = 8174.5 * physical_constants::JULIAN_DAY;
-    double  timeOfFlight = 580.0 * physical_constants::JULIAN_DAY;
+    tudat::spice_interface::loadStandardSpiceKernels( );
 
     // Ephemeris departure body.
     ephemerides::EphemerisPointer pointerToDepartureBodyEphemeris = std::make_shared< ephemerides::ApproximatePlanetPositions>(
@@ -45,74 +44,11 @@ int main( )
     ephemerides::EphemerisPointer pointerToArrivalBodyEphemeris = std::make_shared< ephemerides::ApproximatePlanetPositions >(
                 ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::mars );
 
-    // Retrieve cartesian state at departure and arrival.
-    Eigen::Vector6d cartesianStateAtDeparture = pointerToDepartureBodyEphemeris->getCartesianState( julianDateAtDeparture );
-    Eigen::Vector6d cartesianStateAtArrival = pointerToArrivalBodyEphemeris->getCartesianState( julianDateAtDeparture + timeOfFlight );
-
     std::function< Eigen::Vector6d( const double ) > departureStateFunction = [ = ]( const double currentTime )
-    {
-        return pointerToDepartureBodyEphemeris->getCartesianState( currentTime );
-    };
+    { return pointerToDepartureBodyEphemeris->getCartesianState( currentTime ); };
 
     std::function< Eigen::Vector6d( const double ) > arrivalStateFunction = [ = ]( const double currentTime )
-    {
-        return pointerToArrivalBodyEphemeris->getCartesianState( currentTime );
-    };
-
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////         SET UP DYNAMICAL ENVIRONMENT                    /////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    spice_interface::loadStandardSpiceKernels( );
-
-    // Create central, departure and arrival bodies.
-    std::vector< std::string > bodiesToCreate;
-    bodiesToCreate.push_back( "Sun" );
-
-    std::map< std::string, std::shared_ptr< simulation_setup::BodySettings > > bodySettings =
-            simulation_setup::getDefaultBodySettings( bodiesToCreate );
-
-    std::string frameOrigin = "SSB";
-    std::string frameOrientation = "ECLIPJ2000";
-
-
-    // Define central body ephemeris settings.
-    bodySettings[ "Sun" ]->ephemerisSettings = std::make_shared< simulation_setup::ConstantEphemerisSettings >(
-                ( Eigen::Vector6d( ) << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ).finished( ), frameOrigin, frameOrientation );
-
-    bodySettings[ "Sun" ]->ephemerisSettings->resetFrameOrientation( frameOrientation );
-    bodySettings[ "Sun" ]->rotationModelSettings->resetOriginalFrame( frameOrientation );
-
-
-    // Create body map.
-    simulation_setup::NamedBodyMap bodyMap = createBodies( bodySettings );
-
-    bodyMap[ "Borzi" ] = std::make_shared< simulation_setup::Body >( );
-    bodyMap.at( "Borzi" )->setEphemeris( std::make_shared< ephemerides::TabulatedCartesianEphemeris< > >(
-                                                         std::shared_ptr< interpolators::OneDimensionalInterpolator
-                                                         < double, Eigen::Vector6d > >( ), frameOrigin, frameOrientation ) );
-
-
-    setGlobalFrameBodyEphemerides( bodyMap, frameOrigin, frameOrientation );
-
-
-    // Define body to propagate and central body.
-    std::vector< std::string > bodiesToPropagate;
-    bodiesToPropagate.push_back( "Borzi" );
-    std::vector< std::string > centralBodies;
-    centralBodies.push_back( "Sun" );
-
-    // Set vehicle mass.
-    bodyMap[ "Borzi" ]->setConstantBodyMass( 2000.0 );
-
-
-    // Define specific impulse function.
-    std::function< double( const double ) > specificImpulseFunction = [ = ]( const double currentTime )
-    {
-        return 3000.0;
-    };
+    { return pointerToArrivalBodyEphemeris->getCartesianState( currentTime ); };
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,16 +56,14 @@ int main( )
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Define bounds for departure date and time-of-flight.
-    std::pair< double, double > departureTimeBounds = std::make_pair( 7304.5 * physical_constants::JULIAN_DAY, 10225.5 * physical_constants::JULIAN_DAY  );
-    std::pair< double, double > timeOfFlightBounds = std::make_pair( 500.0 * physical_constants::JULIAN_DAY, 2000.0 * physical_constants::JULIAN_DAY );
+    std::pair< double, double > departureTimeBounds =
+            std::make_pair( 7304.5 * physical_constants::JULIAN_DAY, 10225.5 * physical_constants::JULIAN_DAY  );
+    std::pair< double, double > timeOfFlightBounds =
+            std::make_pair( 500.0 * physical_constants::JULIAN_DAY, 2000.0 * physical_constants::JULIAN_DAY );
 
-    // Initialize free coefficients vector for radial velocity function.
+    // Initialize free coefficients vectors
     Eigen::VectorXd freeCoefficientsRadialVelocityFunction = Eigen::VectorXd::Zero( 0 );
-
-    // Initialize free coefficients vector for normal velocity function.
     Eigen::VectorXd freeCoefficientsNormalVelocityFunction = Eigen::VectorXd::Zero( 0 );
-
-    // Initialize free coefficients vector for axial velocity function.
     Eigen::VectorXd freeCoefficientsAxialVelocityFunction = Eigen::VectorXd::Zero( 0 );
 
     std::map< int, Eigen::Vector4d > hodographicShapingResultsLowOrder;
@@ -143,11 +77,13 @@ int main( )
 
         // Get recommended base functions for the radial velocity composite function.
         std::vector< std::shared_ptr< shape_based_methods::BaseFunctionHodographicShaping > > radialVelocityFunctionComponents;
-        shape_based_methods::getRecommendedRadialVelocityBaseFunctions( radialVelocityFunctionComponents, freeCoefficientsRadialVelocityFunction, currentTOF );
+        shape_based_methods::getRecommendedRadialVelocityBaseFunctions(
+                    radialVelocityFunctionComponents, freeCoefficientsRadialVelocityFunction, currentTOF );
 
         // Get recommended base functions for the normal velocity composite function.
         std::vector< std::shared_ptr< shape_based_methods::BaseFunctionHodographicShaping > > normalVelocityFunctionComponents;
-        shape_based_methods::getRecommendedNormalAxialBaseFunctions( normalVelocityFunctionComponents, freeCoefficientsNormalVelocityFunction, currentTOF );
+        shape_based_methods::getRecommendedNormalAxialBaseFunctions(
+                    normalVelocityFunctionComponents, freeCoefficientsNormalVelocityFunction, currentTOF );
 
         // for-loop parsing the departure date values, ranging from 7304 MJD to 10225 MJD (with 401 steps)
         for ( int j = 0 ; j <= 400; j++ )
@@ -155,9 +91,8 @@ int main( )
             double currentDepartureDate = departureTimeBounds.first + j * ( departureTimeBounds.second - departureTimeBounds.first ) / 400.0;
 
             // Compute states at departure and arrival.
-            cartesianStateAtDeparture = pointerToDepartureBodyEphemeris->getCartesianState( currentDepartureDate );
-            cartesianStateAtArrival = pointerToArrivalBodyEphemeris->getCartesianState( currentDepartureDate + currentTOF );
-
+            Eigen::Vector6d cartesianStateAtDeparture = pointerToDepartureBodyEphemeris->getCartesianState( currentDepartureDate );
+            Eigen::Vector6d cartesianStateAtArrival = pointerToArrivalBodyEphemeris->getCartesianState( currentDepartureDate + currentTOF );
 
             int bestNumberOfRevolutions;
             double currentBestDeltaV;
@@ -165,17 +100,19 @@ int main( )
             // Parse shaped trajectories with numbers of revolutions between 0 and 5.
             for ( int currentNumberOfRevolutions = 0 ; currentNumberOfRevolutions <= 5 ; currentNumberOfRevolutions++ )
             {
-
                 // Get recommended base functions for the axial velocity composite function.
                 std::vector< std::shared_ptr< shape_based_methods::BaseFunctionHodographicShaping > > axialVelocityFunctionComponents;
-                shape_based_methods::getRecommendedAxialVelocityBaseFunctions( axialVelocityFunctionComponents, freeCoefficientsAxialVelocityFunction, currentTOF,
-                                                          currentNumberOfRevolutions );
+                shape_based_methods::getRecommendedAxialVelocityBaseFunctions(
+                            axialVelocityFunctionComponents, freeCoefficientsAxialVelocityFunction, currentTOF,
+                            currentNumberOfRevolutions );
 
                 // Create hodographically shaped trajectory.
                 tudat::shape_based_methods::HodographicShaping hodographicShaping = shape_based_methods::HodographicShaping(
-                            cartesianStateAtDeparture, cartesianStateAtArrival, currentTOF, currentNumberOfRevolutions, bodyMap, "Borzi", "Sun",
+                            cartesianStateAtDeparture, cartesianStateAtArrival, currentTOF,
+                            spice_interface::getBodyGravitationalParameter( "Sun" ), currentNumberOfRevolutions,
                             radialVelocityFunctionComponents, normalVelocityFunctionComponents, axialVelocityFunctionComponents,
-                            freeCoefficientsRadialVelocityFunction, freeCoefficientsNormalVelocityFunction, freeCoefficientsAxialVelocityFunction );
+                            freeCoefficientsRadialVelocityFunction, freeCoefficientsNormalVelocityFunction,
+                            freeCoefficientsAxialVelocityFunction );
 
                 // Save trajectory with the lowest deltaV.
                 if ( currentNumberOfRevolutions == 0 )
@@ -194,8 +131,9 @@ int main( )
             }
 
             // Save results.
-            Eigen::Vector4d outputVector = ( Eigen::Vector4d( ) << currentTOF / physical_constants::JULIAN_DAY,
-                                             currentDepartureDate / physical_constants::JULIAN_DAY, currentBestDeltaV, bestNumberOfRevolutions ).finished( );
+            Eigen::Vector4d outputVector =
+                    ( Eigen::Vector4d( ) << currentTOF / physical_constants::JULIAN_DAY,
+                      currentDepartureDate / physical_constants::JULIAN_DAY, currentBestDeltaV, bestNumberOfRevolutions ).finished( );
             numberCases++;
             hodographicShapingResultsLowOrder[ numberCases ] = outputVector;
 
@@ -240,9 +178,11 @@ int main( )
 
         // Define settings for the two additional base functions for the radial velocity composite function.
         std::shared_ptr< shape_based_methods::BaseFunctionHodographicShapingSettings > fourthRadialVelocityBaseFunctionSettings =
-                std::make_shared< shape_based_methods::PowerTimesTrigonometricFunctionHodographicShapingSettings >( 1.0, 0.5 * frequency, scaleFactor );
+                std::make_shared< shape_based_methods::PowerTimesTrigonometricFunctionHodographicShapingSettings >(
+                    1.0, 0.5 * frequency, scaleFactor );
         std::shared_ptr< shape_based_methods::BaseFunctionHodographicShapingSettings > fifthRadialVelocityBaseFunctionSettings =
-                std::make_shared< shape_based_methods::PowerTimesTrigonometricFunctionHodographicShapingSettings >( 1.0, 0.5 * frequency, scaleFactor );
+                std::make_shared< shape_based_methods::PowerTimesTrigonometricFunctionHodographicShapingSettings >(
+                    1.0, 0.5 * frequency, scaleFactor );
 
         // Get recommended base functions for the radial velocity composite function, and add two additional base functions
         // (introducing two degrees of freedom in the trajectory design problem).
@@ -265,27 +205,28 @@ int main( )
                     j * 15.0 * physical_constants::JULIAN_DAY;
 
             // Compute states at departure and arrival.
-            cartesianStateAtDeparture = pointerToDepartureBodyEphemeris->getCartesianState( currentDepartureDate );
-            cartesianStateAtArrival = pointerToArrivalBodyEphemeris->getCartesianState( currentDepartureDate + currentTOF );
+            Eigen::Vector6d cartesianStateAtDeparture = pointerToDepartureBodyEphemeris->getCartesianState( currentDepartureDate );
+            Eigen::Vector6d cartesianStateAtArrival = pointerToArrivalBodyEphemeris->getCartesianState( currentDepartureDate + currentTOF );
 
 
             // Get recommended base functions for the axial velocity composite function.
             std::vector< std::shared_ptr< shape_based_methods::BaseFunctionHodographicShaping > > axialVelocityFunctionComponents;
             shape_based_methods::getRecommendedAxialVelocityBaseFunctions( axialVelocityFunctionComponents, freeCoefficientsAxialVelocityFunction,
-                                                      currentTOF, numberOfRevolutions );
+                                                                           currentTOF, numberOfRevolutions );
 
 
             // Create hodographic shaping optimisation problem.
-            problem prob{ shape_based_methods::HodographicShapingOptimisationProblem(
-                            cartesianStateAtDeparture, cartesianStateAtArrival, currentTOF, numberOfRevolutions,
-                            bodyMap, "Borzi", "Sun", radialVelocityFunctionComponents,
+            problem prob{ shape_based_methods::FixedTimeHodographicShapingOptimisationProblem(
+                            cartesianStateAtDeparture, cartesianStateAtArrival, currentTOF,
+                            spice_interface::getBodyGravitationalParameter( "Sun" ), numberOfRevolutions,
+                            radialVelocityFunctionComponents,
                             normalVelocityFunctionComponents, axialVelocityFunctionComponents, bounds ) };
 
             // Perform optimisation.
             algorithm algo{ pagmo::sga( ) };
 
             // Create an island with 1024 individuals
-            island isl{ algo, prob, 1024 };
+            island isl{ algo, prob, 25 };
 
             // Evolve for 100 generations
             for( int i = 0 ; i < 10; i++ )
@@ -316,13 +257,14 @@ int main( )
 
             // Compute low-order hodographically shaped trajectory (number of revolutions set to 1).
             tudat::shape_based_methods::HodographicShaping hodographicShapingLowOrderOneRevolution = shape_based_methods::HodographicShaping(
-                        cartesianStateAtDeparture, cartesianStateAtArrival, currentTOF, numberOfRevolutions, bodyMap, "Borzi", "Sun",
+                        cartesianStateAtDeparture, cartesianStateAtArrival, currentTOF,
+                        spice_interface::getBodyGravitationalParameter( "Sun" ), numberOfRevolutions,
                         radialVelocityFunctionComponents, normalVelocityFunctionComponents, axialVelocityFunctionComponents,
                         freeCoefficientsRadialVelocityFunction, freeCoefficientsNormalVelocityFunction, freeCoefficientsAxialVelocityFunction );
 
             // Save low-order shaping solution.
             outputVector = ( Eigen::Vector4d( ) << currentTOF / physical_constants::JULIAN_DAY,
-                          currentDepartureDate / physical_constants::JULIAN_DAY, hodographicShapingLowOrderOneRevolution.computeDeltaV( ), 1 ).finished( );
+                             currentDepartureDate / physical_constants::JULIAN_DAY, hodographicShapingLowOrderOneRevolution.computeDeltaV( ), 1 ).finished( );
             hodographicShapingResultsLowOrderOneRevolution[ numberCases ] = outputVector;
 
             numberCases++;

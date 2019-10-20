@@ -16,6 +16,7 @@
 #include "pagmo/algorithms/nsga2.hpp"
 #include "pagmo/algorithms/moead.hpp"
 #include "pagmo/algorithms/ihs.hpp"
+#include "pagmo/algorithms/gaco.hpp"
 
 pagmo::algorithm getMultiObjectiveAlgorithm( const int index )
 {

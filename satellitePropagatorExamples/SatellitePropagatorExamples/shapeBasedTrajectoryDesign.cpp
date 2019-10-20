@@ -28,43 +28,13 @@
 #include "Tudat/SimulationSetup/tudatSimulationHeader.h"
 #include "Tudat/External/SpiceInterface/spiceEphemeris.h"
 
+using namespace tudat;
+using namespace tudat::input_output;
+using namespace tudat::simulation_setup;
+using namespace tudat::shape_based_methods;
 
-int main( )
+NamedBodyMap getBetBodyMap( )
 {
-    using namespace tudat;
-    using namespace tudat::input_output;
-    using namespace tudat::simulation_setup;
-    using namespace tudat::shape_based_methods;
-
-    std::string outputSubFolder = "ShapeBasedTrajectoriesExample/";
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////           DEFINE TRAJECTORY GLOBAL PARAMETERS      ////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    int numberOfRevolutions = 1;
-    double julianDateAtDeparture = 8174.5 * physical_constants::JULIAN_DAY;
-    double  timeOfFlight = 580.0 * physical_constants::JULIAN_DAY;
-
-    // Ephemeris departure body.
-    ephemerides::EphemerisPointer pointerToDepartureBodyEphemeris = std::make_shared< ephemerides::ApproximatePlanetPositions>(
-                ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::earthMoonBarycenter );
-    // Ephemeris arrival body.
-    ephemerides::EphemerisPointer pointerToArrivalBodyEphemeris = std::make_shared< ephemerides::ApproximatePlanetPositions >(
-                ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::mars );
-
-    // Retrieve cartesian state at departure and arrival.
-    Eigen::Vector6d cartesianStateAtDeparture = pointerToDepartureBodyEphemeris->getCartesianState( julianDateAtDeparture );
-    Eigen::Vector6d cartesianStateAtArrival = pointerToArrivalBodyEphemeris->getCartesianState( julianDateAtDeparture + timeOfFlight );
-
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////         DEFINE PERTURBED DYNAMICAL ENVIRONMENT          /////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    spice_interface::loadStandardSpiceKernels( );
-
     // Create central, departure and arrival bodies.
     std::vector< std::string > bodiesToCreate;
     bodiesToCreate.push_back( "Sun" );
@@ -96,25 +66,6 @@ int main( )
                                                          std::shared_ptr< interpolators::OneDimensionalInterpolator
                                                          < double, Eigen::Vector6d > >( ), frameOrigin, frameOrientation ) );
 
-
-    setGlobalFrameBodyEphemerides( bodyMap, frameOrigin, frameOrientation );
-
-    // Define body to propagate and central body.
-    std::vector< std::string > bodiesToPropagate;
-    bodiesToPropagate.push_back( "Borzi" );
-    std::vector< std::string > centralBodies;
-    centralBodies.push_back( "Sun" );
-
-    // Set vehicle mass.
-    bodyMap[ "Borzi" ]->setConstantBodyMass( 2000.0 );
-
-
-    // Define specific impulse function.
-    std::function< double( const double ) > specificImpulseFunction = [ = ]( const double currentTime )
-    {
-        return 3000.0;
-    };
-
     // Create radiation pressure settings
     double referenceAreaRadiation = 4.0;
     double radiationPressureCoefficient = 1.2;
@@ -129,51 +80,36 @@ int main( )
                 "Sun", createRadiationPressureInterface(
                     asterixRadiationPressureSettings, "Borzi", bodyMap ) );
 
+    setGlobalFrameBodyEphemerides( bodyMap, frameOrigin, frameOrientation );
 
-    // Define acceleration map for the simplified problem.
-    // (empty map as central gravity and low-thrust accelerations are already included in the shape-based methods)
-    basic_astrodynamics::AccelerationMap perturbingAccelerationsMapSimplifiedProblem;
+    return bodyMap;
+}
 
+int main( )
+{
 
-    // Define acceleration map for the fully perturbed problem.
-
-    // Define propagation settings.
-    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationSettingsPerturbedProblem;
-    accelerationSettingsPerturbedProblem[ "Earth" ].push_back( std::make_shared< AccelerationSettings >(
-                                                     basic_astrodynamics::central_gravity ) );
-    accelerationSettingsPerturbedProblem[ "Mars" ].push_back( std::make_shared< AccelerationSettings >(
-                                                     basic_astrodynamics::central_gravity ) );
-    accelerationSettingsPerturbedProblem[ "Jupiter" ].push_back( std::make_shared< AccelerationSettings >(
-                                                     basic_astrodynamics::central_gravity ) );
-    accelerationSettingsPerturbedProblem[ "Sun" ].push_back( std::make_shared< AccelerationSettings >(
-                                                     basic_astrodynamics::cannon_ball_radiation_pressure ) );
-
-    SelectedAccelerationMap accelerationMap;
-
-    accelerationMap[ "Borzi" ] = accelerationSettingsPerturbedProblem;
-    bodiesToPropagate.push_back( "Borzi" );
-    centralBodies.push_back( "Sun" );
-
-    basic_astrodynamics::AccelerationMap perturbingAccelerationsMapPertubedProblem = createAccelerationModelsMap(
-                bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
-
+    std::string outputSubFolder = "ShapeBasedTrajectoriesExample/";
+    spice_interface::loadStandardSpiceKernels( );
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////                 DEFINE PROPAGATION SETTINGS                   /////////////////////////////////
+    ////////////////////////////           DEFINE TRAJECTORY GLOBAL PARAMETERS      ////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Define integrator settings.
-    double stepSize = timeOfFlight / static_cast< double >( 8000.0 );
-    std::shared_ptr< numerical_integrators::IntegratorSettings< double > > integratorSettings =
-            std::make_shared< numerical_integrators::IntegratorSettings< double > > ( numerical_integrators::rungeKutta4, 0.0, stepSize );
+    int numberOfRevolutions = 1;
+    double julianDateAtDeparture = 8174.5 * physical_constants::JULIAN_DAY;
+    double timeOfFlight = 580.0 * physical_constants::JULIAN_DAY;
+    double vehicleInitialMass = 2000.0;
+    double specificImpulse = 3000.0;
 
-    // Define list of dependent variables to save.
-    std::vector< std::shared_ptr< propagators::SingleDependentVariableSaveSettings > > dependentVariablesList;
+    std::function< double( const double ) > specificImpulseFunction = [ = ]( const double ){ return specificImpulse; };
 
-    // Create object with list of dependent variables
-    std::shared_ptr< propagators::DependentVariableSaveSettings > dependentVariablesToSave =
-            std::make_shared< propagators::DependentVariableSaveSettings >( dependentVariablesList );
-
+    // Retrieve cartesian state at departure and arrival.
+    ephemerides::EphemerisPointer pointerToDepartureBodyEphemeris = std::make_shared< ephemerides::ApproximatePlanetPositions>(
+                ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::earthMoonBarycenter );
+    ephemerides::EphemerisPointer pointerToArrivalBodyEphemeris = std::make_shared< ephemerides::ApproximatePlanetPositions >(
+                ephemerides::ApproximatePlanetPositionsBase::BodiesWithEphemerisData::mars );
+    Eigen::Vector6d cartesianStateAtDeparture = pointerToDepartureBodyEphemeris->getCartesianState( julianDateAtDeparture );
+    Eigen::Vector6d cartesianStateAtArrival = pointerToArrivalBodyEphemeris->getCartesianState( julianDateAtDeparture + timeOfFlight );
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -248,10 +184,11 @@ int main( )
 
     // Create hodographic-shaping object with defined velocity functions and boundary conditions.
     shape_based_methods::HodographicShaping hodographicShaping(
-                cartesianStateAtDeparture, cartesianStateAtArrival, timeOfFlight, 1, bodyMap, "Borzi", "Sun",
+                cartesianStateAtDeparture, cartesianStateAtArrival, timeOfFlight,
+                spice_interface::getBodyGravitationalParameter( "Sun" ), 1,
                 radialVelocityFunctionComponents, normalVelocityFunctionComponents, axialVelocityFunctionComponents,
                 freeCoefficientsRadialVelocityFunction, freeCoefficientsNormalVelocityFunction, freeCoefficientsAxialVelocityFunction,
-                integratorSettings );
+                vehicleInitialMass );
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -265,13 +202,49 @@ int main( )
     // Compute shaped trajectory.
     shape_based_methods::SphericalShaping sphericalShaping = shape_based_methods::SphericalShaping(
                 cartesianStateAtDeparture, cartesianStateAtArrival, timeOfFlight,
-                numberOfRevolutions, bodyMap, "Borzi", "Sun", 0.000703,
-                rootFinderSettings, 1.0e-6, 1.0e-1, integratorSettings );
+                spice_interface::getBodyGravitationalParameter( "Sun" ),
+                numberOfRevolutions, 0.000703,
+                rootFinderSettings, 1.0e-6, 1.0e-1, vehicleInitialMass );
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////         CREATE ENVIRONMENT                              /////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    // Set vehicle mass.
+    NamedBodyMap bodyMap = getBetBodyMap( );
+    bodyMap[ "Borzi" ]->setConstantBodyMass( vehicleInitialMass );
+
+
+    // Define body to propagate and central body.
+    std::vector< std::string > bodiesToPropagate;
+    std::vector< std::string > centralBodies;
+    bodiesToPropagate.push_back( "Borzi" );
+    centralBodies.push_back( "Sun" );
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////                 DEFINE PROPAGATION SETTINGS                   /////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Define integrator settings.
+    double stepSize = timeOfFlight / static_cast< double >( 8000.0 );
+    std::shared_ptr< numerical_integrators::IntegratorSettings< double > > integratorSettings =
+            std::make_shared< numerical_integrators::IntegratorSettings< double > > ( numerical_integrators::rungeKutta4, 0.0, stepSize );
+
+    // Define list of dependent variables to save.
+    std::vector< std::shared_ptr< propagators::SingleDependentVariableSaveSettings > > dependentVariablesList;
+
+    // Create object with list of dependent variables
+    std::shared_ptr< propagators::DependentVariableSaveSettings > dependentVariablesToSave =
+            std::make_shared< propagators::DependentVariableSaveSettings >( dependentVariablesList, false );
+
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////       NUMERICALLY PROPAGATE THE SIMPLIFIED PROBLEM            /////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     std::map< double, Eigen::VectorXd > hodographicShapingPropagationUnperturbedCase;
     std::map< double, Eigen::Vector6d > hodographicShapingAnalyticalResults;
@@ -280,11 +253,12 @@ int main( )
     // Create propagator settings for hodographic shaping.
     std::pair< std::shared_ptr< propagators::PropagatorSettings< double > >, std::shared_ptr< propagators::PropagatorSettings< double > > >
             hodographicShapingPropagatorSettings = hodographicShaping.createLowThrustPropagatorSettings(
-                specificImpulseFunction, perturbingAccelerationsMapSimplifiedProblem, integratorSettings, dependentVariablesToSave );
+                bodyMap, bodiesToPropagate.at( 0 ), centralBodies.at( 0 ), specificImpulseFunction,
+                basic_astrodynamics::AccelerationMap( ), integratorSettings, dependentVariablesToSave );
 
     // Compute shaped trajectory and propagated trajectory.
     hodographicShaping.computeSemiAnalyticalAndFullPropagation(
-                integratorSettings, hodographicShapingPropagatorSettings, hodographicShapingPropagationUnperturbedCase,
+                bodyMap, integratorSettings, hodographicShapingPropagatorSettings, hodographicShapingPropagationUnperturbedCase,
                 hodographicShapingAnalyticalResults, hodographicShapingDependentVariablesHistory );
 
 
@@ -295,11 +269,12 @@ int main( )
     // Create propagator settings for spherical shaping.
     std::pair< std::shared_ptr< propagators::PropagatorSettings< double > >, std::shared_ptr< propagators::PropagatorSettings< double > > >
             sphericalShapingPropagatorSettings = sphericalShaping.createLowThrustPropagatorSettings(
-                specificImpulseFunction, perturbingAccelerationsMapSimplifiedProblem, integratorSettings, dependentVariablesToSave );
+                bodyMap, bodiesToPropagate.at( 0 ), centralBodies.at( 0 ), specificImpulseFunction,
+                basic_astrodynamics::AccelerationMap( ), integratorSettings, dependentVariablesToSave );
 
     // Compute shaped trajectory and propagated trajectory.
     sphericalShaping.computeSemiAnalyticalAndFullPropagation(
-                integratorSettings, sphericalShapingPropagatorSettings, sphericalShapingPropagationUnperturbedCase,
+                bodyMap, integratorSettings, sphericalShapingPropagatorSettings, sphericalShapingPropagationUnperturbedCase,
                 sphericalShapingAnalyticalResults, sphericalShapingDependentVariablesHistory );
 
     input_output::writeDataMapToTextFile( hodographicShapingAnalyticalResults,
@@ -353,7 +328,7 @@ int main( )
 
     hodographicShaping.getMassProfile(
                 epochsVectorHodographicShaping, hodographicShapingMassProfile, specificImpulseFunction, integratorSettings );
-    hodographicShaping.getThrustProfile(
+    hodographicShaping.getThrustForceProfile(
                 epochsVectorHodographicShaping, hodographicShapingThrustProfile, specificImpulseFunction, integratorSettings );
     hodographicShaping.getThrustAccelerationProfile(
                 epochsVectorHodographicShaping, hodographicShapingThrustAccelerationProfile, specificImpulseFunction, integratorSettings );
@@ -373,12 +348,35 @@ int main( )
 
     sphericalShaping.getMassProfile(
                 epochsVectorSphericalShaping, sphericalShapingMassProfile, specificImpulseFunction, integratorSettings );
-    sphericalShaping.getThrustProfile(
+    sphericalShaping.getThrustForceProfile(
                 epochsVectorSphericalShaping, sphericalShapingThrustProfile, specificImpulseFunction, integratorSettings );
     sphericalShaping.getThrustAccelerationProfile(
                 epochsVectorSphericalShaping, sphericalShapingThrustAccelerationProfile, specificImpulseFunction, integratorSettings );
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////         DEFINE PERTURBED DYNAMICAL ENVIRONMENT          /////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+    // Define propagation settings.
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationSettingsPerturbedProblem;
+    accelerationSettingsPerturbedProblem[ "Earth" ].push_back( std::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::central_gravity ) );
+    accelerationSettingsPerturbedProblem[ "Mars" ].push_back( std::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::central_gravity ) );
+    accelerationSettingsPerturbedProblem[ "Jupiter" ].push_back( std::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::central_gravity ) );
+    accelerationSettingsPerturbedProblem[ "Sun" ].push_back( std::make_shared< AccelerationSettings >(
+                                                     basic_astrodynamics::cannon_ball_radiation_pressure ) );
+
+    SelectedAccelerationMap accelerationMap;
+
+    accelerationMap[ "Borzi" ] = accelerationSettingsPerturbedProblem;
+    bodiesToPropagate.push_back( "Borzi" );
+    centralBodies.push_back( "Sun" );
+
+    basic_astrodynamics::AccelerationMap perturbingAccelerationsMapPertubedProblem = createAccelerationModelsMap(
+                bodyMap, accelerationMap, bodiesToPropagate, centralBodies );
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////         PROPAGATE THE FULLY PERTURBED PROBLEM           /////////////////////////////////////
@@ -395,21 +393,23 @@ int main( )
     // Create propagator settings for hodographic shaping.
     std::pair< std::shared_ptr< propagators::PropagatorSettings< double > >, std::shared_ptr< propagators::PropagatorSettings< double > > >
             hodographicShapingPropagatorSettingsPerturbedCase = hodographicShaping.createLowThrustPropagatorSettings(
-                specificImpulseFunction, perturbingAccelerationsMapPertubedProblem, integratorSettings, dependentVariablesToSave );
+                bodyMap, bodiesToPropagate.at( 0 ), centralBodies.at( 0 ), specificImpulseFunction,
+                perturbingAccelerationsMapPertubedProblem, integratorSettings, dependentVariablesToSave );
 
     // Compute shaped trajectory and propagated trajectory.
     hodographicShaping.computeSemiAnalyticalAndFullPropagation(
-                integratorSettings, hodographicShapingPropagatorSettingsPerturbedCase, hodographicShapingPropagationPerturbedCase,
+                bodyMap, integratorSettings, hodographicShapingPropagatorSettingsPerturbedCase, hodographicShapingPropagationPerturbedCase,
                 hodographicShapingAnalyticalResultsPerturbedCase, hodographicShapingDependentVariablesHistoryPerturbedCase );
 
     // Create propagator settings for spherical shaping.
     std::pair< std::shared_ptr< propagators::PropagatorSettings< double > >, std::shared_ptr< propagators::PropagatorSettings< double > > >
             sphericalShapingPropagatorSettingsPerturbedCase = sphericalShaping.createLowThrustPropagatorSettings(
-                specificImpulseFunction, perturbingAccelerationsMapPertubedProblem, integratorSettings, dependentVariablesToSave );
+                bodyMap, bodiesToPropagate.at( 0 ), centralBodies.at( 0 ), specificImpulseFunction,
+                perturbingAccelerationsMapPertubedProblem, integratorSettings, dependentVariablesToSave );
 
     // Compute shaped trajectory and propagated trajectory.
     sphericalShaping.computeSemiAnalyticalAndFullPropagation(
-                integratorSettings, sphericalShapingPropagatorSettingsPerturbedCase, sphericalShapingPropagationPerturbedCase,
+                bodyMap, integratorSettings, sphericalShapingPropagatorSettingsPerturbedCase, sphericalShapingPropagationPerturbedCase,
                 sphericalShapingAnalyticalResultsPerturbedCase, sphericalShapingDependentVariablesHistoryPerturbedCase );
 
 
