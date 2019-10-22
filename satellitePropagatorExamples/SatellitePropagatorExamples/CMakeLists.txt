@@ -167,11 +167,6 @@ add_executable(application_PropagatorTypesComparison "${SRCROOT}/propagatorTypes
 setup_executable_target(application_PropagatorTypesComparison "${SRCROOT}")
 target_link_libraries(application_PropagatorTypesComparison ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
-# Add filter example.
-add_executable(application_FilterEstimation "${SRCROOT}/filterExample")
-setup_executable_target(application_FilterEstimation "${SRCROOT}")
-target_link_libraries(application_FilterEstimation ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
-
 # Add single, Earth-orbiting satellite propagator application.
 add_executable(application_SingleSatellitePropagator "${SRCROOT}/singleSatellitePropagator.cpp")
 setup_executable_target(application_SingleSatellitePropagator "${SRCROOT}")
@@ -283,3 +278,11 @@ if( BUILD_WITH_ESTIMATION_TOOLS )
  setup_executable_target(application_EarthOrbiterBasicStateEstimation "${SRCROOT}")
  target_link_libraries(application_EarthOrbiterBasicStateEstimation ${TUDAT_ESTIMATION_LIBRARIES} ${Boost_LIBRARIES} )
 endif()
+
+
+# Add filter example.
+if(BUILD_WITH_KALMAN_FILERS)
+  add_executable(application_FilterEstimation "${SRCROOT}/filterExample")
+  setup_executable_target(application_FilterEstimation "${SRCROOT}")
+  target_link_libraries(application_FilterEstimation  ${TUDAT_PROPAGATION_LIBRARIES} tudat_filters tudat_basic_mathematics ${Boost_LIBRARIES} )
+endif( )
