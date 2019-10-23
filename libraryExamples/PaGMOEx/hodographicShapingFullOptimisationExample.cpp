@@ -153,7 +153,7 @@ int main( )
             problem prob{ HodographicShapingOptimisationProblem(
                             departureStateFunction, arrivalStateFunction, spice_interface::getBodyGravitationalParameter( "Sun" ),
                             revolutions, std::bind( &getShapingBasisFunctions, std::placeholders::_1, revolutions ), bounds,
-                            useMultiObjective, 2000.0, 3000.0 ) };
+                            useMultiObjective, 2000.0 ) };
 
             //sade, gaco, sga, de
             algorithm algo;

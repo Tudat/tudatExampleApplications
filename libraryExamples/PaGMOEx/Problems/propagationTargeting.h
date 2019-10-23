@@ -63,7 +63,6 @@ private:
     double altitudeOfApogee_;
     double altitudeOfTarget_;
     double longitudeOfTarget_;
-    bool useExtendedDynamics_;
     double earthRadius_;
     double radiusOfPerigee_;
     double radiusOfApogee_;
@@ -73,6 +72,8 @@ private:
     double simulationEndEpoch_;
 
     std::shared_ptr< propagators::DependentVariableSaveSettings > dependentVariablesToSave_;
+
+    bool useExtendedDynamics_;
 
     mutable std::map< double, Eigen::VectorXd > previousStateHistory_;
     mutable Eigen::VectorXd previousFinalState_;
