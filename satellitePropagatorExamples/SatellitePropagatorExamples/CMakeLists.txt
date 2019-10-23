@@ -281,7 +281,7 @@ endif()
 
 
 # Add filter example.
-if(BUILD_WITH_KALMAN_FILERS)
+if(BUILD_WITH_FILTERS)
   add_executable(application_FilterEstimation "${SRCROOT}/filterExample")
   setup_executable_target(application_FilterEstimation "${SRCROOT}")
   target_link_libraries(application_FilterEstimation  ${TUDAT_PROPAGATION_LIBRARIES} tudat_filters tudat_basic_mathematics ${Boost_LIBRARIES} )
