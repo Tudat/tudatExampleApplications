@@ -244,10 +244,10 @@ setup_executable_target(application_FullPropagationCR3BP "${SRCROOT}")
 target_link_libraries(application_FullPropagationCR3BP ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 # Add full propagation interplanetary trajectory example
-add_executable(application_FullPropagationInterplanetaryTrajectory
-               "${SRCROOT}/fullPropagationInterplanetaryTrajectory.cpp")
-setup_executable_target(application_FullPropagationInterplanetaryTrajectory "${SRCROOT}")
-target_link_libraries(application_FullPropagationInterplanetaryTrajectory ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
+add_executable(application_FullPropagationMga
+               "${SRCROOT}/fullPropagationMga.cpp")
+setup_executable_target(application_FullPropagationMga "${SRCROOT}")
+target_link_libraries(application_FullPropagationMga ${TUDAT_PROPAGATION_LIBRARIES} ${Boost_LIBRARIES} )
 
 if( BUILD_WITH_SOCIS_2019 )
 
