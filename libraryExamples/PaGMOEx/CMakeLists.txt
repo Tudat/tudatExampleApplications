@@ -172,8 +172,9 @@ include(tudatLinkLibraries)
 ## Add Tudat pagmo examples
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Problems")
 
-# Disable the CEC2013 example application on Windows as CEC2013 is not supported by MinGW
-if( NOT MINGW )
+# Disable the CEC2013 example application on Windows and Apple as
+# some compilers choke on the cec2013 data arrays.
+if( NOT MINGW AND NOT APPLE)
     add_executable(application_PagmoCEC2013Comparison "${SRCROOT}/cec2013OptimizerComparison.cpp")
     setup_executable_target(application_PagmoCEC2013Comparison "${SRCROOT}")
     target_link_libraries(application_PagmoCEC2013Comparison pagmo pagmo2_library_example_problems tudat_input_output pthread ${Boost_LIBRARIES} )
